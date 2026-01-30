@@ -1,0 +1,15 @@
+name: laion-fmri-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - sphinx>=4.0
+    - sphinx-rtd-theme>=1.0
+    - myst-parser
+    - sphinx-copybutton
+    - sphinx-design
+    - sphinx-tabs
+    - numpydoc

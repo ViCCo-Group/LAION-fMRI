@@ -1,0 +1,722 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stimulus Data &mdash; LAION-fMRI 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom_rtd.css?v=dca3ec87" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f86456c9"></script>
+      <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Experiments" href="experiments.html" />
+    <link rel="prev" title="Dataset Overview" href="dataset_overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LAION-fMRI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="news.html#latest-updates">Latest Updates</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="news.html#january-2026">January 2026</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="news.html#coming-soon">Coming Soon</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#getting-access">Getting Access</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#access-methods">Access Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#quick-example">Quick Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#loading-fmri-data">Loading fMRI Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#working-with-stimulus-data">Working with Stimulus Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Dataset Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="dataset_overview.html">Dataset Overview</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Stimulus Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stimulus-sets">Stimulus Sets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visual-stimuli">Visual Stimuli</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#stimulus-categories">Stimulus Categories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stimulus-format">Stimulus Format</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#stimulus-metadata">Stimulus Metadata</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#file-organization">File Organization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stimuli-list-and-reference">Stimuli list and Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#metadata-fields">Metadata Fields</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stimuli-metadata">Stimuli Metadata</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#distribution-of-stimuli">Distribution of Stimuli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-stimulus-data">Loading Stimulus Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-the-python-package">Using the Python Package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#filtering-stimuli">Filtering Stimuli</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#stimulus-validation">Stimulus Validation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#quality-checks">Quality Checks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="experiments.html">Experiments</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#experimental-design">Experimental Design</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#design-types">Design Types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#task-structure">Task Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#experimental-sessions">Experimental Sessions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#run-parameters">Run Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#trial-structure">Trial Structure</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#experimental-conditions">Experimental Conditions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#condition-types">Condition Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#counterbalancing">Counterbalancing</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#events-files">Events Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#format">Format</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#example-events-file">Example Events File</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#experimental-protocols">Experimental Protocols</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#main-experiment">Main Experiment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#localizer-experiment">Localizer Experiment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#validation-runs">Validation Runs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#timing-and-synchronization">Timing and Synchronization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#stimulus-presentation">Stimulus Presentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#scanner-synchronization">Scanner Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="experiments.html#quality-assurance">Quality Assurance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#experimental-monitoring">Experimental Monitoring</a></li>
+<li class="toctree-l4"><a class="reference internal" href="experiments.html#post-scan-verification">Post-Scan Verification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="behavioral_data.html">Behavioral Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#response-data">Response Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#data-collection">Data Collection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#response-metrics">Response Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#file-organization">File Organization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#file-formats">File Formats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#analyzing-by-condition">Analyzing by Condition</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#performance-metrics">Performance Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#accuracy-measures">Accuracy Measures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#reaction-time-analyses">Reaction Time Analyses</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#attention-and-vigilance">Attention and Vigilance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#miss-rate">Miss Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#performance-over-time">Performance Over Time</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#eye-tracking-data">Eye Tracking Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#if-available">If Available</a></li>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#eye-tracking-metrics">Eye Tracking Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#quality-control">Quality Control</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#behavioral-qc-metrics">Behavioral QC Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#qc-report-example">QC Report Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="behavioral_data.html#summary-statistics">Summary Statistics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="behavioral_data.html#aggregating-across-runs">Aggregating Across Runs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="structural_data.html">Structural Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#anatomical-scans">Anatomical Scans</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#t1-weighted-images">T1-weighted Images</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#file-organization">File Organization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#example-json-metadata">Example JSON Metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#visualizing-slices">Visualizing Slices</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#preprocessed-derivatives">Preprocessed Derivatives</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#segmentation">Segmentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#brain-extraction">Brain Extraction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#surface-reconstruction">Surface Reconstruction</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#normalization">Normalization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#template-space">Template Space</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#transformation-files">Transformation Files</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#quality-assessment">Quality Assessment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#visual-inspection">Visual Inspection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#qc-metrics">QC Metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#qc-reports">QC Reports</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#additional-structural-scans">Additional Structural Scans</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#t2-weighted-if-available">T2-weighted (if available)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#flair-if-available">FLAIR (if available)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structural_data.html#using-structural-data">Using Structural Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#registration-to-functional">Registration to Functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="structural_data.html#creating-roi-masks">Creating ROI Masks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="functional_data.html">Functional Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#fmri-acquisitions">fMRI Acquisitions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#acquisition-parameters">Acquisition Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#file-organization">File Organization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#file-components">File Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#time-series-extraction">Time Series Extraction</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#data-quality">Data Quality</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#signal-characteristics">Signal Characteristics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#motion-assessment">Motion Assessment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#framewise-displacement">Framewise Displacement</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#preprocessing-derivatives">Preprocessing Derivatives</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#preprocessed-data">Preprocessed Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#preprocessing-steps-applied">Preprocessing Steps Applied</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#confounds">Confounds</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#analysis-ready-data">Analysis-Ready Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#creating-analysis-datasets">Creating Analysis Datasets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#multi-run-concatenation">Multi-Run Concatenation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#spatial-coverage">Spatial Coverage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#brain-coverage-check">Brain Coverage Check</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#roi-coverage">ROI Coverage</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional_data.html#quality-control-outputs">Quality Control Outputs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#qc-reports">QC Reports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional_data.html#carpet-plots">Carpet Plots</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dataset_overview.html#quick-overview">Quick Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset_overview.html#dataset-structure">Dataset Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset_overview.html#data-formats">Data Formats</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="processing_pipeline.html">Processing Pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="processing_pipeline.html#contents">Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quality_control.html">Quality Control</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="quality_control.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quality_control.html#visual-inspection">Visual Inspection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quality_control.html#qc-reports">QC Reports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quality_control.html#qc-thresholds">QC Thresholds</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quality_control.html#group-level-qc">Group-Level QC</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing.html">Preprocessing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="preprocessing.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preprocessing.html#preprocessing-steps">Preprocessing Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preprocessing.html#preprocessing-parameters">Preprocessing Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preprocessing.html#output-structure">Output Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preprocessing.html#using-preprocessed-data">Using Preprocessed Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="preprocessing.html#quality-checks">Quality Checks</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="glm.html">GLM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="glm.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="glm.html#first-level-analysis">First-Level Analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="glm.html#group-level-analysis">Group-Level Analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="glm.html#multiple-comparisons-correction">Multiple Comparisons Correction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="glm.html#roi-analysis">ROI Analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="glm.html#results-storage">Results Storage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="processing_pipeline.html#pipeline-overview">Pipeline Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing_pipeline.html#workflow-summary">Workflow Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing_pipeline.html#processing-tools">Processing Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing_pipeline.html#output-organization">Output Organization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_access.html">Data Access</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#how-to-access-the-laion-fmri-dataset">How to Access the LAION-fMRI Dataset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#access-requirements">Access Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#data-use-agreement">Data Use Agreement</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#terms-of-use">Terms of Use</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#registration">Registration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#download-instructions">Download Instructions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#dataset-components">Dataset Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#download-methods">Download Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#file-organization">File Organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#data-size">Data Size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#storage-recommendations">Storage Recommendations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#data-formats">Data Formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#file-formats-used">File Formats Used</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#software-requirements">Software Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#data-verification">Data Verification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#checksum-verification">Checksum Verification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="data_access.html#integrity-checks">Integrity Checks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#support">Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_access.html#citation">Citation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#general-questions">General Questions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-is-the-laion-fmri-dataset">What is the LAION-fMRI dataset?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#who-can-use-this-dataset">Who can use this dataset?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-cite-this-dataset">How do I cite this dataset?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#data-access">Data Access</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-download-the-dataset">How do I download the dataset?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-is-the-total-size-of-the-dataset">What is the total size of the dataset?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-download-only-part-of-the-dataset">Can I download only part of the dataset?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#do-i-need-special-permissions">Do I need special permissions?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#technical-questions">Technical Questions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-scanner-was-used">What scanner was used?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-is-the-spatial-resolution">What is the spatial resolution?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-tasks-were-performed">What tasks were performed?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#is-the-data-already-preprocessed">Is the data already preprocessed?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-file-format-is-used">What file format is used?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#analysis-questions">Analysis Questions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-software-should-i-use-to-analyze-the-data">What software should I use to analyze the data?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-load-the-fmri-data">How do I load the fMRI data?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-use-this-data-for-machine-learning">Can I use this data for machine learning?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#where-are-the-experimental-events">Where are the experimental events?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#quality-control">Quality Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-know-if-the-data-quality-is-good">How do I know if the data quality is good?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-motion-threshold-should-i-use">What motion threshold should I use?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#are-there-subjects-i-should-exclude">Are there subjects I should exclude?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#dataset-organization">Dataset Organization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-does-the-folder-structure-mean">What does the folder structure mean?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#what-are-the-derivatives">What are the derivatives?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#where-are-the-stimulus-images">Where are the stimulus images?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#i-can-t-open-the-nifti-files">I can’t open the NIfTI files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#the-download-failed-or-is-incomplete">The download failed or is incomplete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#i-get-memory-errors-when-loading-data">I get memory errors when loading data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#contributing">Contributing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-contribute-to-the-dataset">Can I contribute to the dataset?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#how-do-i-report-issues">How do I report issues?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="faq.html#can-i-add-my-own-analyses-to-the-documentation">Can I add my own analyses to the documentation?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#more-questions">More Questions?</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#dataset-overview">Dataset Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#data-structure">Data Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#accessing-the-data">Accessing the Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#working-with-the-data">Working with the Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#loading-fmri-data">Loading fMRI Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#metadata">Metadata</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#data-format">Data Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#quality-control">Quality Control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#citation">Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#support">Support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to LAION-fMRI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#ways-to-contribute">Ways to Contribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#getting-started">Getting Started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#setting-up-your-environment">Setting Up Your Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#making-changes">Making Changes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#documentation-changes">Documentation Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#documentation-style-guide">Documentation Style Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-of-conduct">Code of Conduct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#questions">Questions?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#thank-you">Thank You!</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="release-history.html#initial-release-yyyy-mm-dd">Initial Release (YYYY-MM-DD)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LAION-fMRI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="dataset_overview.html">Dataset Overview</a></li>
+      <li class="breadcrumb-item active">Stimulus Data</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/LAION-AI/LAION-fMRI/blob/main/docs/source/stimulus_data.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="dataset_overview.html" class="btn btn-neutral float-left" title="Dataset Overview" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="experiments.html" class="btn btn-neutral float-right" title="Experiments" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="stimulus-data">
+<h1>Stimulus Data<a class="headerlink" href="#stimulus-data" title="Link to this heading"></a></h1>
+<p>The LAION-fMRI dataset includes comprehensive visual stimuli presented to participants during fMRI scanning.</p>
+<section id="stimulus-sets">
+<h2>Stimulus Sets<a class="headerlink" href="#stimulus-sets" title="Link to this heading"></a></h2>
+<p>The dataset may include multiple stimulus sets for different experiments:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>stimuli/
+├── localizer/     # Functional localizer stimuli
+└── n_back/        # N-back task stimuli
+</pre></div>
+</div>
+<p>Each set includes its own metadata file describing the specific stimuli and their properties.</p>
+</section>
+<section id="visual-stimuli">
+<h2>Visual Stimuli<a class="headerlink" href="#visual-stimuli" title="Link to this heading"></a></h2>
+<section id="stimulus-categories">
+<h3>Stimulus Categories<a class="headerlink" href="#stimulus-categories" title="Link to this heading"></a></h3>
+<p>The dataset includes a variety of visual stimuli:</p>
+<ul class="simple">
+<li><p><strong>Natural images</strong>: Photographs of natural scenes</p></li>
+<li><p><strong>Object categories</strong>: Various object types and categories</p></li>
+<li><p><strong>Scene categories</strong>: Indoor and outdoor scenes</p></li>
+<li><p><strong>Face stimuli</strong>: Human faces with varying expressions and identities</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/oodA_images.png"><img alt="Example stimuli from different categories" src="_images/oodA_images.png" style="width: 60%;" />
+</a>
+</figure>
+</section>
+<section id="stimulus-format">
+<h3>Stimulus Format<a class="headerlink" href="#stimulus-format" title="Link to this heading"></a></h3>
+<p><strong>Technical Specifications:</strong></p>
+<ul class="simple">
+<li><p><strong>Image files</strong>: PNG/JPEG format</p></li>
+<li><p><strong>Resolution</strong>: 1024x1024 pixels</p></li>
+<li><p><strong>Color space</strong>: RGB</p></li>
+<li><p><strong>Bit depth</strong>: 8-bit per channel</p></li>
+</ul>
+</section>
+</section>
+<section id="stimulus-metadata">
+<h2>Stimulus Metadata<a class="headerlink" href="#stimulus-metadata" title="Link to this heading"></a></h2>
+<section id="file-organization">
+<h3>File Organization<a class="headerlink" href="#file-organization" title="Link to this heading"></a></h3>
+<p>Stimulus files are organized as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>stimuli/
+├── localizer/       # Functional localizer stimuli
+│   ├── images/      # Stimulus image files
+│   ├── category_01/
+│   ├── category_02/
+│   └── ...
+│   ├── stimuli.tsv  # Stimuli list and reference
+│   ├── stimuli.json # Stimuli metadata
+│   └── README.txt   # Stimulus documentation
+└── n_back/          # N-back task stimuli
+</pre></div>
+</div>
+</section>
+<section id="stimuli-list-and-reference">
+<h3>Stimuli list and Reference<a class="headerlink" href="#stimuli-list-and-reference" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">stimuli.tsv</span></code> file contains a list of all stimulus images along with their feature values, identifiers and categories.</p>
+<div class="highlight-tsv notranslate"><div class="highlight"><pre><span></span>stimulus_id category    filename    luminance   contrast    experiment_id    duration
+stim_0001   face    face_001.png    127.5   0.42    exp_01  500
+stim_0002   scene   scene_001.png   115.2   0.38    exp_01  500
+stim_0003   object  object_001.png  132.1   0.45    exp_02  750
+</pre></div>
+</div>
+</section>
+<section id="metadata-fields">
+<h3>Metadata Fields<a class="headerlink" href="#metadata-fields" title="Link to this heading"></a></h3>
+<p>Each stimulus includes comprehensive metadata:</p>
+<p><strong>Primary Fields:</strong></p>
+<ul class="simple">
+<li><p><strong>stimulus_id</strong>: Unique identifier for each stimulus</p></li>
+<li><p><strong>category</strong>: Primary category label</p></li>
+<li><p><strong>subcategory</strong>: Fine-grained category (if applicable)</p></li>
+<li><p><strong>filename</strong>: Image filename</p></li>
+<li><p><strong>presentation_order</strong>: Order of presentation in experiment</p></li>
+</ul>
+<p><strong>Visual Properties:</strong></p>
+<ul class="simple">
+<li><p><strong>luminance</strong>: Mean luminance value</p></li>
+<li><p><strong>contrast</strong>: RMS contrast</p></li>
+<li><p><strong>spatial_frequency</strong>: Dominant spatial frequency</p></li>
+<li><p><strong>color_histogram</strong>: RGB color distribution</p></li>
+</ul>
+<p><strong>Experimental Information:</strong></p>
+<ul class="simple">
+<li><p><strong>experiment_id</strong>: Which experiment used this stimulus</p></li>
+<li><p><strong>condition</strong>: Experimental condition</p></li>
+<li><p><strong>trial_type</strong>: Type of trial (e.g., target, distractor)</p></li>
+<li><p><strong>duration</strong>: Presentation duration in milliseconds</p></li>
+</ul>
+</section>
+<section id="stimuli-metadata">
+<h3>Stimuli Metadata<a class="headerlink" href="#stimuli-metadata" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">stimuli.json</span></code> file contains detailed metadata for the stimulus set:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;LAION-fMRI Localizer Stimuli&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;BIDSVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.8.0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;License&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CC-BY-4.0&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Authors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;ViCCo-Group&quot;</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;Description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Visual stimuli used in the LAION-fMRI functional localizer experiment&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;StimulusPresentation&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;ScreenSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1920</span><span class="p">,</span><span class="w"> </span><span class="mi">1080</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;ScreenDistance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ScreenRefreshRate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;ImageProperties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;Resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">1024</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;ColorSpace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;BitDepth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;Format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PNG&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;Categories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;CategoryID&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;faces&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;CategoryName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Human Faces&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;NumberOfStimuli&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;Subcategories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;neutral&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;happy&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;sad&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;CategoryID&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;scenes&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;CategoryName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Natural Scenes&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;NumberOfStimuli&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;Subcategories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;indoor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;outdoor&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;CategoryID&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;objects&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;CategoryName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Objects&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;NumberOfStimuli&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;Subcategories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tools&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;furniture&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;vehicles&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;VisualProperties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;MeanLuminance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">127.5</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;ContrastRange&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.6</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;SpatialFrequencyRange&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="distribution-of-stimuli">
+<h2>Distribution of Stimuli<a class="headerlink" href="#distribution-of-stimuli" title="Link to this heading"></a></h2>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="_images/stimuli_distribution.png"><img alt="Distribution of stimuli across categories" src="_images/stimuli_distribution.png" style="width: 70%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Distribution of stimuli across categories in the LAION-fMRI dataset.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="loading-stimulus-data">
+<h2>Loading Stimulus Data<a class="headerlink" href="#loading-stimulus-data" title="Link to this heading"></a></h2>
+<section id="using-the-python-package">
+<h3>Using the Python Package<a class="headerlink" href="#using-the-python-package" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">laion-fmri-dataloader</span></code> package provides convenient functions for loading stimulus data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">laion_fmri_dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LAIONfMRIDataset</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<span class="c1"># Initialize dataset</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">LAIONfMRIDataset</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;./laion-fmri-data&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load stimulus metadata</span>
+<span class="n">stimuli_metadata</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">load_stimuli</span><span class="p">(</span><span class="n">stimulus_set</span><span class="o">=</span><span class="s1">&#39;localizer&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total stimuli: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">stimuli_metadata</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Categories: </span><span class="si">{</span><span class="n">stimuli_metadata</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load a specific stimulus image</span>
+<span class="n">stimulus_img</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">load_stimulus_image</span><span class="p">(</span>
+    <span class="n">stimulus_set</span><span class="o">=</span><span class="s1">&#39;localizer&#39;</span><span class="p">,</span>
+    <span class="n">stimulus_id</span><span class="o">=</span><span class="s1">&#39;stim_0001&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Display the image</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">stimulus_img</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stimulus: </span><span class="si">{</span><span class="n">stimuli_metadata</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;stimulus_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Get stimuli by category</span>
+<span class="n">face_stimuli</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_stimuli_by_category</span><span class="p">(</span>
+    <span class="n">stimulus_set</span><span class="o">=</span><span class="s1">&#39;localizer&#39;</span><span class="p">,</span>
+    <span class="n">category</span><span class="o">=</span><span class="s1">&#39;faces&#39;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Face stimuli: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">face_stimuli</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load multiple images at once</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">load_stimulus_images</span><span class="p">(</span>
+    <span class="n">stimulus_set</span><span class="o">=</span><span class="s1">&#39;localizer&#39;</span><span class="p">,</span>
+    <span class="n">stimulus_ids</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;stim_0001&#39;</span><span class="p">,</span> <span class="s1">&#39;stim_0002&#39;</span><span class="p">,</span> <span class="s1">&#39;stim_0003&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="filtering-stimuli">
+<h3>Filtering Stimuli<a class="headerlink" href="#filtering-stimuli" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get all face stimuli</span>
+<span class="n">face_stimuli</span> <span class="o">=</span> <span class="n">stimuli</span><span class="p">[</span><span class="n">stimuli</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;face&#39;</span><span class="p">]</span>
+
+<span class="c1"># Get stimuli from specific experiment</span>
+<span class="n">exp1_stimuli</span> <span class="o">=</span> <span class="n">stimuli</span><span class="p">[</span><span class="n">stimuli</span><span class="p">[</span><span class="s1">&#39;experiment_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;exp_01&#39;</span><span class="p">]</span>
+
+<span class="c1"># Filter by visual properties</span>
+<span class="n">high_contrast</span> <span class="o">=</span> <span class="n">stimuli</span><span class="p">[</span><span class="n">stimuli</span><span class="p">[</span><span class="s1">&#39;contrast&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.4</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="stimulus-validation">
+<h2>Stimulus Validation<a class="headerlink" href="#stimulus-validation" title="Link to this heading"></a></h2>
+<section id="quality-checks">
+<h3>Quality Checks<a class="headerlink" href="#quality-checks" title="Link to this heading"></a></h3>
+<p>All stimuli have undergone quality control:</p>
+<ul class="simple">
+<li><p><strong>Resolution verification</strong>: All images meet minimum resolution requirements</p></li>
+<li><p><strong>Color space validation</strong>: Correct RGB color space</p></li>
+<li><p><strong>Duplicate detection</strong>: No duplicate images</p></li>
+<li><p><strong>Metadata completeness</strong>: All required fields populated</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataset_overview.html" class="btn btn-neutral float-left" title="Dataset Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="experiments.html" class="btn btn-neutral float-right" title="Experiments" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, ViCCo-Group.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

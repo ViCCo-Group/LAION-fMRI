@@ -1,0 +1,133 @@
+Contributing to LAION-fMRI
+===========================
+
+Thank you for your interest in contributing to the LAION-fMRI dataset documentation!
+
+.. contents:: Table of Contents
+   :local:
+   :depth: 2
+
+Ways to Contribute
+------------------
+
+There are several ways you can contribute to the LAION-fMRI dataset and documentation:
+
+**Improve documentation** 📚
+   Fix typos, add examples, clarify explanations, or write tutorials. Documentation improvements 
+   help make the dataset more accessible to researchers.
+
+**Report issues** 🐛
+   Found something unclear or incorrect? Open an issue on GitHub with details about what needs 
+   to be improved.
+
+**Add examples** 💡
+   Share your analysis scripts, visualization examples, or preprocessing pipelines that might 
+   help other researchers.
+
+**Suggest improvements** ✨
+   Have ideas for additional metadata, better organization, or new features? We'd love to hear them!
+
+Getting Started
+---------------
+
+Setting Up Your Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To contribute to the documentation:
+
+1. **Fork the repository** on GitHub
+
+2. **Clone your fork**:
+
+   .. code-block:: bash
+
+      git clone https://github.com/YOUR-USERNAME/LAION-fMRI.git
+      cd LAION-fMRI
+
+3. **Create the development environment**:
+
+   .. code-block:: bash
+
+      conda env create -f environment.yml
+      conda activate laion-fmri-dev
+
+4. **Build the documentation**:
+
+   .. code-block:: bash
+
+      cd docs
+      make html
+
+The built documentation will be in ``docs/build/html/``.
+
+Making Changes
+--------------
+
+Documentation Changes
+^^^^^^^^^^^^^^^^^^^^^
+
+The documentation source files are in ``docs/source/`` and written in reStructuredText (.rst).
+
+To make changes:
+
+1. **Create a new branch**:
+
+   .. code-block:: bash
+
+      git checkout -b improve-documentation
+
+2. **Edit the .rst files** in ``docs/source/``
+
+3. **Build and preview** your changes:
+
+   .. code-block:: bash
+
+      cd docs
+      make html
+      # Open docs/build/html/index.html in your browser
+
+4. **Commit your changes**:
+
+   .. code-block:: bash
+
+      git add docs/source/your-file.rst
+      git commit -m "Improve documentation for XYZ"
+
+5. **Push to your fork**:
+
+   .. code-block:: bash
+
+      git push origin improve-documentation
+
+6. **Open a Pull Request** on GitHub
+
+Documentation Style Guide
+--------------------------
+
+When contributing to the documentation:
+
+* Use clear, concise language
+* Include examples where helpful
+* Follow the existing structure and formatting
+* Check for typos and grammatical errors
+* Ensure all code examples work correctly
+
+Code of Conduct
+---------------
+
+Please be respectful and constructive in all interactions. We aim to create a welcoming 
+environment for all contributors.
+
+Questions?
+----------
+
+If you have questions about contributing:
+
+* Open an issue on `GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
+* Check existing issues and pull requests for similar discussions
+
+Thank You!
+----------
+
+Your contributions help make this dataset more useful for the research community. Thank you 
+for taking the time to contribute!
