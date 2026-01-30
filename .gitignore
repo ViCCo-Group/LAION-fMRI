@@ -1,0 +1,5 @@
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Sphinx build output
+/docs/build/*
