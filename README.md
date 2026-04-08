@@ -5,6 +5,8 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> ⚠️ **Draft documentation.** This documentation is a work in progress and is not yet complete. Sections may be incomplete, inaccurate, or subject to change before the dataset's official release. Please treat all content as provisional.
+
 LAION-fMRI is an open fMRI dataset collected and curated by ViCCo-Group. This repository contains documentation for the dataset, including structure, specifications, and usage guidelines.
 
 ## 📚 Documentation

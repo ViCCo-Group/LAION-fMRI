@@ -24,6 +24,14 @@
         :target: https://github.com/ViCCo-Group/LAION-fMRI
 
 
+.. warning::
+
+   **Draft documentation.** This documentation is a work in progress and is not
+   yet complete. Sections may be incomplete, inaccurate, or subject to change
+   before the dataset's official release. Please treat all content as
+   provisional.
+
+
 What is LAION-fMRI?
 ===================
 
