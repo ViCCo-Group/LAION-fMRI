@@ -226,6 +226,7 @@ html_theme_options = {
 
 # Project info
 # html_logo = "_static/laion_fmri_logo_mosaic.png"
+html_favicon = "_static/favicon.ico"
 html_show_sourcelink = True
 html_show_sphinx = True
 
