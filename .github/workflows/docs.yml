@@ -1,52 +1,26 @@
-name: build docs
+name: Build and Deploy Docs
 
-# The events/triggers when it should be run
-# Here we set that the workflow should run
-# whenever there was a push or PR to the 
-# main branch
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-  pull_request_target:
-    branches: [main]  
 
-# We define the jobs that should be run
-# and the respective runner, ie virtual machine
-# Here, the workflow runs on the latest ubuntu
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.11"]
-
-    # Below we define all steps that should be
-    # run within the workflow        
     steps:
-
-    # Step 1: Checkout the repository
-    - uses: actions/checkout@v2
-
-    # Step 2: Set up conda environment
-    - name: Set up conda
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        environment-file: environment.yml
-        activate-environment: laion-fmri-dev
-        auto-activate-base: false
-
-    # Step 3: Build the docs 
-    - name: Build the docs
-      shell: bash -l {0}
-      run: |
-        cd docs && make clean html
-    - name: GitHub Pages action
-      uses: peaceiris/actions-gh-pages@v3.6.1
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs/build/html
-        commit_message: ${{ github.event.head_commit.message }}
+      - name: Deploy to herbert
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 85.214.87.238
+          username: johannes
+          key: ${{ secrets.HERBERT_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/laion-fmri
+            git fetch origin main
+            git reset --hard origin/main
+            /opt/venvs/laion-fmri/bin/pip install --quiet --upgrade \
+              'sphinx>=4.0' 'sphinx-rtd-theme>=1.0' myst-parser \
+              sphinx-copybutton sphinx-design sphinx-tabs numpydoc
+            . /opt/venvs/laion-fmri/bin/activate
+            make -C docs clean html
