@@ -8,12 +8,6 @@ find the files you need.
 At a Glance
 ===========
 
-.. todo::
-
-   Fill in the headline numbers below. This should be a quick "fact sheet"
-   — just the key numbers a user wants to see before deciding to use the
-   dataset. Keep it scannable; the detail pages have the full story.
-
 .. grid:: 2 2 4 4
     :gutter: 2
 
@@ -21,25 +15,25 @@ At a Glance
         :class-card: sd-border-0
         :shadow: sm
 
-        (placeholder)
+        5 deeply-sampled subjects
 
     .. grid-item-card:: Stimuli
         :class-card: sd-border-0
         :shadow: sm
 
-        (placeholder)
+        ~25,000 unique images
 
     .. grid-item-card:: Sessions
         :class-card: sd-border-0
         :shadow: sm
 
-        (placeholder)
+        165 sessions (34 per subject)
 
     .. grid-item-card:: Dataset Size
         :class-card: sd-border-0
         :shadow: sm
 
-        (placeholder)
+        .. todo:: Total size in TB
 
 What's Included
 ===============

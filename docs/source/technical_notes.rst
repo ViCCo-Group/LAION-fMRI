@@ -10,7 +10,7 @@ Coordinate Spaces & Conventions
 
 .. note::
 
-   Placeholder -- document the following once finalized:
+   Placeholder - document the following once finalized:
 
    * Axis ordering convention (e.g., LPI vs RAS) for NIfTI files
    * Origin location and how it relates to MNI coordinates
@@ -22,7 +22,7 @@ Beta Estimates
 
 .. note::
 
-   Placeholder -- document:
+   Placeholder - document:
 
    * Data type and scaling (e.g., int16 with a multiplier, or float32)
    * How to convert stored values to percent signal change (if applicable)
@@ -35,7 +35,7 @@ Noise Ceilings
 
 .. note::
 
-   Placeholder -- document:
+   Placeholder - document:
 
    * How noise ceilings are computed (formula)
    * How to convert the provided values to percentage variance explained
@@ -47,7 +47,7 @@ Stimulus-to-Beta Mapping
 
 .. note::
 
-   Placeholder -- document:
+   Placeholder - document:
 
    * Exact mapping between the 4th dimension of the beta volume and stimulus IDs
    * How repeated stimuli are handled (averaged? separate entries?)
@@ -59,7 +59,7 @@ File Sizes & Memory
 
 .. note::
 
-   Placeholder -- document:
+   Placeholder - document:
 
    * Approximate file sizes per subject for each data type
    * Memory requirements for loading full beta volumes
@@ -75,7 +75,7 @@ users run into.
 
 .. warning::
 
-   **All items below are placeholders** -- they will be filled in with
+   **All items below are placeholders** - they will be filled in with
    specific, actionable warnings as the dataset is finalized and users begin
    working with the data.
 
@@ -96,7 +96,7 @@ Noise ceiling misinterpretation
 -------------------------------
 
 (Placeholder) The noise ceiling is an upper bound, not a target. A model
-explaining 50% of the noise ceiling is not "only 50% accurate" -- it may be
+explaining 50% of the noise ceiling is not "only 50% accurate" - it may be
 near-optimal given the noise in the data.
 
 Wrong coordinate space
