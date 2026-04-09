@@ -3,26 +3,6 @@
    :width: 800px
    :alt: LAION-fMRI Logo
 
-|
-
-.. image:: https://img.shields.io/badge/python-3.11+-blue.svg
-        :target: https://www.python.org/downloads/release/python-380/
-
-.. image:: https://img.shields.io/badge/License-MIT-yellow.svg
-        :target: https://opensource.org/licenses/MIT
-
-.. image:: https://img.shields.io/github/repo-size/ViCCo-Group/LAION-fMRI.svg
-        :target: https://github.com/ViCCo-Group/LAION-fMRI
-
-.. image:: https://img.shields.io/github/issues/ViCCo-Group/LAION-fMRI.svg
-        :target: https://github.com/ViCCo-Group/LAION-fMRI/issues
-
-.. image:: https://img.shields.io/github/issues-pr/ViCCo-Group/LAION-fMRI.svg
-        :target: https://github.com/ViCCo-Group/LAION-fMRI/pulls
-
-.. image:: https://img.shields.io/github/license/ViCCo-Group/LAION-fMRI.svg
-        :target: https://github.com/ViCCo-Group/LAION-fMRI
-
 
 .. warning::
 
@@ -35,96 +15,125 @@
 What is LAION-fMRI?
 ===================
 
-**LAION-fMRI** is an open fMRI dataset .... This dataset provides ...
+.. todo::
 
+   Introductory description of the dataset (1 paragraph). Cover:
 
-This documentation provides comprehensive information about the dataset structure, 
-specifications, access methods, and usage guidelines.
+   - What it is (large-scale open fMRI dataset for visual neuroscience)
+   - Key numbers (N participants, N stimuli, N sessions)
+   - What's included at a high level
+   - Who it's for
+
+Key Features
+============
+
+.. todo::
+
+   Bullet list of 4-6 headline features. Keep each to one line + a brief
+   clarification. These should be the things that make someone want to use
+   the dataset.
+
+Getting Started
+===============
 
 .. grid:: 1 1 3 3
     :gutter: 2
 
-    .. grid-item-card:: 🚀 Quickstart
+    .. grid-item-card:: Quickstart
         :link: quickstart
         :link-type: doc
         :class-card: sd-border-0
         :shadow: sm
 
         Get started quickly with basic examples
-        
+
         +++
         Load and explore the data in minutes
 
-    .. grid-item-card:: 📊 Dataset Overview
-        :link: dataset_overview
+    .. grid-item-card:: Dataset at a Glance
+        :link: dataset_at_a_glance
         :link-type: doc
         :class-card: sd-border-0
         :shadow: sm
 
-        Complete dataset specifications
-        
-        +++
-        Stimuli, Experiments, behavioral & MRI
+        Overview of all data, spaces, and ROIs
 
-    .. grid-item-card:: 🔬 Processing Pipeline
-        :link: processing_pipeline
+        +++
+        What's in the dataset and what you need
+
+    .. grid-item-card:: Data Access
+        :link: data_access
         :link-type: doc
         :class-card: sd-border-0
         :shadow: sm
 
-        Analysis workflows and methods
-        
+        Download and access instructions
+
         +++
-        QC, preprocessing, and GLM analysis
+        AWS S3, Python package, and more
 
-Support & Contributing
-======================
-
-.. grid:: 1 1 2 2
-    :gutter: 3
-
-    .. grid-item-card:: 🐛 Report Issues
-        :class-card: sd-border-0
-        :shadow: sm
-
-        Found an issue or have questions?
-        
-        +++
-        `Open an issue on GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
-
-    .. grid-item-card:: 📚 Documentation
-        :class-card: sd-border-0
-        :shadow: sm
-
-        Explore the complete documentation
-        
-        +++
-        See the sections below for detailed information
 
 .. toctree::
    :maxdepth: 2
    :hidden:
    :caption: Getting Started
 
-   news
+   Home <self>
    quickstart
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Dataset Documentation
-
-   dataset_overview
-   processing_pipeline
+   dataset_at_a_glance
    data_access
-   faq
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Additional Information
+   :caption: Core Data
 
-   usage
+   anatomical_data
+   fmri_data
+   diffusion
+   rois
+   retinotopy
+   localizers
+   glmsingle_betas
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Stimuli & Splits
+
+   stimulus_data
+   train_test_splits
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Methods
+
+   experimental_design
+   mri_acquisition
+   preprocessing
+   quality_control
+   stimulus_selection
+   metadata_acquisition
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Reference
+
+   faq
+   technical_notes
+   example_methods_text
    contributing
    release-history
 
+
+Latest Updates
+==============
+
+.. todo::
+
+   Keep this short — 3-5 most recent updates, one line each. Move older
+   entries to :doc:`release-history` when the list gets long.
+
+* **YYYY-MM-DD** — (placeholder)

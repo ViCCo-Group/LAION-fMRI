@@ -1,84 +1,40 @@
-Contributing to LAION-fMRI
-===========================
+============
+Contributing
+============
 
-Thank you for your interest in contributing to the LAION-fMRI dataset documentation!
+.. todo::
 
-.. contents:: Table of Contents
-   :local:
-   :depth: 2
+   Review and finalize this page before the dataset release.
+
+We welcome contributions to the LAION-fMRI documentation and tooling.
 
 Ways to Contribute
-------------------
+==================
 
-There are several ways you can contribute to the LAION-fMRI dataset and documentation:
+- **Improve documentation** — fix typos, add examples, clarify explanations
+- **Report issues** — found something unclear or incorrect? Open a
+  `GitHub issue <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
+- **Share analysis examples** — scripts, notebooks, or visualizations that
+  might help other researchers
 
-**Improve documentation** 📚
-   Fix typos, add examples, clarify explanations, or write tutorials. Documentation improvements 
-   help make the dataset more accessible to researchers.
+Setting Up
+==========
 
-**Report issues** 🐛
-   Found something unclear or incorrect? Open an issue on GitHub with details about what needs 
-   to be improved.
-
-**Add examples** 💡
-   Share your analysis scripts, visualization examples, or preprocessing pipelines that might 
-   help other researchers.
-
-**Suggest improvements** ✨
-   Have ideas for additional metadata, better organization, or new features? We'd love to hear them!
-
-Getting Started
----------------
-
-Setting Up Your Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To contribute to the documentation:
-
-1. **Fork the repository** on GitHub
-
-2. **Clone your fork**:
+1. Fork and clone the repository:
 
    .. code-block:: bash
 
       git clone https://github.com/YOUR-USERNAME/LAION-fMRI.git
       cd LAION-fMRI
 
-3. **Create the development environment**:
+2. Create the development environment:
 
    .. code-block:: bash
 
       conda env create -f environment.yml
       conda activate laion-fmri-dev
 
-4. **Build the documentation**:
-
-   .. code-block:: bash
-
-      cd docs
-      make html
-
-The built documentation will be in ``docs/build/html/``.
-
-Making Changes
---------------
-
-Documentation Changes
-^^^^^^^^^^^^^^^^^^^^^
-
-The documentation source files are in ``docs/source/`` and written in reStructuredText (.rst).
-
-To make changes:
-
-1. **Create a new branch**:
-
-   .. code-block:: bash
-
-      git checkout -b improve-documentation
-
-2. **Edit the .rst files** in ``docs/source/``
-
-3. **Build and preview** your changes:
+3. Build the docs:
 
    .. code-block:: bash
 
@@ -86,48 +42,23 @@ To make changes:
       make html
       # Open docs/build/html/index.html in your browser
 
-4. **Commit your changes**:
+Making Changes
+==============
 
-   .. code-block:: bash
+1. Create a branch: ``git checkout -b your-branch-name``
+2. Edit files in ``docs/source/`` (reStructuredText format)
+3. Build and preview: ``make html``
+4. Commit, push, and open a Pull Request on GitHub
 
-      git add docs/source/your-file.rst
-      git commit -m "Improve documentation for XYZ"
+Style Guide
+===========
 
-5. **Push to your fork**:
-
-   .. code-block:: bash
-
-      git push origin improve-documentation
-
-6. **Open a Pull Request** on GitHub
-
-Documentation Style Guide
---------------------------
-
-When contributing to the documentation:
-
-* Use clear, concise language
-* Include examples where helpful
-* Follow the existing structure and formatting
-* Check for typos and grammatical errors
-* Ensure all code examples work correctly
-
-Code of Conduct
----------------
-
-Please be respectful and constructive in all interactions. We aim to create a welcoming 
-environment for all contributors.
+- Clear, concise language
+- Include code examples where helpful
+- Follow existing structure and formatting
+- Ensure code examples are correct and runnable
 
 Questions?
-----------
+==========
 
-If you have questions about contributing:
-
-* Open an issue on `GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
-* Check existing issues and pull requests for similar discussions
-
-Thank You!
-----------
-
-Your contributions help make this dataset more useful for the research community. Thank you 
-for taking the time to contribute!
+Open an issue on `GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_.

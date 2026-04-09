@@ -1,158 +1,324 @@
-/* Custom CSS for LAION-fMRI Documentation - ViCCo-Group color scheme */
+/* LAION-fMRI Documentation — re:vision theme overrides for Furo */
 
-/* Card hover effects */
-.sd-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+/* Google Fonts: Syne (headings), Outfit (body), Fira Code (mono) */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Syne:wght@500;600;700;800&display=swap');
+
+/* ---- Color tokens per mode ---- */
+
+/* Dark mode tokens */
+body[data-theme="dark"] {
+    --rv-bg: #0a0e1a;
+    --rv-surface: #111729;
+    --rv-surface-light: #1a2140;
+    --rv-slate: #2a3050;
+    --rv-slate-light: #4a5580;
+    --rv-fg: #e8eaf0;
+    --rv-fg-dim: #a0a8c0;
+    --rv-fg-muted: #6a7090;
+    --rv-cyan: #00d4ff;
+    --rv-cyan-dim: #006880;
+    --rv-coral: #ff6b4a;
+    --rv-coral-dim: #803626;
+    --rv-code-bg: #0d1117;
+    --rv-code-border: #2a3050;
+    --rv-inline-code-bg: #1a2140;
+    --rv-inline-code-fg: #00d4ff;
+    --rv-card-shadow-hover: rgba(0, 212, 255, 0.1);
+    --rv-heading-fg: #e8eaf0;
+    --rv-h3-fg: #00d4ff;
+    --rv-noise-opacity: 0.015;
 }
 
-.sd-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+/* Light mode tokens */
+body:not([data-theme="dark"]) {
+    --rv-bg: #ffffff;
+    --rv-surface: #f5f7fa;
+    --rv-surface-light: #eef1f6;
+    --rv-slate: #d8dde6;
+    --rv-slate-light: #b8c0d0;
+    --rv-fg: #1a1e2e;
+    --rv-fg-dim: #4a5068;
+    --rv-fg-muted: #8890a8;
+    --rv-cyan: #0090b0;
+    --rv-cyan-dim: #b0dce8;
+    --rv-coral: #e05535;
+    --rv-coral-dim: #fce8e4;
+    --rv-code-bg: #f5f7fa;
+    --rv-code-border: #d8dde6;
+    --rv-inline-code-bg: #eef1f6;
+    --rv-inline-code-fg: #0090b0;
+    --rv-card-shadow-hover: rgba(0, 144, 176, 0.1);
+    --rv-heading-fg: #1a1e2e;
+    --rv-h3-fg: #0090b0;
+    --rv-noise-opacity: 0;
 }
 
-/* Better spacing for grids */
-.sd-container-fluid {
-    padding-left: 0;
-    padding-right: 0;
-}
-
-/* Code blocks */
-.highlight pre {
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-/* Improved heading spacing */
-h1, h2, h3 {
-    margin-top: 1.5em;
-    margin-bottom: 0.8em;
+/* ---- Headings: Syne font ---- */
+h1, h2, h3, h4, h5, h6,
+.sidebar-title {
+    font-family: 'Syne', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    letter-spacing: -0.01em;
 }
 
 h1 {
-    border-bottom: 3px solid #5e35b1;
-    padding-bottom: 0.3em;
+    font-weight: 700 !important;
+    color: var(--rv-heading-fg) !important;
+    border-bottom: 2px solid var(--rv-slate) !important;
+    padding-bottom: 0.4em !important;
 }
 
 h2 {
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 0.2em;
+    font-weight: 600 !important;
+    color: var(--rv-heading-fg) !important;
 }
 
-/* Tab styling */
-.sd-tab-set {
-    margin-top: 1em;
-    margin-bottom: 1.5em;
+h3 {
+    color: var(--rv-h3-fg) !important;
+    font-weight: 600 !important;
 }
 
-/* Better link colors */
-a {
-    color: #5e35b1;
+/* ---- Links ---- */
+.main a,
+.sidebar-tree a,
+.toc-tree a {
+    transition: color 0.15s ease, opacity 0.15s ease;
 }
 
-a:hover {
-    color: #311b92;
-    text-decoration: underline;
+/* ---- Sidebar captions (section labels) ---- */
+.sidebar-tree .caption-text {
+    color: var(--rv-cyan) !important;
+    font-family: 'Syne', sans-serif !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
 }
 
-/* Card title styling */
-.sd-card-title {
-    font-size: 1.1em;
+/* Sidebar active item left border */
+.sidebar-tree li.current-page > a {
+    border-left: 3px solid var(--rv-cyan) !important;
+    padding-left: calc(1rem - 3px) !important;
+    color: var(--rv-cyan) !important;
+}
+
+/* ---- Code blocks ---- */
+pre {
+    background: var(--rv-code-bg) !important;
+    border: 1px solid var(--rv-code-border) !important;
+    border-radius: 8px !important;
+    padding: 1em 1.2em !important;
+    font-size: 0.85rem !important;
+    line-height: 1.7 !important;
+}
+
+code.literal {
+    background: var(--rv-inline-code-bg) !important;
+    color: var(--rv-inline-code-fg) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.88em !important;
+    border: 1px solid var(--rv-slate) !important;
+}
+
+/* ---- Cards (sphinx-design) ---- */
+.sd-card {
+    background: var(--rv-surface) !important;
+    border: 1px solid var(--rv-slate) !important;
+    border-radius: 12px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.sd-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 32px var(--rv-card-shadow-hover) !important;
+    border-color: var(--rv-cyan-dim) !important;
+}
+
+.sd-card .sd-card-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--rv-slate) !important;
     font-weight: 600;
-    color: #333;
 }
 
-/* Better table of contents */
-.toctree-wrapper .caption {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: #5e35b1;
-    margin-top: 1em;
+.sd-card .sd-card-footer {
+    border-top: 1px solid var(--rv-slate) !important;
+    color: var(--rv-fg-dim) !important;
+    font-size: 0.85em !important;
 }
 
-/* Admonition styling */
+/* ---- Admonitions ---- */
 .admonition {
-    border-radius: 8px;
-    border-left: 4px solid #5e35b1;
+    background: var(--rv-surface) !important;
+    border: 1px solid var(--rv-slate) !important;
+    border-radius: 8px !important;
+    border-left: 4px solid var(--rv-cyan) !important;
+    padding: 1em 1.2em !important;
 }
 
-.admonition-title {
-    font-weight: 600;
+.admonition.warning {
+    border-left-color: var(--rv-coral) !important;
 }
 
-/* Logo and header */
-.md-header {
-    background-color: #37474f;
+.admonition.warning > .admonition-title {
+    color: var(--rv-coral) !important;
 }
 
-/* Sidebar improvements */
-.md-sidebar__scrollwrap {
-    margin-top: 1em;
+.admonition.note > .admonition-title {
+    color: var(--rv-cyan) !important;
 }
 
-/* Footer styling */
-.md-footer {
-    background-color: #263238;
+.admonition > .admonition-title {
+    background: transparent !important;
+    font-weight: 600 !important;
+    font-family: 'Syne', sans-serif !important;
 }
 
-/* Code inline styling */
-code {
-    background-color: #f5f5f5;
-    padding: 2px 6px;
+/* ---- Tables ---- */
+table {
+    border-collapse: collapse !important;
+}
+
+th {
+    background: var(--rv-surface-light) !important;
+    color: var(--rv-fg) !important;
+    font-weight: 600 !important;
+    font-family: 'Syne', sans-serif !important;
+    border: 1px solid var(--rv-slate) !important;
+}
+
+td {
+    border: 1px solid var(--rv-slate) !important;
+}
+
+table td.stub {
+    color: var(--rv-fg) !important;
+    font-weight: 500 !important;
+}
+
+/* ---- Tabs (sphinx-tabs) ---- */
+.sphinx-tabs-tab {
+    background: var(--rv-surface) !important;
+    color: var(--rv-fg-dim) !important;
+    border: 1px solid var(--rv-slate) !important;
+    border-bottom: none !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 500 !important;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sphinx-tabs-tab[aria-selected="true"] {
+    background: var(--rv-surface-light) !important;
+    color: var(--rv-cyan) !important;
+    border-bottom: 2px solid var(--rv-cyan) !important;
+}
+
+.sphinx-tabs-panel {
+    background: var(--rv-surface) !important;
+    border: 1px solid var(--rv-slate) !important;
+    border-radius: 0 0 8px 8px !important;
+}
+
+/* ---- Dropdowns (FAQ) ---- */
+details {
+    background: var(--rv-surface) !important;
+    border: 1px solid var(--rv-slate) !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.75em !important;
+}
+
+details > summary {
+    color: var(--rv-fg) !important;
+    font-weight: 500 !important;
+    padding: 0.75em 1em !important;
+    cursor: pointer;
+}
+
+details > summary:hover {
+    color: var(--rv-cyan) !important;
+}
+
+/* ---- Scrollbar (dark mode only) ---- */
+body[data-theme="dark"] ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+body[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--rv-bg);
+}
+
+body[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--rv-slate-light);
     border-radius: 3px;
-    font-size: 0.9em;
 }
 
-/* Note and warning boxes */
-.note, .warning, .tip {
-    border-radius: 8px;
-    padding: 1em;
-    margin: 1em 0;
+body[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--rv-fg-muted);
 }
 
-.note {
-    background-color: #e3f2fd;
-    border-left: 4px solid #2196f3;
+/* ---- Copy button ---- */
+button.copybtn {
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
 }
 
-.warning {
-    background-color: #fff3e0;
-    border-left: 4px solid #ff9800;
+button.copybtn:hover {
+    opacity: 1;
+    color: var(--rv-cyan) !important;
 }
 
-.tip {
-    background-color: #e8f5e9;
-    border-left: 4px solid #4caf50;
+/* ---- Footer navigation ---- */
+.prev-next-area a {
+    border: 1px solid var(--rv-slate) !important;
+    border-radius: 8px !important;
+    transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-/* Improve grid spacing on mobile */
+.prev-next-area a:hover {
+    border-color: var(--rv-cyan-dim) !important;
+    background: var(--rv-surface) !important;
+}
+
+/* ---- Smooth scrolling ---- */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ---- Logo in sidebar ---- */
+.sidebar-brand {
+    padding: 1rem !important;
+}
+
+/* ---- Search highlight ---- */
+.highlighted {
+    background: rgba(0, 212, 255, 0.2) !important;
+    color: var(--rv-fg) !important;
+    border-radius: 2px;
+}
+
+/* ---- Badge images on landing page ---- */
+.body img[src*="shields.io"] {
+    margin-right: 4px;
+}
+
+/* ---- Subtle noise texture (dark mode only) ---- */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: var(--rv-noise-opacity, 0);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ---- Mobile improvements ---- */
 @media screen and (max-width: 768px) {
     .sd-container-fluid {
         padding-left: 1em;
         padding-right: 1em;
     }
-}
-
-/* Better button styling */
-.btn, .md-button {
-    border-radius: 6px;
-    padding: 0.5em 1.5em;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn:hover, .md-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Improve search box */
-.md-search__input {
-    border-radius: 6px;
-}
-
-/* Centered content improvements */
-.centered {
-    text-align: center;
-    font-size: 1.3em;
-    color: #555;
-    margin: 1em 0 2em 0;
 }

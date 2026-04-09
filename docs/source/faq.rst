@@ -2,100 +2,135 @@
 FAQ
 ===
 
-Frequently Asked Questions about the LAION-fMRI dataset.
+Frequently asked questions about the LAION-fMRI dataset.
 
-General Questions
-=================
+.. todo::
+
+   Fill in the answers below. Keep answers short (2-4 sentences) and
+   cross-reference the relevant doc page rather than duplicating content.
+   Remove questions that don't apply; add new ones as they come up from
+   actual users.
+
+General
+=======
 
 .. dropdown:: What is the LAION-fMRI dataset?
 
-.. dropdown:: Who can use this dataset?
+   .. todo:: Brief description + link to :doc:`dataset_at_a_glance`.
 
-.. dropdown:: How do I cite this dataset?
+.. dropdown:: How do I cite the dataset?
+
+   .. todo:: Citation + link to :doc:`example_methods_text`.
+
+.. dropdown:: What license is the data released under?
+
+   .. todo:: License name + any conditions.
+
+.. dropdown:: Who collected this data?
+
+   .. todo:: Brief attribution.
 
 Data Access
 ===========
 
 .. dropdown:: How do I download the dataset?
 
+   .. todo:: Brief answer + link to :doc:`data_access`.
+
 .. dropdown:: What is the total size of the dataset?
 
-.. dropdown:: Can I download only part of the dataset?
+   .. todo:: Total size + per-subject estimate.
 
-.. dropdown:: Do I need special permissions?
+.. dropdown:: Can I download only the parts I need?
 
-Technical Questions
-===================
+   .. todo:: Yes + brief instructions + link to :doc:`data_access`.
 
-.. dropdown:: What scanner was used?
+.. dropdown:: Do I need to sign a Data Use Agreement?
 
-.. dropdown:: What is the spatial resolution?
+   .. todo:: Answer + link to :doc:`data_access`.
 
-.. dropdown:: What tasks were performed?
+Working with the Data
+=====================
 
-.. dropdown:: Is the data already preprocessed?
+.. dropdown:: Which files do I need for encoding/decoding models?
 
-.. dropdown:: What file format is used?
+   .. todo:: Brief answer + link to "What Files Do I Need?" in
+   :doc:`dataset_at_a_glance`.
 
-Analysis Questions
-==================
+.. dropdown:: Which GLMsingle beta version should I use?
 
-.. dropdown:: What software should I use to analyze the data?
+   .. todo:: Brief recommendation + link to :doc:`glmsingle_betas`.
 
-.. dropdown:: How do I load the fMRI data?
+.. dropdown:: How do beta indices map to stimulus IDs?
 
-.. dropdown:: Can I use this data for machine learning?
+   .. todo:: Brief answer + link to :doc:`glmsingle_betas`.
 
-.. dropdown:: Where are the experimental events?
+.. dropdown:: What are the available train/test splits?
+
+   .. todo:: Brief answer + link to :doc:`train_test_splits`.
+
+.. dropdown:: What coordinate spaces are the data provided in?
+
+   .. todo:: List spaces + link to :doc:`dataset_at_a_glance`.
+
+.. dropdown:: How do I extract betas from an ROI?
+
+   .. todo:: Brief code snippet or link to :doc:`rois`.
+
+.. dropdown:: Are there shared stimuli across subjects?
+
+   .. todo:: Answer + link to :doc:`train_test_splits`.
+
+Acquisition & Preprocessing
+============================
+
+.. dropdown:: What MRI scanner and sequence were used?
+
+   .. todo:: Brief answer + link to :doc:`mri_acquisition`.
+
+.. dropdown:: What preprocessing pipeline was applied?
+
+   .. todo:: Brief answer + link to :doc:`preprocessing`.
+
+.. dropdown:: Is the raw (unprocessed) data available?
+
+   .. todo:: Yes + link to :doc:`fmri_data`.
+
+.. dropdown:: What confound regressors are provided?
+
+   .. todo:: Brief answer + link to :doc:`fmri_data`.
 
 Quality Control
 ===============
 
-.. dropdown:: How do I know if the data quality is good?
+.. dropdown:: Were any subjects or runs excluded?
 
-.. dropdown:: What motion threshold should I use?
+   .. todo:: Brief answer + link to :doc:`quality_control`.
 
-.. dropdown:: Are there subjects I should exclude?
+.. dropdown:: What motion thresholds were used for exclusion?
 
-Dataset Organization
-====================
+   .. todo:: Brief answer + link to :doc:`quality_control`.
 
-.. dropdown:: What does the folder structure mean?
+.. dropdown:: Where are the QC reports?
 
-.. dropdown:: What are the derivatives?
-
-.. dropdown:: Where are the stimulus images?
+   .. todo:: Brief answer + link to :doc:`quality_control`.
 
 Troubleshooting
 ===============
 
-.. dropdown:: I can't open the NIfTI files
+.. dropdown:: I get memory errors when loading the beta files
 
-.. dropdown:: The download failed or is incomplete
+   .. todo:: Tips (memory mapping with nibabel, loading ROI subsets, etc.)
 
-.. dropdown:: I get memory errors when loading data
+.. dropdown:: The download is slow or keeps failing
 
-Contributing
-============
+   .. todo:: Tips (resume downloads, use ``--only-show-errors``, etc.)
 
-.. dropdown:: Can I contribute to the dataset?
-
-.. dropdown:: How do I report issues?
-
-.. dropdown:: Can I add my own analyses to the documentation?
 
 More Questions?
 ===============
 
 If your question isn't answered here:
 
-* Check the detailed documentation sections
-* Open an issue on GitHub
-* Contact the dataset maintainers
-
-**Additional Resources:**
-
-* :doc:`quickstart` - Get started quickly
-* :doc:`dataset_overview` - Detailed dataset information
-* :doc:`processing_pipeline` - Analysis workflows
-* :doc:`data_access` - Download instructions
+* `Open an issue on GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
+* Check the detailed documentation pages listed in the sidebar

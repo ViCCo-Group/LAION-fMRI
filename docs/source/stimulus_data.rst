@@ -2,166 +2,79 @@
 Stimulus Data
 ==============
 
-The LAION-fMRI dataset includes comprehensive visual stimuli presented to participants during fMRI scanning.
+.. todo::
+
+   Introductory narrative (2-3 sentences): What stimuli are provided, how
+   many, and for which experiments (main experiment, localizer, etc.)?
+   Cross-reference :doc:`stimulus_selection` for how they were chosen.
+
+.. todo::
+
+   Add a large montage / grid figure showing a representative sample of
+   stimuli from the dataset (e.g., 50-100 random images in a grid).
+
+.. figure:: _static/placeholder_stimulus_montage.png
+   :align: center
+   :width: 90%
+   :alt: Montage of example stimuli
+
+   A representative sample of stimuli from the LAION-fMRI dataset.
+   *(placeholder — replace with actual figure)*
 
 Stimulus Sets
 =============
 
-The dataset may include multiple stimulus sets for different experiments:
+.. todo::
+
+   List all stimulus sets included in the dataset (main experiment,
+   localizer, n-back, etc.). For each set: how many images, what kind of
+   images, what experiment they belong to.
+
+File Organization
+=================
+
+.. todo::
+
+   Paste the actual directory tree under ``stimuli/``.
 
 .. code-block:: text
 
     stimuli/
-    ├── localizer/     # Functional localizer stimuli
-    └── n_back/        # N-back task stimuli
-
-Each set includes its own metadata file describing the specific stimuli and their properties.
-
-
-Visual Stimuli
-==============
-
-Stimulus Categories
--------------------
-
-The dataset includes a variety of visual stimuli:
-
-* **Natural images**: Photographs of natural scenes
-* **Object categories**: Various object types and categories
-* **Scene categories**: Indoor and outdoor scenes
-* **Face stimuli**: Human faces with varying expressions and identities
+    └── ... (placeholder — fill with actual file listing)
 
 .. figure:: _static/oodA_images.png
    :align: center
    :width: 60%
    :alt: Example stimuli from different categories
-   
-    Example stimuli from different categories in the LAION-fMRI dataset.
 
+   Example stimuli from different categories in the LAION-fMRI dataset.
 
-Stimulus Format
----------------
+Image Format
+============
 
-**Technical Specifications:**
+.. todo::
 
-* **Image files**: PNG/JPEG format
-* **Resolution**: 1024x1024 pixels
-* **Color space**: RGB
-* **Bit depth**: 8-bit per channel
+   Document the technical specs of the image files:
+
+   - File format (PNG, JPEG, etc.)
+   - Resolution (pixels)
+   - Color space and bit depth
+   - Any preprocessing applied (cropping, resizing, background)
 
 Stimulus Metadata
 =================
 
-File Organization
------------------
+For details on how the metadata was collected and computed (visual properties,
+semantic annotations, model-derived features), see
+:doc:`metadata_acquisition`.
 
-Stimulus files are organized as follows:
+.. todo::
 
-.. code-block:: text
+   Document the ``stimuli.tsv`` file:
 
-    stimuli/
-    ├── localizer/       # Functional localizer stimuli
-    │   ├── images/      # Stimulus image files
-    │   ├── category_01/
-    │   ├── category_02/
-    │   └── ...
-    │   ├── stimuli.tsv  # Stimuli list and reference
-    │   ├── stimuli.json # Stimuli metadata
-    │   └── README.txt   # Stimulus documentation 
-    └── n_back/          # N-back task stimuli
-
-Stimuli list and Reference
---------------------------
-
-The ``stimuli.tsv`` file contains a list of all stimulus images along with their feature values, identifiers and categories.
-
-.. code-block:: tsv
-
-    stimulus_id category    filename    luminance   contrast    experiment_id    duration
-    stim_0001   face    face_001.png    127.5   0.42    exp_01  500
-    stim_0002   scene   scene_001.png   115.2   0.38    exp_01  500
-    stim_0003   object  object_001.png  132.1   0.45    exp_02  750
-
-
-Metadata Fields
----------------
-
-Each stimulus includes comprehensive metadata:
-
-**Primary Fields:**
-
-* **stimulus_id**: Unique identifier for each stimulus
-* **category**: Primary category label
-* **subcategory**: Fine-grained category (if applicable)
-* **filename**: Image filename
-* **presentation_order**: Order of presentation in experiment
-
-**Visual Properties:**
-
-* **luminance**: Mean luminance value
-* **contrast**: RMS contrast
-* **spatial_frequency**: Dominant spatial frequency
-* **color_histogram**: RGB color distribution
-
-**Experimental Information:**
-
-* **experiment_id**: Which experiment used this stimulus
-* **condition**: Experimental condition
-* **trial_type**: Type of trial (e.g., target, distractor)
-* **duration**: Presentation duration in milliseconds
-
-Stimuli Metadata
-----------------
-
-The ``stimuli.json`` file contains detailed metadata for the stimulus set:
-
-.. code-block:: json
-
-    {
-        "Name": "LAION-fMRI Localizer Stimuli",
-        "BIDSVersion": "1.8.0",
-        "License": "CC-BY-4.0",
-        "Authors": [
-            "ViCCo-Group"
-        ],
-        "Description": "Visual stimuli used in the LAION-fMRI functional localizer experiment",
-        "StimulusPresentation": {
-            "ScreenSize": [1920, 1080],
-            "ScreenDistance": 60,
-            "ScreenRefreshRate": 60
-        },
-        "ImageProperties": {
-            "Resolution": [1024, 1024],
-            "ColorSpace": "RGB",
-            "BitDepth": 8,
-            "Format": "PNG"
-        },
-        "Categories": [
-            {
-                "CategoryID": "faces",
-                "CategoryName": "Human Faces",
-                "NumberOfStimuli": 120,
-                "Subcategories": ["neutral", "happy", "sad"]
-            },
-            {
-                "CategoryID": "scenes",
-                "CategoryName": "Natural Scenes",
-                "NumberOfStimuli": 120,
-                "Subcategories": ["indoor", "outdoor"]
-            },
-            {
-                "CategoryID": "objects",
-                "CategoryName": "Objects",
-                "NumberOfStimuli": 120,
-                "Subcategories": ["tools", "furniture", "vehicles"]
-            }
-        ],
-        "VisualProperties": {
-            "MeanLuminance": 127.5,
-            "ContrastRange": [0.2, 0.6],
-            "SpatialFrequencyRange": [0.5, 8.0]
-        }
-    }
+   - List every column and what it contains
+   - Show a few example rows (copy from the actual file)
+   - Document the companion ``stimuli.json`` sidecar if one exists
 
 Distribution of Stimuli
 =======================
@@ -170,84 +83,28 @@ Distribution of Stimuli
    :align: center
    :width: 70%
    :alt: Distribution of stimuli across categories
-   
+
    Distribution of stimuli across categories in the LAION-fMRI dataset.
+
+.. todo::
+
+   Add a brief description of what this figure shows. If there are additional
+   useful distribution plots (by visual properties, by source, etc.), add them.
 
 Loading Stimulus Data
 =====================
 
-Using the Python Package
--------------------------
+.. todo::
 
-The ``laion-fmri-dataloader`` package provides convenient functions for loading stimulus data:
+   Provide minimal code examples for:
 
-.. code-block:: python
+   1. Loading the metadata TSV
+   2. Loading an image file
+   3. Mapping stimulus IDs to beta indices (cross-ref :doc:`glmsingle_betas`)
 
-    from laion_fmri_dataloader import LAIONfMRIDataset
-    import matplotlib.pyplot as plt
-    from PIL import Image
-    
-    # Initialize dataset
-    dataset = LAIONfMRIDataset(data_dir='./laion-fmri-data')
-    
-    # Load stimulus metadata
-    stimuli_metadata = dataset.load_stimuli(stimulus_set='localizer')
-    print(f"Total stimuli: {len(stimuli_metadata)}")
-    print(f"Categories: {stimuli_metadata['category'].unique()}")
-    
-    # Load a specific stimulus image
-    stimulus_img = dataset.load_stimulus_image(
-        stimulus_set='localizer',
-        stimulus_id='stim_0001'
-    )
-    
-    # Display the image
-    plt.figure(figsize=(8, 8))
-    plt.imshow(stimulus_img)
-    plt.title(f"Stimulus: {stimuli_metadata.loc[0, 'stimulus_id']}")
-    plt.axis('off')
-    plt.show()
-    
-    # Get stimuli by category
-    face_stimuli = dataset.get_stimuli_by_category(
-        stimulus_set='localizer',
-        category='faces'
-    )
-    print(f"Face stimuli: {len(face_stimuli)}")
-    
-    # Load multiple images at once
-    images = dataset.load_stimulus_images(
-        stimulus_set='localizer',
-        stimulus_ids=['stim_0001', 'stim_0002', 'stim_0003']
-    )
+   If the ``laion-fmri-dataloader`` Python package has a stable API, show
+   examples using it. Otherwise, show plain pandas + PIL.
 
-Filtering Stimuli
------------------
-
-.. code-block:: python
-
-
-
-    # Get all face stimuli
-    face_stimuli = stimuli[stimuli['category'] == 'face']
-    
-    # Get stimuli from specific experiment
-    exp1_stimuli = stimuli[stimuli['experiment_id'] == 'exp_01']
-    
-    # Filter by visual properties
-    high_contrast = stimuli[stimuli['contrast'] > 0.4]
-
-
-Stimulus Validation
-===================
-
-Quality Checks
---------------
-
-All stimuli have undergone quality control:
-
-* **Resolution verification**: All images meet minimum resolution requirements
-* **Color space validation**: Correct RGB color space
-* **Duplicate detection**: No duplicate images
-* **Metadata completeness**: All required fields populated
+See also :doc:`train_test_splits` for how stimuli are partitioned into
+training and test sets.
 

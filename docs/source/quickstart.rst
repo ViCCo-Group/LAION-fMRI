@@ -4,142 +4,47 @@ Quickstart
 
 This guide will help you get started with the LAION-fMRI dataset quickly.
 
-Getting Access
-==============
+.. todo::
 
-The LAION-fMRI dataset can be accessed in two ways:
+   This page should be written once the data access method and file paths are
+   finalized. It should give a user the shortest path from "I have nothing"
+   to "I'm looking at data in Python." Keep it under 5 minutes of reading.
 
-**1. Direct AWS Access**
+   **Avoid duplicating** :doc:`data_access` — this page should be brief and
+   link there for details.
 
-* Direct download from AWS S3 buckets
-* Suitable for downloading entire dataset or specific subjects
-* Provides full control over data storage and management
-* Requires AWS CLI or similar tools
+Getting the Data
+================
 
-**2. Python Package (laion_fmri_dataloader)**
+.. todo::
 
-* Streamlined Python interface for data access
-* Built-in data validation and integrity checks
-* Automatic handling of file paths and metadata
-* Convenient for programmatic access and integration into analysis pipelines
+   Minimal download instructions — just enough to get one subject's betas
+   and stimuli. Point to :doc:`data_access` for full options (all subjects,
+   raw data, etc.).
 
-.. note::
-   
-   Some parts of the dataset require a **Data Use Agreement (DUA)**. Please review 
-   the :doc:`data_access` section for details on accessing restricted data components.
+   Decide: is the primary access method AWS S3, a Python package, or
+   something else? Show only one method here; put alternatives in
+   :doc:`data_access`.
 
-Access Methods
---------------
+Loading Betas and Stimuli
+=========================
 
-Choose your preferred method for accessing the LAION-fMRI dataset:
+.. todo::
 
-.. tab-set::
+   A single, minimal code example that:
 
-    .. tab-item:: AWS S3 Access
+   1. Loads single-trial betas for one subject
+   2. Loads the stimulus metadata
+   3. Shows how they map to each other
 
-        **Prerequisites:**
-        
-        * AWS CLI installed: ``pip install awscli``
-        * AWS credentials (for restricted data only)
-
-        **Download entire dataset:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/ ./laion-fmri-data/ --no-sign-request
-
-        **Download specific subject:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/sub-01/ ./laion-fmri-data/sub-01/ --no-sign-request
-
-        **Download derivatives only:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/derivatives/ ./laion-fmri-data/derivatives/ --no-sign-request
-
-        .. note::
-           
-           For restricted data requiring DUA, remove ``--no-sign-request`` and 
-           configure AWS credentials with appropriate access permissions.
-
-    .. tab-item:: Python Package
-
-        **Installation:**
-
-        .. code-block:: bash
-
-           pip install laion-fmri-dataloader
-
-        **Basic Usage:**
-
-        .. code-block:: python
-
-           from laion_fmri_dataloader import LAIONfMRIDataset
-           
-           # Initialize dataset
-           dataset = LAIONfMRIDataset(data_dir='./laion-fmri-data')
-           
-           # Download specific subject
-           dataset.download_subject('sub-01')
-           
-           # Load functional data
-           func_data = dataset.load_functional('sub-01', task='experiment', run=1)
-           
-           # Load stimulus metadata
-           stimuli = dataset.load_stimuli()
-           
-           print(f"Functional data shape: {func_data.shape}")
-           print(f"Number of stimuli: {len(stimuli)}")
-
-        **With authentication (restricted data):**
-
-        .. code-block:: python
-
-           # Configure credentials
-           dataset = LAIONfMRIDataset(
-               data_dir='./laion-fmri-data',
-               aws_access_key='YOUR_ACCESS_KEY',
-               aws_secret_key='YOUR_SECRET_KEY'
-           )
-           
-           # Download restricted components
-           dataset.download_subject('sub-01', include_restricted=True)
-
-
-
-Quick Example
-=============
-
-Loading fMRI Data
------------------
-
-.. code-block:: python
-
-    import nibabel as nib
-    
-    # Load a functional MRI scan
-    fmri_img = nib.load('path/to/sub-01/func/sub-01_task-experiment_bold.nii.gz')
-    fmri_data = fmri_img.get_fdata()
-    
-    print(f"Data shape: {fmri_data.shape}")
-
-Working with Stimulus Data
----------------------------
-
-.. code-block:: python
-
-    import pandas as pd
-    
-    # Load stimulus information
-    stimuli = pd.read_csv('path/to/stimuli/stimulus_metadata.csv')
-    print(stimuli.head())
+   This should use correct file paths and column names — do not add until
+   those are finalized.
 
 Next Steps
 ==========
 
-* Explore the :doc:`dataset_overview` to understand the complete dataset structure
-* Review the :doc:`processing_pipeline` for analysis workflows
-* Check the :doc:`faq` for common questions
+* :doc:`dataset_at_a_glance` — full dataset overview and "what files do I need"
+* :doc:`glmsingle_betas` — details on the beta estimates
+* :doc:`stimulus_data` — stimulus images and metadata
+* :doc:`train_test_splits` — train/test partitioning
+* :doc:`faq` — common questions

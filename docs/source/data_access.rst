@@ -2,226 +2,87 @@
 Data Access
 ===========
 
-How to Access the LAION-fMRI Dataset
-=====================================
+.. todo::
 
-The LAION-fMRI dataset can be accessed in two ways:
+   Introductory narrative (2-3 sentences): Where is the data hosted, what
+   are the access options, and is any part restricted?
 
-**1. Direct AWS Access**
-
-* Direct download from AWS S3 buckets
-* Suitable for downloading entire dataset or specific subjects
-* Provides full control over data storage and management
-* Requires AWS CLI or similar tools
-
-**2. Python Package (laion_fmri_dataloader)**
-
-* Streamlined Python interface for data access
-* Built-in data validation and integrity checks
-* Automatic handling of file paths and metadata
-* Convenient for programmatic access and integration into analysis pipelines
+   **Note:** This page overlaps with :doc:`quickstart`. Consider whether they
+   should be merged or clearly differentiated (quickstart = minimal getting
+   started, this page = comprehensive reference for all access options).
 
 Access Requirements
--------------------
+===================
 
-Some parts of the dataset require a **Data Use Agreement (DUA)**.
+.. todo::
 
-By accessing the LAION-fMRI dataset, you agree to:
+   Document:
 
-* Use the data for research purposes only
-* Properly cite the dataset in publications
-* Not redistribute the raw data without permission
-* Follow ethical guidelines for human subjects data
+   - Is there a Data Use Agreement (DUA)? If so, what does it cover?
+   - Is any part of the data restricted (e.g., raw anatomical scans)?
+   - Where / how do users register for access?
+   - What are the terms of use (research only, citation required, etc.)?
 
-Registration
-------------
+Download Methods
+================
 
-For restricted data requiring a DUA:
+.. todo::
 
-1. Visit the dataset homepage
-2. Complete the registration form
-3. Receive access credentials
-4. Configure your AWS credentials or Python package with appropriate permissions
+   Document all supported download methods. For each one:
 
-Download Instructions
-=====================
+   - Prerequisites (tools, credentials)
+   - Commands to download full dataset, single subject, derivatives only,
+     stimuli only
+   - How to handle authentication for restricted data
 
-Choose your preferred method for accessing the dataset:
+   Candidate methods to document:
 
-.. tab-set::
+   - AWS S3 (with ``aws s3 sync``)
+   - Python package (if ``laion-fmri-dataloader`` has a stable API)
+   - Direct HTTP / other
 
-    .. tab-item:: AWS S3 Access
-
-        **Prerequisites:**
-        
-        * AWS CLI installed: ``pip install awscli``
-        * AWS credentials (for restricted data only)
-
-        **Download entire dataset:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/ ./laion-fmri-data/ --no-sign-request
-
-        **Download specific subject:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/sub-01/ ./laion-fmri-data/sub-01/ --no-sign-request
-
-        **Download derivatives only:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/derivatives/ ./laion-fmri-data/derivatives/ --no-sign-request
-
-        **Download stimuli:**
-
-        .. code-block:: bash
-
-           aws s3 sync s3://laion-fmri/stimuli/ ./laion-fmri-data/stimuli/ --no-sign-request
-
-        .. note::
-           
-           For restricted data requiring DUA, remove ``--no-sign-request`` and 
-           configure AWS credentials with appropriate access permissions.
-
-    .. tab-item:: Python Package
-
-        **Installation:**
-
-        .. code-block:: bash
-
-           pip install laion-fmri-dataloader
-
-        **Basic Usage:**
-
-        .. code-block:: python
-
-           from laion_fmri_dataloader import LAIONfMRIDataset
-           
-           # Initialize dataset
-           dataset = LAIONfMRIDataset(data_dir='./laion-fmri-data')
-           
-           # Download specific subject
-           dataset.download_subject('sub-01')
-           
-           # Load functional data
-           func_data = dataset.load_functional('sub-01', task='experiment', run=1)
-           
-           # Load stimulus metadata
-           stimuli = dataset.load_stimuli()
-           
-           print(f"Functional data shape: {func_data.shape}")
-           print(f"Number of stimuli: {len(stimuli)}")
-
-        **With authentication (restricted data):**
-
-        .. code-block:: python
-
-           # Configure credentials
-           dataset = LAIONfMRIDataset(
-               data_dir='./laion-fmri-data',
-               aws_access_key='YOUR_ACCESS_KEY',
-               aws_secret_key='YOUR_SECRET_KEY'
-           )
-           
-           # Download restricted components
-           dataset.download_subject('sub-01', include_restricted=True)
-
-Dataset Components
-==================
-
-The dataset is organized into several components:
-
-* **Raw data**: Unprocessed fMRI and anatomical scans
-* **Derivatives**: Preprocessed data and analysis results  
-* **Stimuli**: Visual stimuli used in experiments
-* **Behavioral**: Behavioral response data
-* **Metadata**: Experimental parameters and subject information
-
-File Organization
-=================
-
-After downloading, the dataset structure will be:
-
-.. code-block:: text
-
-    laion-fmri/
-    ├── dataset_description.json
-    ├── README
-    ├── CHANGES
-    ├── participants.tsv
-    ├── participants.json
-    ├── stimuli/
-    ├── sub-01/
-    ├── sub-02/
-    ├── ...
-    └── derivatives/
-
-Data Size
----------
-
-
-Storage Recommendations
------------------------
-
-
-Data Formats
+Dataset Size
 ============
 
-File Formats Used
------------------
+.. todo::
 
-**Neuroimaging Data:**
+   Document:
 
-* NIfTI format (.nii.gz): Functional and anatomical MRI data
-* JSON sidecar files: Metadata and acquisition parameters
-
-**Behavioral Data:**
-
-* TSV format (.tsv): Event timing and responses
-* JSON format (.json): Metadata and experimental parameters
-
-**Stimulus Data:**
-
-* PNG/JPEG: Image files
-* TSV/JSON: Stimulus metadata
-
-Software Requirements
----------------------
+   - Total dataset size
+   - Size per subject (approximate)
+   - Size of major components (raw, derivatives, stimuli)
+   - Storage recommendations
 
 Data Verification
 =================
 
+.. todo::
+
+   Is there a checksum file or verification script? How can users confirm
+   their download is complete and uncorrupted?
+
+Software Requirements
+=====================
+
+.. todo::
+
+   What software do users need to work with the data? Minimum list:
+
+   - Python version
+   - Key packages (nibabel, pandas, etc.)
+   - Any dataset-specific package
+
+Citation
+========
+
+.. todo::
+
+   Add the full citation once the paper is published. Include BibTeX.
 
 Support
 =======
 
 For data access issues or questions:
 
-* **Email**: support@laion-fmri.org (placeholder)
-* **GitHub Issues**: `Report issues <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
-* **Documentation**: Review this documentation for common questions
-
-Citation
-========
-
-If you use this dataset, please cite:
-
-.. code-block:: text
-
-    LAION-fMRI Dataset (2026). ViCCo-Group.
-    Available at: https://github.com/ViCCo-Group/LAION-fMRI
-
-BibTeX entry:
-
-.. code-block:: bibtex
-
-    @dataset{laion_fmri_2026,
-      title={LAION-fMRI: Open fMRI Dataset},
-      author={ViCCo-Group},
-      year={2026},
-      publisher={ViCCo-Group},
-      url={https://github.com/ViCCo-Group/LAION-fMRI}
-    }
+* `Open an issue on GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
+* Check the :doc:`faq` for common questions
