@@ -43,7 +43,7 @@ neuroimaging resources assembled to date.
 Getting Started
 ===============
 
-.. grid:: 1 1 3 3
+.. grid:: 1 2 2 2
     :gutter: 2
 
     .. grid-item-card:: Quickstart
@@ -78,6 +78,16 @@ Getting Started
 
         +++
         AWS S3, Python package, and more
+
+    .. grid-item-card:: Brain Viewer
+        :link: https://laion-fmri.hebartlab.com/brain/
+        :class-card: sd-border-0
+        :shadow: sm
+
+        Interactive 3D voxel explorer
+
+        +++
+        Browse responses and concept maps in-browser
 
 
 .. toctree::
