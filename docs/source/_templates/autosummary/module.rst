@@ -37,11 +37,16 @@
    .. rubric:: {{ _('Classes') }}
 
    .. autosummary::
-      :toctree:
-      :template: autosummary/class.rst
    {% for item in classes %}
       {{ item }}
    {%- endfor %}
+
+   {% for item in classes %}
+   .. autoclass:: {{ item }}
+      :members:
+      :show-inheritance:
+      :inherited-members:
+   {% endfor %}
    {% endif %}
    {% endblock %}
 
