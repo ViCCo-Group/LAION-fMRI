@@ -40,7 +40,7 @@ All other uses are strictly prohibited. In particular, you may NOT:
   4. Create derivative works from the images for any purpose
      other than non-commercial academic research.
 
-Full terms: https://laion-fmri.github.io/terms
+Full terms: https://laion-fmri.hebartlab.com/terms
 """
 
 STIMULI_LICENSE_PROMPT = 'Type "I AGREE" to accept: '

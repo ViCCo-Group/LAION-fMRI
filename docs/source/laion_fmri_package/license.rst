@@ -83,4 +83,4 @@ The full text shown at the prompt when ``include_stimuli=True``:
      4. Create derivative works from the images for any purpose
         other than non-commercial academic research.
 
-   Full terms: https://laion-fmri.github.io/terms
+   Full terms: https://laion-fmri.hebartlab.com/terms
