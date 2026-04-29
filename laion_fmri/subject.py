@@ -1,8 +1,7 @@
 """Subject class for accessing per-subject data files.
 
-This module is a thin file-loader. It intentionally avoids
-operations like averaging across sessions: every accessor maps to
-exactly one file in the bucket layout.
+Every accessor maps to exactly one file in the bucket layout:
+no averaging, concatenation, or rebinning across sessions.
 """
 
 import warnings

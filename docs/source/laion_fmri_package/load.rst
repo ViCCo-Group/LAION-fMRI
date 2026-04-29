@@ -8,10 +8,10 @@ Load
 
    sub = load_subject("sub-03")
 
-A ``Subject`` is a thin file-loader. **Every accessor maps to
-exactly one file** -- no averaging, no concatenation, no
-rebinning. If you want those operations, you do them yourself
-on the returned arrays.
+A ``Subject`` reads one file per accessor. **Every accessor
+maps to exactly one file on disk** -- no averaging, no
+concatenation, no rebinning. Those operations are left to the
+caller, on the returned arrays.
 
 Core accessors
 ==============
@@ -94,12 +94,60 @@ how much you pull into RAM**. A few rules of thumb:
 * **Avoid loading whole sessions if you only need a slice.**
   Build a ``mask=`` array yourself, or chain ``roi`` +
   ``nc_threshold``, before calling ``get_betas``.
-* **Don't concatenate sessions blindly.** Trial counts differ
-  by session; verify shapes match before ``np.concatenate``.
+* **Multi-session results are dicts, not stacked arrays.**
+  Trial counts vary per session, so passing a list to
+  ``get_betas`` returns a ``dict[ses, ndarray]``. All sessions
+  share the same brain mask within a subject, so the voxel
+  axis matches and ``np.concatenate(list(out.values()),
+  axis=0)`` is the right stack -- you just have to align
+  trial-level metadata yourself when you do.
 
 PyTorch users: ``to_torch_dataset(...)`` exposes the same
 accessors lazily per ``__getitem__`` call, so total RAM stays
 proportional to batch size rather than the dataset.
+
+Common workflow: per-session z-scoring + train/test split
+=========================================================
+
+A frequent recipe -- load every session for one subject,
+z-score betas within each session, then split shared vs.
+unique stimuli into test vs. train -- composes from the
+existing accessors:
+
+.. code-block:: python
+
+   import numpy as np
+   from laion_fmri.subject import load_subject
+
+   sub = load_subject("sub-03")
+
+   train_chunks, test_chunks = [], []
+   for ses in sub.get_sessions():
+       betas = sub.get_betas(session=ses)             # (n_trials, n_voxels)
+       z = (betas - betas.mean(0)) / betas.std(0)     # within-session z-score
+
+       trials = sub.get_trial_info(session=ses)
+       is_shared = trials["label"].str.startswith("shared_").to_numpy()
+
+       train_chunks.append(z[~is_shared])
+       test_chunks.append(z[is_shared])
+
+   X_train = np.concatenate(train_chunks, axis=0)
+   X_test = np.concatenate(test_chunks, axis=0)
+
+The ``stimuli="shared"`` / ``"unique"`` filter on
+``get_betas`` does the same trial selection in one call if you
+prefer it without the manual ``label`` parse:
+
+.. code-block:: python
+
+   train = sub.get_betas(session=ses, stimuli="unique")
+   test = sub.get_betas(session=ses, stimuli="shared")
+
+For ROI-restricted variants, add ``roi="visual"`` (or any
+``mask=`` / ``nc_threshold=`` filter) to the same calls --
+voxel selection composes naturally and applies before the
+z-score.
 
 Errors you may encounter
 ========================

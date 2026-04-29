@@ -24,6 +24,20 @@ A typical session looks like:
    sub = load_subject("sub-03")
    betas = sub.get_betas(session="ses-01")     # (n_trials, n_voxels), float32
 
+The same three workflow steps -- *configure*, *inspect*,
+*download* -- are also exposed as a ``laion-fmri`` shell
+command, installed automatically by ``pip``/``uv``:
+
+.. code-block:: bash
+
+   laion-fmri config   --data-dir ./laion_fmri_data
+   laion-fmri info
+   laion-fmri download --subject sub-03
+
+Loading still happens from Python; the CLI covers configure,
+inspect, and download. See :doc:`download` for full
+``laion-fmri download`` semantics.
+
 The cards below walk through each step in detail.
 
 .. grid:: 1 2 2 3
