@@ -21,6 +21,7 @@ jobs:
             git reset --hard origin/main
             /opt/venvs/laion-fmri/bin/pip install --quiet --upgrade \
               'sphinx>=4.0' 'sphinx-rtd-theme>=1.0' myst-parser \
-              sphinx-copybutton sphinx-design sphinx-tabs numpydoc
+              sphinx-copybutton sphinx-design sphinx-tabs numpydoc \
+              sphinx-gallery
             . /opt/venvs/laion-fmri/bin/activate
             make -C docs clean html
