@@ -1,6 +1,6 @@
-==============================
-``laion_fmri`` Python Package
-==============================
+==============
+``laion_fmri``
+==============
 
 A pure data downloader and wrangler for the LAION-fMRI dataset.
 The package mirrors the bucket layout to your local disk via the
@@ -17,7 +17,7 @@ A typical session looks like:
    from laion_fmri.subject import load_subject
 
    dataset_initialize("./laion_fmri_data")
-   set_aws_credentials(access_key_id="AKIA...", secret_access_key="...")
+   set_aws_credentials(access_key_id="...", secret_access_key="...")
 
    download(subject="sub-03", ses="ses-01", n_jobs=4)
 
