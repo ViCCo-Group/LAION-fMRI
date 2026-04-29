@@ -21,7 +21,25 @@ extensions = [
     "sphinx_design",
     "sphinx_tabs.tabs",
     "sphinx.ext.todo",
+    "sphinx_gallery.gen_gallery",
 ]
+
+# -- Sphinx-gallery configuration -----------------------------------------
+#
+# Examples live under <repo>/examples and are rendered as a gallery at
+# docs/source/auto_examples. We deliberately do NOT execute them at build
+# time -- they call download() / load_subject(), which would require AWS
+# credentials and several GB of bandwidth. ``plot_gallery=False`` keeps
+# the source narratives + code blocks but skips execution.
+
+sphinx_gallery_conf = {
+    "examples_dirs": ["../../examples"],
+    "gallery_dirs": ["auto_examples"],
+    "filename_pattern": r"plot_",
+    "plot_gallery": False,
+    "remove_config_comments": True,
+    "doc_module": ("laion_fmri",),
+}
 
 # Configuration for sphinx-copybutton
 copybutton_prompt_text = (

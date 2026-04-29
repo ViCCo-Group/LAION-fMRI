@@ -3,3 +3,41 @@
 
 # Ignore Sphinx build output
 /docs/build/*
+
+# Sphinx-gallery generated output
+/docs/source/auto_examples/
+/docs/source/sg_execution_times.rst
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+
+# uv
+uv.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Avoid constitution files
+.claude/
+
+# Local example/demo data dirs
+laion_fmri_data/
+laion_fmri_init_demo/
+laion_fmri_quickstart/
