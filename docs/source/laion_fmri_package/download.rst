@@ -73,3 +73,37 @@ of 4 typically opens ~40 concurrent S3 connections.
 
 Bad inputs (``n_jobs=0``, negative, very large, non-int) are
 detected, warn, and fall back to a working value.
+
+Command-line interface
+======================
+
+The same download flow is reachable from the shell via the
+``laion-fmri`` console script (installed by ``pip``/``uv``):
+
+.. code-block:: bash
+
+   laion-fmri config   --data-dir ./laion_fmri_data
+   laion-fmri info
+   laion-fmri download --subject sub-03
+   laion-fmri download --subject sub-03 --include-stimuli
+   laion-fmri download --subject all
+
+The CLI mirrors the Python ``download(...)`` signature: every
+BIDS-entity filter the function accepts is exposed as a
+flag, each accepting one or more values:
+
+.. code-block:: bash
+
+   # one session of single-trial betas, parallelized
+   laion-fmri download \
+       --subject sub-03 \
+       --ses ses-01 \
+       --desc singletrial --stat effect \
+       --extension nii.gz \
+       --n-jobs 4
+
+   # session plus subject-level summaries, in one call
+   laion-fmri download --subject sub-03 --ses ses-01 averages
+
+Run ``laion-fmri --help`` (or ``laion-fmri download --help``)
+for the full flag list.

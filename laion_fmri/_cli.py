@@ -4,6 +4,17 @@ import argparse
 import sys
 
 
+_FILTER_ENTITIES = (
+    ("ses", "BIDS session ID, e.g. ses-01 or 'averages'"),
+    ("task", "BIDS task entity, e.g. images"),
+    ("space", "BIDS space entity, e.g. T1w"),
+    ("desc", "BIDS desc entity, e.g. singletrial"),
+    ("stat", "BIDS stat entity, e.g. effect"),
+    ("suffix", "BIDS suffix, e.g. statmap or events"),
+    ("extension", "File extension, e.g. nii.gz or tsv"),
+)
+
+
 def main(argv=None):
     """Entry point for the laion-fmri CLI."""
     parser = argparse.ArgumentParser(
@@ -28,6 +39,15 @@ def main(argv=None):
     download_parser.add_argument(
         "--subject", required=True,
         help="Subject ID (e.g., sub-01) or 'all'",
+    )
+    for entity, description in _FILTER_ENTITIES:
+        download_parser.add_argument(
+            f"--{entity}", nargs="+", default=None,
+            help=f"{description} (one or more values).",
+        )
+    download_parser.add_argument(
+        "--n-jobs", type=int, default=1,
+        help="Number of parallel `aws s3 cp` workers (default: 1).",
     )
     download_parser.add_argument(
         "--include-stimuli", action="store_true",
@@ -69,6 +89,14 @@ def _handle_download(args):
     from laion_fmri.download import download
     download(
         subject=args.subject,
+        ses=args.ses,
+        task=args.task,
+        space=args.space,
+        desc=args.desc,
+        stat=args.stat,
+        suffix=args.suffix,
+        extension=args.extension,
+        n_jobs=args.n_jobs,
         include_stimuli=args.include_stimuli,
     )
 
