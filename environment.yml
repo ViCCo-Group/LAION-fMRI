@@ -12,4 +12,5 @@ dependencies:
     - sphinx-copybutton
     - sphinx-design
     - sphinx-tabs
+    - sphinx-gallery
     - numpydoc
