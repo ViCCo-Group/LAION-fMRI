@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "laion-fmri"
+version = "0.1.0"
+description = "Data loading package for the LAION-fMRI dataset"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.10"
+authors = [
+    {name = "ViCCo Group"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "numpy>=1.24",
+    "h5py>=3.0",
+    "nibabel>=5.0",
+    "pandas>=2.0",
+    "awscli>=1.30",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0", "torchvision>=0.15", "Pillow>=9.0"]
+bids = ["pybids>=0.16"]
+images = ["Pillow>=9.0"]
+
+[project.scripts]
+laion-fmri = "laion_fmri._cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "flake8>=6.0",
+    "Pillow>=9.0",
+]
+docs = [
+    "sphinx>=5.0",
+    "sphinx-copybutton>=0.5",
+    "sphinx-design>=0.4",
+    "sphinx-tabs>=3.4",
+    "sphinx-gallery>=0.14",
+    "myst-parser>=2.0",
+    "numpydoc>=1.5",
+    "furo>=2024.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "network: tests requiring network access (deselect with '-m not network')",
+]
+
+[tool.flake8]
+max-line-length = 79
+extend-ignore = ["E203", "W503"]
+per-file-ignores = [
+    "examples/*:E402",
+]
