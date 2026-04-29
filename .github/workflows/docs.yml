@@ -19,9 +19,10 @@ jobs:
             cd /opt/laion-fmri
             git fetch origin main
             git reset --hard origin/main
+            /opt/venvs/laion-fmri/bin/pip install --quiet -e .
             /opt/venvs/laion-fmri/bin/pip install --quiet --upgrade \
-              'sphinx>=4.0' 'sphinx-rtd-theme>=1.0' myst-parser \
-              sphinx-copybutton sphinx-design sphinx-tabs numpydoc \
-              sphinx-gallery
+              'sphinx>=4.0' 'sphinx-rtd-theme>=1.0' 'docutils>=0.21,<0.23' \
+              myst-parser sphinx-copybutton sphinx-design sphinx-tabs \
+              numpydoc sphinx-gallery
             . /opt/venvs/laion-fmri/bin/activate
             make -C docs clean html

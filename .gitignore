@@ -8,6 +8,9 @@
 /docs/source/auto_examples/
 /docs/source/sg_execution_times.rst
 
+# Autosummary-generated API stubs
+/docs/source/laion_fmri_package/_autosummary/
+
 # Python
 __pycache__/
 *.py[cod]

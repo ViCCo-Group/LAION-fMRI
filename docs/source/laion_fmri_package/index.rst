@@ -128,6 +128,19 @@ The cards below walk through each step in detail.
       +++
       ``plot_01`` … ``plot_04``
 
+   .. grid-item-card:: API reference
+      :link: api
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Auto-generated reference for every public module, class,
+      and function.
+
+      +++
+      ``brain`` · ``config`` · ``discovery`` · ``download`` ·
+      ``group`` · ``io`` · ``subject`` · ``torch_data``
+
 
 .. toctree::
    :maxdepth: 1
@@ -139,3 +152,4 @@ The cards below walk through each step in detail.
    discover
    download
    load
+   api
