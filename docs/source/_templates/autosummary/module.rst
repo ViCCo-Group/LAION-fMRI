@@ -7,10 +7,13 @@
    .. rubric:: Module Attributes
 
    .. autosummary::
-      :toctree:
    {% for item in attributes %}
       {{ item }}
    {%- endfor %}
+
+   {% for item in attributes %}
+   .. autodata:: {{ item }}
+   {% endfor %}
    {% endif %}
    {% endblock %}
 
@@ -19,10 +22,13 @@
    .. rubric:: {{ _('Functions') }}
 
    .. autosummary::
-      :toctree:
    {% for item in functions %}
       {{ item }}
    {%- endfor %}
+
+   {% for item in functions %}
+   .. autofunction:: {{ item }}
+   {% endfor %}
    {% endif %}
    {% endblock %}
 
@@ -44,10 +50,13 @@
    .. rubric:: {{ _('Exceptions') }}
 
    .. autosummary::
-      :toctree:
    {% for item in exceptions %}
       {{ item }}
    {%- endfor %}
+
+   {% for item in exceptions %}
+   .. autoexception:: {{ item }}
+   {% endfor %}
    {% endif %}
    {% endblock %}
 
