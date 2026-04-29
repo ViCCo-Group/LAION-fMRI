@@ -103,6 +103,14 @@ Getting Started
 .. toctree::
    :maxdepth: 2
    :hidden:
+   :caption: Python Package
+
+   laion_fmri_package/index
+   auto_examples/index
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
    :caption: Core Data
 
    anatomical_data

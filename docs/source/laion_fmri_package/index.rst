@@ -1,0 +1,127 @@
+==============================
+``laion_fmri`` Python Package
+==============================
+
+A pure data downloader and wrangler for the LAION-fMRI dataset.
+The package mirrors the bucket layout to your local disk via the
+official AWS CLI, keeps every accessor as a one-to-one map onto a
+single file in S3, and applies BIDS-entity filters so you only
+fetch what you need.
+
+A typical session looks like:
+
+.. code-block:: python
+
+   from laion_fmri.config import dataset_initialize, set_aws_credentials
+   from laion_fmri.download import download
+   from laion_fmri.subject import load_subject
+
+   dataset_initialize("./laion_fmri_data")
+   set_aws_credentials(access_key_id="AKIA...", secret_access_key="...")
+
+   download(subject="sub-03", ses="ses-01", n_jobs=4)
+
+   sub = load_subject("sub-03")
+   betas = sub.get_betas(session="ses-01")     # (n_trials, n_voxels), float32
+
+The cards below walk through each step in detail.
+
+.. grid:: 1 2 2 3
+   :gutter: 2
+
+   .. grid-item-card:: Initialize
+      :link: initialize
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Pick a local data directory and persist the choice across
+      sessions.
+
+      +++
+      ``dataset_initialize`` · ``get_data_dir``
+
+   .. grid-item-card:: Authenticate
+      :link: authentication
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Hand the AWS CLI your access key without ``aws configure``,
+      or fall back to anonymous access once the bucket is public.
+
+      +++
+      ``set_aws_credentials`` · ``has_aws_credentials``
+
+   .. grid-item-card:: Licenses
+      :link: license
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Review and accept the dataset and stimulus licenses up
+      front, or let ``download(...)`` prompt on first use.
+
+      +++
+      ``accept_licenses``
+
+   .. grid-item-card:: Discover
+      :link: discover
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      List subjects, ROIs, and bucket structure -- every query
+      reads S3 directly, no local download needed.
+
+      +++
+      ``get_subjects`` · ``describe`` · ``inspect_bucket``
+
+   .. grid-item-card:: Download
+      :link: download
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      BIDS-entity filters, strict ``ses`` semantic with the
+      ``"averages"`` keyword, idempotent re-runs, and ``n_jobs``
+      parallelism.
+
+      +++
+      ``download(...)``
+
+   .. grid-item-card:: Load
+      :link: load
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Single-trial betas, noise-ceiling maps, ROI masks,
+      brain-space mapping, multi-subject groups, and PyTorch.
+
+      +++
+      ``Subject`` · ``Group``
+
+   .. grid-item-card:: Examples gallery
+      :link: /auto_examples/index
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Four hands-on, narrated walkthroughs covering the full
+      workflow.
+
+      +++
+      ``plot_01`` … ``plot_04``
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   initialize
+   authentication
+   license
+   discover
+   download
+   load
