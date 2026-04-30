@@ -148,6 +148,10 @@ def list_common_prefixes(bucket, prefix):
 def download_key(bucket, key, dest_path):
     """Download a single S3 object via ``aws s3 cp``.
 
+    Captures stdout/stderr so callers can inspect ``stderr`` on
+    ``CalledProcessError`` to distinguish ``AccessDenied`` (e.g.
+    from held-out evaluation data) from other failures.
+
     Parameters
     ----------
     bucket : str
@@ -162,7 +166,7 @@ def download_key(bucket, key, dest_path):
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     _aws(
         ["s3", "cp", f"s3://{bucket}/{key}", str(dest_path)],
-        capture=False,
+        capture=True,
     )
     return dest_path
 

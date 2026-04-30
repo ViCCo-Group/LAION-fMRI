@@ -1,5 +1,6 @@
 """Tests for laion_fmri S3 fetch with BIDS-entity filters."""
 
+import subprocess
 import warnings
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ import pytest
 
 from laion_fmri._laion_fmri_fetch import (
     _clamp_n_jobs,
+    _is_held_out,
     _matches_filters,
     fetch_laion_fmri,
 )
@@ -525,3 +527,174 @@ def test_fetch_n_jobs_downloads_all_keys(
     }
     for k in keys:
         assert k in called
+
+
+# ── held-out session exclusion ──────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "ses_token", ["ses-31", "ses-32", "ses-33", "ses-34"],
+)
+def test_is_held_out_true_for_protected_session_keys(ses_token):
+    key = (
+        f"derivatives/glmsingle-tedana/sub-01/{ses_token}/func/"
+        f"sub-01_{ses_token}_task-images_desc-singletrial_"
+        "stat-effect_statmap.nii.gz"
+    )
+    assert _is_held_out(key) is True
+
+
+@pytest.mark.parametrize(
+    "ses_token", ["ses-01", "ses-30", "ses-35"],
+)
+def test_is_held_out_false_for_public_session_keys(ses_token):
+    key = (
+        f"derivatives/glmsingle-tedana/sub-01/{ses_token}/func/"
+        f"sub-01_{ses_token}_task-images_desc-singletrial_"
+        "stat-effect_statmap.nii.gz"
+    )
+    assert _is_held_out(key) is False
+
+
+def test_is_held_out_false_for_subject_level_key():
+    """Subject-level files (no ses entity) are never held out."""
+    key = (
+        "derivatives/glmsingle-tedana/sub-01/"
+        "sub-01_task-images_space-T1w_"
+        "desc-meanR2gt15mask_mask.nii.gz"
+    )
+    assert _is_held_out(key) is False
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_excludes_held_out_keys_with_no_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Default download must not request keys under HELD_OUT_SESSIONS,
+    even when the listing happens to include them."""
+    public = (
+        "derivatives/glmsingle-tedana/sub-01/ses-01/func/"
+        "sub-01_ses-01_task-images_desc-singletrial_"
+        "stat-effect_statmap.nii.gz"
+    )
+    held_out = (
+        "derivatives/glmsingle-tedana/sub-01/ses-31/func/"
+        "sub-01_ses-31_task-images_desc-singletrial_"
+        "stat-effect_statmap.nii.gz"
+    )
+
+    def listing(_bucket, prefix):
+        if prefix.endswith("glmsingle-tedana/sub-01/"):
+            return [
+                {"Key": public, "Size": 100},
+                {"Key": held_out, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(str(tmp_path), subject="sub-01")
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert public in downloaded
+    assert held_out not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_excludes_held_out_when_explicitly_named_in_ses(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Even when a caller names a held-out session via ``ses=``,
+    the package refuses to request it -- the bucket would 403 anyway."""
+    held_out = (
+        "derivatives/glmsingle-tedana/sub-01/ses-31/func/"
+        "sub-01_ses-31_task-images_desc-singletrial_"
+        "stat-effect_statmap.nii.gz"
+    )
+
+    def listing(_bucket, prefix):
+        if prefix.endswith("glmsingle-tedana/sub-01/"):
+            return [{"Key": held_out, "Size": 100}]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(str(tmp_path), subject="sub-01", ses="31")
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert held_out not in downloaded
+
+
+# ── AccessDenied warn-skip ──────────────────────────────────────
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_warns_and_continues_on_access_denied(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """An AccessDenied on one key emits a warning and the rest still
+    download -- the legacy behavior was to crash the whole batch."""
+    key_403 = (
+        "derivatives/glmsingle-tedana/sub-01/ses-29/func/protected.bin"
+    )
+    key_ok = (
+        "derivatives/glmsingle-tedana/sub-01/ses-29/func/public.bin"
+    )
+
+    def listing(_bucket, prefix):
+        if prefix.endswith("glmsingle-tedana/sub-01/"):
+            return [
+                {"Key": key_403, "Size": 100},
+                {"Key": key_ok, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    def cp(_bucket, key, _dest):
+        if key == key_403:
+            raise subprocess.CalledProcessError(
+                returncode=1, cmd=["aws", "s3", "cp"],
+                stderr=(
+                    "fatal error: An error occurred (AccessDenied) "
+                    "when calling the GetObject operation: Access Denied"
+                ),
+            )
+    mock_download_key.side_effect = cp
+
+    with pytest.warns(UserWarning, match="Access denied"):
+        fetch_laion_fmri(str(tmp_path), subject="sub-01")
+
+    attempted = [c.args[1] for c in mock_download_key.call_args_list]
+    assert key_403 in attempted  # we tried
+    assert key_ok in attempted   # and continued past the 403
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_reraises_non_access_denied_errors(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """A non-AccessDenied subprocess failure must not be swallowed."""
+    key = "derivatives/glmsingle-tedana/sub-01/ses-29/func/x.bin"
+
+    def listing(_bucket, prefix):
+        if prefix.endswith("glmsingle-tedana/sub-01/"):
+            return [{"Key": key, "Size": 100}]
+        return []
+
+    mock_list_objects.side_effect = listing
+    mock_download_key.side_effect = subprocess.CalledProcessError(
+        returncode=2, cmd=["aws", "s3", "cp"],
+        stderr="fatal error: connection timed out",
+    )
+
+    with pytest.raises(subprocess.CalledProcessError):
+        fetch_laion_fmri(str(tmp_path), subject="sub-01")

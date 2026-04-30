@@ -11,6 +11,7 @@ filter on that entity (so subject-level summaries survive a
 
 import os
 import re
+import subprocess
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -21,7 +22,7 @@ from laion_fmri._s3_engine import (
     has_aws_credentials,
     list_prefix_objects,
 )
-from laion_fmri._sources import LAION_FMRI_BUCKET
+from laion_fmri._sources import HELD_OUT_SESSIONS, LAION_FMRI_BUCKET
 
 DATASET_LEVEL_KEYS = (
     "dataset_description.json",
@@ -141,6 +142,14 @@ def _matches_filters(key, filters):
     return True
 
 
+def _is_held_out(key):
+    """True if ``key`` belongs to a session in ``HELD_OUT_SESSIONS``."""
+    for ses in HELD_OUT_SESSIONS:
+        if f"/{ses}/" in key or key.endswith(f"/{ses}"):
+            return True
+    return False
+
+
 def _matches_ses(key, fvalues):
     """Strict ses match.
 
@@ -176,7 +185,8 @@ def _filtered_download(
 
     Files whose local size already matches the S3 size are skipped
     entirely -- so a re-run of an interrupted download only fetches
-    what's missing.
+    what's missing. Keys under ``HELD_OUT_SESSIONS`` are unconditionally
+    excluded; their bucket-policy deny rule would 403 every GET.
 
     Parameters
     ----------
@@ -192,11 +202,17 @@ def _filtered_download(
     force_keys = set(force_keys)
 
     objects = list_prefix_objects(bucket, prefix)
-    matching = [
-        o for o in objects
-        if o["Key"] in force_keys
-        or _matches_filters(o["Key"], filters)
-    ]
+    matching = []
+    for o in objects:
+        key = o["Key"]
+        if _is_held_out(key):
+            continue
+        if key in force_keys:
+            matching.append(o)
+            continue
+        if not _matches_filters(key, filters):
+            continue
+        matching.append(o)
 
     if not matching:
         local_path = Path(data_dir) / prefix
@@ -229,7 +245,25 @@ def _filtered_download(
         return
 
     def _fetch(obj):
-        download_key(bucket, obj["Key"], Path(data_dir) / obj["Key"])
+        key = obj["Key"]
+        try:
+            download_key(bucket, key, Path(data_dir) / key)
+        except subprocess.CalledProcessError as exc:
+            stderr = exc.stderr or ""
+            if (
+                "AccessDenied" in stderr
+                or "Forbidden" in stderr
+                or "(403)" in stderr
+            ):
+                warnings.warn(
+                    f"Access denied for s3://{bucket}/{key}; "
+                    "skipping (the bucket's deny rule blocks public "
+                    "GET on this key).",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                return
+            raise
 
     if n_jobs <= 1:
         for obj in todo:
