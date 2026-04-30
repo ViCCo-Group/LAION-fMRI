@@ -28,8 +28,8 @@ def _trial_betas_file(synthetic_data_dir, sub, ses):
     return (
         synthetic_data_dir / "derivatives" / "glmsingle-tedana"
         / sub / ses / "func"
-        / f"{sub}_{ses}_task-images_desc-singletrial_"
-        f"stat-effect_statmap.nii.gz"
+        / f"{sub}_{ses}_task-images_space-T1w_stat-effect_"
+        f"desc-SingletrialBetas_statmap.nii.gz"
     )
 
 
@@ -37,8 +37,8 @@ def _session_nc_file(synthetic_data_dir, sub, ses):
     return (
         synthetic_data_dir / "derivatives" / "glmsingle-tedana"
         / sub / ses / "func"
-        / f"{sub}_{ses}_task-images_desc-singletrial_"
-        f"stat-noiseceiling_statmap.nii.gz"
+        / f"{sub}_{ses}_task-images_space-T1w_"
+        f"desc-Noiseceiling_statmap.nii.gz"
     )
 
 
@@ -46,7 +46,8 @@ def _events_file(synthetic_data_dir, sub, ses):
     return (
         synthetic_data_dir / "derivatives" / "glmsingle-tedana"
         / sub / ses / "func"
-        / f"{sub}_{ses}_task-images_desc-GLMsingle_events.tsv"
+        / f"{sub}_{ses}_task-images_"
+        f"desc-SingletrialBetas_trials.tsv"
     )
 
 

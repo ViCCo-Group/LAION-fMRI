@@ -50,8 +50,8 @@ def test_clamp_n_jobs_huge_value_clamped_with_warning():
 
 SES_KEY = (
     "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-    "sub-03_ses-04_task-images_desc-singletrial_"
-    "stat-effect_statmap.nii.gz"
+    "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+    "desc-SingletrialBetas_statmap.nii.gz"
 )
 SUBJECT_LEVEL_KEY = (
     "derivatives/glmsingle-tedana/sub-03/"
@@ -288,13 +288,13 @@ def test_fetch_ses_filter_narrows_downloads(
     other sessions and other subject-level summaries are excluded."""
     ses04 = (
         "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
     ses05 = (
         "derivatives/glmsingle-tedana/sub-03/ses-05/func/"
-        "sub-03_ses-05_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-05_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
     brain_mask = (
         "derivatives/glmsingle-tedana/sub-03/"
@@ -304,7 +304,7 @@ def test_fetch_ses_filter_narrows_downloads(
     other_summary = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-noiseceiling33ses_statmap.nii.gz"
+        "desc-Noiseceiling12rep_statmap.nii.gz"
     )
 
     def listing(_bucket, prefix):
@@ -348,12 +348,12 @@ def test_fetch_ses_averages_keeps_all_subject_level(
     other_summary = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-noiseceiling33ses_statmap.nii.gz"
+        "desc-Noiseceiling12rep_statmap.nii.gz"
     )
     ses04 = (
         "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
 
     def listing(_bucket, prefix):

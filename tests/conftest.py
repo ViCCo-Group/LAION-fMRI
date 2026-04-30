@@ -53,27 +53,30 @@ N_SESSIONS = 2
 N_REPS_PER_STIMULUS = 3
 N_TRIALS_PER_SESSION = N_STIMULI * N_REPS_PER_STIMULUS  # 60
 AFFINE = np.eye(4)
-SUBJECT_NC_DESC = "noiseceiling33ses"
+SUBJECT_NC_DESC = "Noiseceiling12rep"
 
 
 # ── File-name helpers ───────────────────────────────────────────
 
 def _trial_betas_filename(sub, ses):
     return (
-        f"{sub}_{ses}_task-images_desc-singletrial_"
-        f"stat-effect_statmap.nii.gz"
+        f"{sub}_{ses}_task-images_space-T1w_stat-effect_"
+        f"desc-SingletrialBetas_statmap.nii.gz"
     )
 
 
 def _session_nc_filename(sub, ses):
     return (
-        f"{sub}_{ses}_task-images_desc-singletrial_"
-        f"stat-noiseceiling_statmap.nii.gz"
+        f"{sub}_{ses}_task-images_space-T1w_"
+        f"desc-Noiseceiling_statmap.nii.gz"
     )
 
 
 def _events_filename(sub, ses):
-    return f"{sub}_{ses}_task-images_desc-GLMsingle_events.tsv"
+    return (
+        f"{sub}_{ses}_task-images_"
+        f"desc-SingletrialBetas_trials.tsv"
+    )
 
 
 def _brain_mask_filename(sub):
