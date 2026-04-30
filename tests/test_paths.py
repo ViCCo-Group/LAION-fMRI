@@ -37,8 +37,8 @@ def test_betas_path_per_session():
     result = betas_path("/data", "sub-03", "ses-04")
     assert result == Path(
         "/data/derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
 
 
@@ -48,8 +48,8 @@ def test_session_noise_ceiling_path():
     )
     assert result == Path(
         "/data/derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-singletrial_"
-        "stat-noiseceiling_statmap.nii.gz"
+        "sub-03_ses-04_task-images_space-T1w_"
+        "desc-Noiseceiling_statmap.nii.gz"
     )
 
 
@@ -57,7 +57,7 @@ def test_trialinfo_path():
     result = trialinfo_path("/data", "sub-03", "ses-04")
     assert result == Path(
         "/data/derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-GLMsingle_events.tsv"
+        "sub-03_ses-04_task-images_desc-SingletrialBetas_trials.tsv"
     )
 
 
@@ -72,12 +72,12 @@ def test_brain_mask_path_subject_level():
 
 def test_subject_noise_ceiling_path():
     result = subject_noise_ceiling_path(
-        "/data", "sub-03", "noiseceiling33ses",
+        "/data", "sub-03", "Noiseceiling12rep",
     )
     assert result == Path(
         "/data/derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-noiseceiling33ses_statmap.nii.gz"
+        "desc-Noiseceiling12rep_statmap.nii.gz"
     )
 
 
