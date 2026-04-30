@@ -1,14 +1,9 @@
 import json
-import os
 
 import pytest
 
 from laion_fmri._errors import DataDirNotSetError
-from laion_fmri.config import (
-    dataset_initialize,
-    get_data_dir,
-    set_aws_credentials,
-)
+from laion_fmri.config import dataset_initialize, get_data_dir
 
 
 @pytest.fixture
@@ -92,86 +87,3 @@ def test_config_respects_xdg_config_home(tmp_path, monkeypatch):
 
     config_file = custom_config / "laion_fmri" / "config.json"
     assert config_file.exists()
-
-
-# ── set_aws_credentials ─────────────────────────────────────────
-
-
-def test_set_aws_credentials_sets_env_vars(monkeypatch):
-    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
-    monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
-    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
-
-    set_aws_credentials(
-        access_key_id="AKIAEXAMPLE",
-        secret_access_key="secret-example",
-        region="us-west-2",
-    )
-
-    assert os.environ["AWS_ACCESS_KEY_ID"] == "AKIAEXAMPLE"
-    assert os.environ["AWS_SECRET_ACCESS_KEY"] == "secret-example"
-    assert os.environ["AWS_DEFAULT_REGION"] == "us-west-2"
-
-
-def test_set_aws_credentials_region_defaults_to_bucket_region(
-    monkeypatch,
-):
-    from laion_fmri._sources import LAION_FMRI_REGION
-
-    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
-
-    set_aws_credentials(
-        access_key_id="AKIAEXAMPLE",
-        secret_access_key="secret-example",
-    )
-
-    assert os.environ["AWS_DEFAULT_REGION"] == LAION_FMRI_REGION
-
-
-def test_set_aws_credentials_accepts_optional_session_token(
-    monkeypatch,
-):
-    monkeypatch.delenv("AWS_SESSION_TOKEN", raising=False)
-
-    set_aws_credentials(
-        access_key_id="AKIAEXAMPLE",
-        secret_access_key="secret-example",
-        session_token="session-token-example",
-    )
-
-    assert os.environ["AWS_SESSION_TOKEN"] == "session-token-example"
-
-
-def test_set_aws_credentials_does_not_set_session_token_by_default(
-    monkeypatch,
-):
-    monkeypatch.delenv("AWS_SESSION_TOKEN", raising=False)
-
-    set_aws_credentials(
-        access_key_id="AKIAEXAMPLE",
-        secret_access_key="secret-example",
-    )
-
-    assert "AWS_SESSION_TOKEN" not in os.environ
-
-
-def test_set_aws_credentials_makes_aws_cli_detect_them(monkeypatch):
-    """After set_aws_credentials, has_aws_credentials() returns True."""
-    from laion_fmri._s3_engine import has_aws_credentials
-
-    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
-    monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
-
-    set_aws_credentials(
-        access_key_id="AKIAEXAMPLE",
-        secret_access_key="secret-example",
-    )
-
-    assert has_aws_credentials() is True
-
-
-def test_set_aws_credentials_validates_required_args():
-    with pytest.raises(TypeError):
-        set_aws_credentials(access_key_id="x")  # missing secret
-    with pytest.raises(TypeError):
-        set_aws_credentials(secret_access_key="y")  # missing key
