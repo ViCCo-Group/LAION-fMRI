@@ -12,12 +12,11 @@ A typical session looks like:
 
 .. code-block:: python
 
-   from laion_fmri.config import dataset_initialize, set_aws_credentials
+   from laion_fmri.config import dataset_initialize
    from laion_fmri.download import download
    from laion_fmri.subject import load_subject
 
    dataset_initialize("./laion_fmri_data")
-   set_aws_credentials(access_key_id="...", secret_access_key="...")
 
    download(subject="sub-03", ses="ses-01", n_jobs=4)
 
@@ -54,18 +53,6 @@ The cards below walk through each step in detail.
 
       +++
       ``dataset_initialize`` · ``get_data_dir``
-
-   .. grid-item-card:: Authenticate
-      :link: authentication
-      :link-type: doc
-      :class-card: sd-border-0
-      :shadow: sm
-
-      Hand the AWS CLI your access key without ``aws configure``,
-      or fall back to anonymous access once the bucket is public.
-
-      +++
-      ``set_aws_credentials`` · ``has_aws_credentials``
 
    .. grid-item-card:: Licenses
       :link: license
@@ -134,7 +121,6 @@ The cards below walk through each step in detail.
    :hidden:
 
    initialize
-   authentication
    license
    discover
    download

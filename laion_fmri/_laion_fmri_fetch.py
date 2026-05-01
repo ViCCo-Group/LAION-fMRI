@@ -18,7 +18,6 @@ from pathlib import Path
 from laion_fmri._paths import brain_mask_path
 from laion_fmri._s3_engine import (
     download_key,
-    has_aws_credentials,
     list_prefix_objects,
 )
 from laion_fmri._sources import LAION_FMRI_BUCKET
@@ -204,16 +203,9 @@ def _filtered_download(
             local_path.is_dir() and any(local_path.rglob("*"))
         )
         if not has_local:
-            hint = (
-                " No AWS credentials were detected -- "
-                "if the bucket is still private, call "
-                "laion_fmri.config.set_aws_credentials(...) first."
-                if not has_aws_credentials()
-                else ""
-            )
             warnings.warn(
                 f"No objects matching the requested filters under "
-                f"s3://{bucket}/{prefix}.{hint}",
+                f"s3://{bucket}/{prefix}.",
                 UserWarning,
                 stacklevel=3,
             )

@@ -22,6 +22,7 @@ import pytest
 from laion_fmri._s3_engine import (
     download_key,
     list_common_prefixes,
+    list_prefix_keys,
     sync_prefix,
 )
 from laion_fmri._sources import LAION_FMRI_BUCKET
@@ -176,12 +177,21 @@ def test_download_one_session_and_load(
             LAION_FMRI_BUCKET, key, data_dir / key,
         )
 
-    # Subject-level brain mask
+    # Subject-level brain mask -- skip the round-trip if the file
+    # is not yet uploaded under the expected name.
     bm_local = brain_mask_path(data_dir, subject)
     bm_key = (
         f"derivatives/glmsingle-tedana/{subject}/"
         f"{bm_local.name}"
     )
+    subject_keys = list_prefix_keys(
+        LAION_FMRI_BUCKET,
+        f"derivatives/glmsingle-tedana/{subject}/",
+    )
+    if bm_key not in subject_keys:
+        pytest.skip(
+            f"Brain mask not yet in bucket: s3://{LAION_FMRI_BUCKET}/{bm_key}"
+        )
     download_key(LAION_FMRI_BUCKET, bm_key, bm_local)
 
     # One session's func dir only
