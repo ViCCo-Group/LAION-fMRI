@@ -2,16 +2,15 @@
 Quick Start
 ===========
 
-End-to-end walkthrough: initialize, authenticate, query, download,
-and load data.
+End-to-end walkthrough: initialize, query, download, and load
+data.
 
 This example touches every step of a typical LAION-fMRI workflow:
 
 1. Initialize a local data directory
-2. Provide AWS credentials (only required while the bucket is private)
-3. Query what is available in the dataset
-4. Download data for a single subject
-5. Load and inspect the data
+2. Query what is available in the dataset
+3. Download data for a single subject
+4. Load and inspect the data
 
 For deeper dives into each step, see the focused examples on
 :doc:`initialization <plot_02_initialization>`,
@@ -39,43 +38,12 @@ dataset_initialize(data_dir)
 print(f"Data directory: {get_data_dir()}")
 
 # %%
-# Provide AWS credentials (pre-release only)
-# -------------------------------------------
-#
-# The LAION-fMRI bucket is private during development, so the
-# package needs AWS credentials to list and download data. The
-# easiest way is :func:`laion_fmri.config.set_aws_credentials`,
-# which sets the right environment variables for the current
-# Python process. Nothing is written to disk.
-#
-# Once the bucket is made public this step becomes optional --
-# requests fall back to anonymous access automatically.
-#
-# .. code-block:: python
-#
-#     from laion_fmri.config import set_aws_credentials
-#     set_aws_credentials(
-#         access_key_id="AKIA...",
-#         secret_access_key="...",
-#     )
-#
-# Sanity check that the AWS CLI sees credentials:
-
-from laion_fmri._s3_engine import has_aws_credentials
-
-if has_aws_credentials():
-    print("AWS credentials detected -- signed requests.")
-else:
-    print(
-        "No credentials detected -- only public buckets will work."
-    )
-
-# %%
 # Query the dataset
 # ------------------
 #
-# Discovery functions read directly from the S3 bucket, so you can
-# see what is available before downloading anything.
+# The bucket is public, so no AWS credentials are needed.
+# Discovery functions read directly from the S3 bucket, so you
+# can see what is available before downloading anything.
 
 from laion_fmri.discovery import describe, get_subjects
 

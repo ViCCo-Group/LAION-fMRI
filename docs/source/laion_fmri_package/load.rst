@@ -26,7 +26,7 @@ Core accessors
    sub.get_betas(session=["ses-01", "ses-02"]) # dict[ses, ndarray]
 
    sub.get_noise_ceiling(session="ses-01")     # float32, (n_voxels,)
-   sub.get_noise_ceiling(desc="noiseceiling33ses")  # subject-level variant
+   sub.get_noise_ceiling(desc="Noiseceiling12rep")  # subject-level variant
 
    sub.get_trial_info(session="ses-01")        # pandas DataFrame
 

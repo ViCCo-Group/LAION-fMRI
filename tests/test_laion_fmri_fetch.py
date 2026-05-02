@@ -52,8 +52,8 @@ def test_clamp_n_jobs_huge_value_clamped_with_warning():
 
 SES_KEY = (
     "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-    "sub-03_ses-04_task-images_desc-singletrial_"
-    "stat-effect_statmap.nii.gz"
+    "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+    "desc-SingletrialBetas_statmap.nii.gz"
 )
 SUBJECT_LEVEL_KEY = (
     "derivatives/glmsingle-tedana/sub-03/"
@@ -164,10 +164,11 @@ def test_matches_filters_space():
 
 def test_matches_filters_desc():
     assert (
-        _matches_filters(SES_KEY, {"desc": "singletrial"}) is True
+        _matches_filters(SES_KEY, {"desc": "SingletrialBetas"})
+        is True
     )
     assert (
-        _matches_filters(SES_KEY, {"desc": "GLMsingle"}) is False
+        _matches_filters(SES_KEY, {"desc": "Noiseceiling"}) is False
     )
 
 
@@ -290,13 +291,13 @@ def test_fetch_ses_filter_narrows_downloads(
     other sessions and other subject-level summaries are excluded."""
     ses04 = (
         "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
     ses05 = (
         "derivatives/glmsingle-tedana/sub-03/ses-05/func/"
-        "sub-03_ses-05_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-05_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
     brain_mask = (
         "derivatives/glmsingle-tedana/sub-03/"
@@ -306,7 +307,7 @@ def test_fetch_ses_filter_narrows_downloads(
     other_summary = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-noiseceiling33ses_statmap.nii.gz"
+        "desc-Noiseceiling12rep_statmap.nii.gz"
     )
 
     def listing(_bucket, prefix):
@@ -350,12 +351,12 @@ def test_fetch_ses_averages_keeps_all_subject_level(
     other_summary = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-noiseceiling33ses_statmap.nii.gz"
+        "desc-Noiseceiling12rep_statmap.nii.gz"
     )
     ses04 = (
         "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
-        "sub-03_ses-04_task-images_desc-singletrial_"
-        "stat-effect_statmap.nii.gz"
+        "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+        "desc-SingletrialBetas_statmap.nii.gz"
     )
 
     def listing(_bucket, prefix):
@@ -419,21 +420,6 @@ def test_fetch_does_not_warn_when_local_dir_has_data(
         and "No objects matching" in str(w.message)
     ]
     assert relevant == []
-
-
-@patch(
-    "laion_fmri._laion_fmri_fetch.has_aws_credentials",
-    return_value=False,
-)
-@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
-@patch("laion_fmri._laion_fmri_fetch.download_key")
-def test_warning_mentions_set_aws_credentials_when_no_creds(
-    mock_download_key, mock_list_objects, mock_has_creds, tmp_path,
-):
-    mock_list_objects.return_value = []
-
-    with pytest.warns(UserWarning, match="set_aws_credentials"):
-        fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
 
 # ── size-aware skip (resume support) ────────────────────────────

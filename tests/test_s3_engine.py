@@ -9,7 +9,6 @@ import pytest
 
 from laion_fmri._s3_engine import (
     download_key,
-    has_aws_credentials,
     list_common_prefixes,
     list_prefix_keys,
     list_prefix_objects,
@@ -24,22 +23,12 @@ def _completed(stdout="", stderr="", returncode=0):
     )
 
 
-# ── credential detection ────────────────────────────────────────
-
-
-def test_has_aws_credentials_returns_bool():
-    assert isinstance(has_aws_credentials(), bool)
-
-
 # ── _aws subprocess shape ───────────────────────────────────────
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials")
-def test_cli_includes_region_and_no_sign_when_no_creds(
-    mock_has_creds, mock_run,
-):
-    mock_has_creds.return_value = False
+def test_cli_always_includes_region_and_no_sign_request(mock_run):
+    """The bucket is public; every aws call goes anonymous."""
     mock_run.return_value = _completed(stdout='{"Contents":[]}')
 
     list_prefix_keys("laion-fmri", "x/")
@@ -51,28 +40,11 @@ def test_cli_includes_region_and_no_sign_when_no_creds(
     assert "--no-sign-request" in cmd
 
 
-@patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials")
-def test_cli_omits_no_sign_when_creds_available(
-    mock_has_creds, mock_run,
-):
-    mock_has_creds.return_value = True
-    mock_run.return_value = _completed(stdout='{"Contents":[]}')
-
-    list_prefix_keys("laion-fmri", "x/")
-
-    cmd = mock_run.call_args.args[0]
-    assert "--no-sign-request" not in cmd
-
-
 # ── list_prefix_keys ────────────────────────────────────────────
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_prefix_keys_parses_contents(
-    mock_has_creds, mock_run,
-):
+def test_list_prefix_keys_parses_contents(mock_run):
     payload = {
         "Contents": [
             {"Key": "a/1.txt"},
@@ -88,19 +60,13 @@ def test_list_prefix_keys_parses_contents(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_prefix_keys_empty_response(
-    mock_has_creds, mock_run,
-):
+def test_list_prefix_keys_empty_response(mock_run):
     mock_run.return_value = _completed(stdout="")
     assert list_prefix_keys("laion-fmri", "x/") == []
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_prefix_keys_uses_list_objects_v2(
-    mock_has_creds, mock_run,
-):
+def test_list_prefix_keys_uses_list_objects_v2(mock_run):
     mock_run.return_value = _completed(stdout="")
     list_prefix_keys("laion-fmri", "a/")
     cmd = mock_run.call_args.args[0]
@@ -115,10 +81,7 @@ def test_list_prefix_keys_uses_list_objects_v2(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_prefix_objects_parses_size(
-    mock_has_creds, mock_run,
-):
+def test_list_prefix_objects_parses_size(mock_run):
     payload = {
         "Contents": [
             {"Key": "a/1.txt", "Size": 100},
@@ -135,8 +98,7 @@ def test_list_prefix_objects_parses_size(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_prefix_objects_empty(mock_has_creds, mock_run):
+def test_list_prefix_objects_empty(mock_run):
     mock_run.return_value = _completed(stdout="")
     assert list_prefix_objects("laion-fmri", "x/") == []
 
@@ -145,10 +107,7 @@ def test_list_prefix_objects_empty(mock_has_creds, mock_run):
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_common_prefixes_parses_names(
-    mock_has_creds, mock_run,
-):
+def test_list_common_prefixes_parses_names(mock_run):
     payload = {
         "CommonPrefixes": [
             {"Prefix": "derivatives/glmsingle-tedana/sub-01/"},
@@ -164,10 +123,7 @@ def test_list_common_prefixes_parses_names(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_list_common_prefixes_uses_delimiter(
-    mock_has_creds, mock_run,
-):
+def test_list_common_prefixes_uses_delimiter(mock_run):
     mock_run.return_value = _completed(stdout="")
     list_common_prefixes("laion-fmri", "a/")
     cmd = mock_run.call_args.args[0]
@@ -180,10 +136,7 @@ def test_list_common_prefixes_uses_delimiter(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_download_key_runs_s3_cp(
-    mock_has_creds, mock_run, tmp_path,
-):
+def test_download_key_runs_s3_cp(mock_run, tmp_path):
     mock_run.return_value = _completed()
     dest = tmp_path / "out" / "file.bin"
 
@@ -196,10 +149,7 @@ def test_download_key_runs_s3_cp(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_download_key_creates_parent_dirs(
-    mock_has_creds, mock_run, tmp_path,
-):
+def test_download_key_creates_parent_dirs(mock_run, tmp_path):
     mock_run.return_value = _completed()
     dest = tmp_path / "deep" / "nested" / "x.bin"
 
@@ -212,10 +162,7 @@ def test_download_key_creates_parent_dirs(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_sync_prefix_runs_s3_sync(
-    mock_has_creds, mock_run, tmp_path,
-):
+def test_sync_prefix_runs_s3_sync(mock_run, tmp_path):
     mock_run.return_value = _completed(stdout="")
     sync_prefix("laion-fmri", "a/", tmp_path)
 
@@ -226,10 +173,7 @@ def test_sync_prefix_runs_s3_sync(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_sync_prefix_parses_downloaded_keys(
-    mock_has_creds, mock_run, tmp_path,
-):
+def test_sync_prefix_parses_downloaded_keys(mock_run, tmp_path):
     stdout = (
         "download: s3://laion-fmri/a/1.txt to /tmp/a/1.txt\n"
         "download: s3://laion-fmri/a/2.txt to /tmp/a/2.txt\n"
@@ -241,19 +185,15 @@ def test_sync_prefix_parses_downloaded_keys(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
 def test_sync_prefix_returns_empty_when_nothing_to_download(
-    mock_has_creds, mock_run, tmp_path,
+    mock_run, tmp_path,
 ):
     mock_run.return_value = _completed(stdout="")
     assert sync_prefix("laion-fmri", "a/", tmp_path) == []
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_sync_prefix_ignores_non_download_lines(
-    mock_has_creds, mock_run, tmp_path,
-):
+def test_sync_prefix_ignores_non_download_lines(mock_run, tmp_path):
     stdout = (
         "Completed 1.0 MiB/1.0 MiB (500 KiB/s)\n"
         "download: s3://laion-fmri/a/1.txt to /tmp/a/1.txt\n"
@@ -269,10 +209,7 @@ def test_sync_prefix_ignores_non_download_lines(
 
 
 @patch("laion_fmri._s3_engine.subprocess.run")
-@patch("laion_fmri._s3_engine.has_aws_credentials", return_value=True)
-def test_cli_failure_propagates_as_called_process_error(
-    mock_has_creds, mock_run,
-):
+def test_cli_failure_propagates_as_called_process_error(mock_run):
     mock_run.side_effect = subprocess.CalledProcessError(
         returncode=1, cmd=["aws"], stderr="denied",
     )

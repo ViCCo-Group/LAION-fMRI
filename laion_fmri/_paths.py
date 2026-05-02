@@ -38,8 +38,8 @@ def rois_dir(data_dir, subject):
 def betas_path(data_dir, subject, session):
     """4D NIfTI of single-trial effect betas for one session."""
     fname = (
-        f"{subject}_{session}_task-images_desc-singletrial_"
-        f"stat-effect_statmap.nii.gz"
+        f"{subject}_{session}_task-images_space-T1w_stat-effect_"
+        f"desc-SingletrialBetas_statmap.nii.gz"
     )
     return session_func_dir(data_dir, subject, session) / fname
 
@@ -47,16 +47,17 @@ def betas_path(data_dir, subject, session):
 def session_noise_ceiling_path(data_dir, subject, session):
     """3D NIfTI of per-session noise ceiling."""
     fname = (
-        f"{subject}_{session}_task-images_desc-singletrial_"
-        f"stat-noiseceiling_statmap.nii.gz"
+        f"{subject}_{session}_task-images_space-T1w_"
+        f"desc-Noiseceiling_statmap.nii.gz"
     )
     return session_func_dir(data_dir, subject, session) / fname
 
 
 def trialinfo_path(data_dir, subject, session):
-    """Per-session GLMsingle events TSV."""
+    """Per-session single-trial event TSV."""
     fname = (
-        f"{subject}_{session}_task-images_desc-GLMsingle_events.tsv"
+        f"{subject}_{session}_task-images_"
+        f"desc-SingletrialBetas_trials.tsv"
     )
     return session_func_dir(data_dir, subject, session) / fname
 
@@ -75,8 +76,9 @@ def brain_mask_path(data_dir, subject):
 def subject_noise_ceiling_path(data_dir, subject, desc):
     """Subject-level noise ceiling NIfTI for a given ``desc`` label.
 
-    The bucket holds several variants (e.g. ``noiseceiling33ses``,
-    ``noiseceiling30ses4rep``, ...) -- the caller picks one.
+    The bucket holds several variants (e.g. ``Noiseceiling12rep``,
+    ``Noiseceiling4rep``, ``NoiseceilingAllrep``) -- the caller
+    picks one.
     """
     fname = (
         f"{subject}_task-images_space-T1w_"

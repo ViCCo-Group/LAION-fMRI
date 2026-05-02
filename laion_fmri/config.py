@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 from laion_fmri._errors import DataDirNotSetError
-from laion_fmri._sources import LAION_FMRI_REGION
 
 
 def _get_config_path():
@@ -76,37 +75,3 @@ def get_data_dir():
 
     config = json.loads(config_file.read_text())
     return config["data_dir"]
-
-
-def set_aws_credentials(
-    access_key_id,
-    secret_access_key,
-    region=None,
-    session_token=None,
-):
-    """Set AWS credentials for the current Python process.
-
-    Exports ``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``, and
-    ``AWS_DEFAULT_REGION`` so that the AWS CLI resolves them on
-    subsequent S3 operations. No ``aws configure`` step or
-    ``~/.aws/credentials`` file is required.
-
-    Credentials are kept only in this process's environment and are
-    not written to disk.
-
-    Parameters
-    ----------
-    access_key_id : str
-        AWS access key ID.
-    secret_access_key : str
-        AWS secret access key.
-    region : str or None
-        AWS region. Defaults to the LAION-fMRI bucket region.
-    session_token : str or None
-        Optional AWS session token (for temporary credentials).
-    """
-    os.environ["AWS_ACCESS_KEY_ID"] = access_key_id
-    os.environ["AWS_SECRET_ACCESS_KEY"] = secret_access_key
-    os.environ["AWS_DEFAULT_REGION"] = region or LAION_FMRI_REGION
-    if session_token is not None:
-        os.environ["AWS_SESSION_TOKEN"] = session_token

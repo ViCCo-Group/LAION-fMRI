@@ -133,9 +133,10 @@ print(
 )
 
 # Subject-level aggregate (uncomment with a desc that exists in the
-# bucket, e.g. "noiseceiling33ses"):
+# bucket, e.g. "Noiseceiling12rep" / "Noiseceiling4rep" /
+# "NoiseceilingAllrep"):
 #
-#     nc_subj = sub.get_noise_ceiling(desc="noiseceiling33ses")
+#     nc_subj = sub.get_noise_ceiling(desc="Noiseceiling12rep")
 
 # %%
 # Trial info and stimulus metadata
@@ -186,8 +187,8 @@ print(f"Voxel coordinates: {coords.shape}")
 # Multi-subject group loading
 # -----------------------------
 #
-# A ``Group`` is a thin wrapper around several subjects. Only
-# loaders -- no math.
+# ``Group`` holds several ``Subject`` instances and exposes
+# cross-subject loaders that delegate to each one.
 
 from laion_fmri.group import load_subjects
 

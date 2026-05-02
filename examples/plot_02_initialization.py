@@ -8,10 +8,8 @@ This example walks through the steps a new user takes the first
 time they use the package:
 
 1. Configure the local data directory.
-2. Provide AWS credentials (only needed while the bucket is
-   private).
-3. Read the licenses you'll be asked to accept on first download.
-4. Confirm you can reach the bucket and see what it contains.
+2. Read the licenses you'll be asked to accept on first download.
+3. Confirm you can reach the bucket and see what it contains.
 
 Downloads themselves are covered by the
 :doc:`quick start <plot_01_quickstart>`.
@@ -36,48 +34,6 @@ data_dir = os.path.join(os.getcwd(), "laion_fmri_init_demo")
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 print(f"Configured: {get_data_dir()}")
-
-# %%
-# AWS credentials (pre-release only)
-# ------------------------------------
-#
-# The LAION-fMRI S3 bucket is **private during development** and
-# **public after release**. The package wraps the official
-# ``awscli`` (installed automatically as a dependency) and respects
-# its standard credential chain.
-#
-# During the private phase you need an AWS access key and secret.
-# The easiest path is to call
-# :func:`laion_fmri.config.set_aws_credentials` at the start of
-# your script or notebook. The call only sets environment
-# variables for the current Python process; nothing is written to
-# disk.
-
-from laion_fmri.config import set_aws_credentials  # noqa: F401
-
-# set_aws_credentials(
-#     access_key_id="AKIA...",
-#     secret_access_key="...",
-# )
-
-# Any AWS CLI-compatible credential source also works:
-#
-# * Shell env vars (``AWS_ACCESS_KEY_ID``, ``AWS_SECRET_ACCESS_KEY``)
-# * ``~/.aws/credentials`` (populated by ``aws configure`` or by hand)
-# * An IAM role, when running on AWS infrastructure
-#
-# Once the bucket goes public, all of the above becomes optional
-# -- the package will fall back to anonymous S3 access
-# automatically.
-#
-# Sanity-check that the AWS CLI can see your credentials:
-
-from laion_fmri._s3_engine import has_aws_credentials
-
-if has_aws_credentials():
-    print("AWS credentials detected -- signed requests.")
-else:
-    print("No credentials -- unsigned (public bucket only).")
 
 # %%
 # Inspect the license texts
@@ -128,10 +84,11 @@ accept_licenses(include_stimuli=True)
 # Confirm bucket access
 # ----------------------
 #
-# Discovery functions query the bucket directly -- they describe
-# what's available in the dataset, regardless of what you have
-# downloaded. Running them is a quick smoke test that
-# initialization is complete and credentials work.
+# The bucket is public, so discovery is anonymous and works
+# without any credential setup. Discovery functions query the
+# bucket directly -- they describe what's available in the
+# dataset, regardless of what you have downloaded. Running them
+# is a quick smoke test that initialization is complete.
 
 from laion_fmri.discovery import describe, get_subjects
 

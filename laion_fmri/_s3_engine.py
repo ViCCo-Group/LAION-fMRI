@@ -1,17 +1,11 @@
 """AWS S3 operations wrapping the official AWS CLI.
 
-All S3 listing, copying, syncing, and credential inspection are
-delegated to the ``aws`` command provided by the ``awscli`` pip
-dependency. No other AWS SDK is imported.
+All S3 listing, copying, and syncing are delegated to the ``aws``
+command provided by the ``awscli`` pip dependency. No other AWS
+SDK is imported.
 
-Every call respects the standard AWS credential chain:
-
-1. Environment variables (``AWS_ACCESS_KEY_ID`` / ``AWS_SECRET_ACCESS_KEY``)
-2. Shared credentials file (``~/.aws/credentials``)
-3. IAM role (on AWS infrastructure)
-
-If none of the above resolves, calls are made with
-``--no-sign-request`` so they work against public buckets.
+The LAION-fMRI bucket is public, so every call is made with
+``--no-sign-request``. No AWS credentials are read or set.
 """
 
 import json
@@ -21,31 +15,8 @@ from pathlib import Path
 from laion_fmri._sources import LAION_FMRI_REGION
 
 
-def has_aws_credentials():
-    """Return True if the AWS CLI can resolve credentials locally.
-
-    Calls ``aws configure list`` (a local-only command, no network
-    request) and inspects the resulting ``access_key`` row.
-
-    Returns
-    -------
-    bool
-    """
-    result = subprocess.run(
-        ["aws", "configure", "list"],
-        capture_output=True, text=True, check=False,
-    )
-    if result.returncode != 0:
-        return False
-    for line in result.stdout.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("access_key"):
-            return "<not set>" not in stripped
-    return False
-
-
 def _aws(subcommand_args, capture=True):
-    """Run an ``aws`` subprocess with region and signing flags applied.
+    """Run an ``aws`` subprocess with region and anonymous signing.
 
     Parameters
     ----------
@@ -60,9 +31,11 @@ def _aws(subcommand_args, capture=True):
     -------
     subprocess.CompletedProcess
     """
-    cmd = ["aws", *subcommand_args, "--region", LAION_FMRI_REGION]
-    if not has_aws_credentials():
-        cmd.append("--no-sign-request")
+    cmd = [
+        "aws", *subcommand_args,
+        "--region", LAION_FMRI_REGION,
+        "--no-sign-request",
+    ]
     return subprocess.run(
         cmd, capture_output=capture, check=True, text=True,
     )

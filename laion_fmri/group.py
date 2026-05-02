@@ -31,7 +31,7 @@ def load_subjects(subjects):
 
 
 class Group:
-    """Lightweight wrapper around several Subjects.
+    """Holds several ``Subject`` instances and dispatches to them.
 
     Parameters
     ----------

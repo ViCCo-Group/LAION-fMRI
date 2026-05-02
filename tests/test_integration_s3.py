@@ -9,9 +9,7 @@ so they are deselected by default. Run them explicitly with::
 
     uv run pytest -m network -v
 
-Tests requiring credentials skip with a clear message when the
-AWS CLI cannot resolve any credentials, so contributors without
-AWS access can still run the rest of the suite.
+The bucket is public, so no AWS credentials are needed.
 """
 
 import shutil
@@ -23,8 +21,8 @@ import pytest
 
 from laion_fmri._s3_engine import (
     download_key,
-    has_aws_credentials,
     list_common_prefixes,
+    list_prefix_keys,
     sync_prefix,
 )
 from laion_fmri._sources import LAION_FMRI_BUCKET
@@ -57,17 +55,6 @@ def isolated_download_dir():
 # ── Pre-flight ──────────────────────────────────────────────────
 
 
-def _require_credentials():
-    """Skip the calling test if no AWS credentials are configured."""
-    if not has_aws_credentials():
-        pytest.skip(
-            "No AWS credentials detected. Set them with "
-            "laion_fmri.config.set_aws_credentials(...) "
-            "or via AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY env "
-            "vars before running the integration suite."
-        )
-
-
 def _quietly(func, *args, **kwargs):
     """Run ``func`` while ignoring our own UserWarnings."""
     with warnings.catch_warnings():
@@ -80,7 +67,6 @@ def _quietly(func, *args, **kwargs):
 
 def test_bucket_root_lists_derivatives():
     """The bucket root contains the ``derivatives/`` BIDS prefix."""
-    _require_credentials()
     top = list_common_prefixes(LAION_FMRI_BUCKET, "")
     assert "derivatives" in top, (
         f"Expected 'derivatives/' under s3://{LAION_FMRI_BUCKET}/ "
@@ -90,7 +76,6 @@ def test_bucket_root_lists_derivatives():
 
 def test_inspect_bucket_real_run(capsys):
     """``inspect_bucket()`` prints the live bucket structure."""
-    _require_credentials()
     inspect_bucket()
     out = capsys.readouterr().out
     assert f"s3://{LAION_FMRI_BUCKET}" in out
@@ -102,7 +87,6 @@ def test_inspect_bucket_real_run(capsys):
 
 def test_get_subjects_returns_list_from_real_bucket():
     """Subjects discovered from the real bucket match BIDS naming."""
-    _require_credentials()
     subjects = _quietly(get_subjects)
     assert isinstance(subjects, list)
     for sub_id in subjects:
@@ -113,7 +97,6 @@ def test_get_subjects_returns_list_from_real_bucket():
 
 def test_describe_real_bucket(capsys):
     """``describe()`` shows the real bucket contents."""
-    _require_credentials()
     _quietly(describe)
     out = capsys.readouterr().out
     assert "LAION-fMRI Dataset" in out
@@ -122,7 +105,6 @@ def test_describe_real_bucket(capsys):
 
 def test_get_rois_for_first_subject():
     """ROI listing works for a real subject in the bucket."""
-    _require_credentials()
     subjects = _quietly(get_subjects)
     if not subjects:
         pytest.skip("No subjects in bucket yet -- nothing to test.")
@@ -159,7 +141,6 @@ def test_download_one_session_and_load(
     ``isolated_download_dir`` fixture removes everything when the
     test finishes so nothing accumulates on disk.
     """
-    _require_credentials()
     subjects = _quietly(get_subjects)
     if not subjects:
         pytest.skip("No subjects in bucket yet -- nothing to test.")
@@ -196,12 +177,21 @@ def test_download_one_session_and_load(
             LAION_FMRI_BUCKET, key, data_dir / key,
         )
 
-    # Subject-level brain mask
+    # Subject-level brain mask -- skip the round-trip if the file
+    # is not yet uploaded under the expected name.
     bm_local = brain_mask_path(data_dir, subject)
     bm_key = (
         f"derivatives/glmsingle-tedana/{subject}/"
         f"{bm_local.name}"
     )
+    subject_keys = list_prefix_keys(
+        LAION_FMRI_BUCKET,
+        f"derivatives/glmsingle-tedana/{subject}/",
+    )
+    if bm_key not in subject_keys:
+        pytest.skip(
+            f"Brain mask not yet in bucket: s3://{LAION_FMRI_BUCKET}/{bm_key}"
+        )
     download_key(LAION_FMRI_BUCKET, bm_key, bm_local)
 
     # One session's func dir only
@@ -244,7 +234,6 @@ def test_download_one_session_and_load(
 
 def test_cli_info_against_real_bucket(monkeypatch, tmp_path, capsys):
     """``laion-fmri info`` end-to-end against the real bucket."""
-    _require_credentials()
     from laion_fmri._cli import main
 
     config_home = tmp_path / "cfg"
