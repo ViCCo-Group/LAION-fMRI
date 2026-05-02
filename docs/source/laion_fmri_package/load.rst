@@ -149,13 +149,15 @@ For ROI-restricted variants, add ``roi="visual"`` (or any
 voxel selection composes naturally and applies before the
 z-score.
 
-Bundled train / test splits (re:vision Method 1 + Method 2)
-===========================================================
+Bundled train / test splits (re:vision Method 1 / 2 / 3)
+========================================================
 
 The :mod:`laion_fmri.splits` subpackage layers on top of the
-accessors above without changing them. ``get_betas`` and
-``get_trial_info`` stay one-file-per-call; splits are pure
-label matches against the ``trial_info["label"]`` column:
+accessors above without changing them.
+:meth:`~laion_fmri.subject.Subject.get_betas` and
+:meth:`~laion_fmri.subject.Subject.get_trial_info` stay
+one-file-per-call; splits are pure label matches against the
+``label`` column of the trial table:
 
 .. code-block:: python
 
@@ -174,8 +176,9 @@ label matches against the ``trial_info["label"]`` column:
    train, test = get_split_masks(trials, "tau", pool="shared")
    X_train, X_test = betas[train], betas[test]
 
-See :doc:`/train_test_splits` for the full split catalogue and
-the five-fold cluster-holdout (Method 2) loop.
+See :doc:`/train_test_splits` for the full split catalogue
+(``random_*``, ``cluster_k5_*``, ``tau``, ``ood``) and per-method
+worked examples.
 
 Errors you may encounter
 ========================

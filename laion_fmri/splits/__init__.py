@@ -1,60 +1,59 @@
 """Predefined train / test splits for the re:vision generalization framework.
 
-LAION-fMRI ships with **11 train/test splits per pool**, designed to test
+LAION-fMRI ships with **12 train/test splits per pool**, designed to test
 generalization across the per-subject ``shared + unique`` stimulus pool
-or, alternatively, across just the cross-subject shared pool.
+or across just the cross-subject shared pool.
 
 Pools
 -----
 
 * ``"shared"`` — the 1,121 LAION images shared across every subject
-  (non-OOD subset of the shared block). Use this when the original study
-  you're replicating relied on cross-subject shared images only (e.g.
-  Conwell et al., 2024).
+  (non-OOD subset of the shared block).
 * ``"sub-01"``, ``"sub-03"``, ``"sub-05"``, ``"sub-06"``, ``"sub-07"`` —
-  the 5,833-image per-subject pools (1,121 shared + 4,712 unique). Use
-  these when each subject's full pool is the unit of analysis.
+  the 5,833-image per-subject pools (1,121 shared + 4,712 unique).
 
 Splits
 ------
 
-The same 11 split names exist in every pool:
+The same 12 split names exist in every pool:
 
-* ``random_0`` … ``random_4`` — five seeded uniform-random partitions.
-  The natural baseline for any generalization metric.
+* ``random_0`` … ``random_4`` — five seeded uniform-random partitions
+  (re:vision *baseline*).
 * ``cluster_k5_0`` … ``cluster_k5_4`` — five hold-out-cluster partitions
   (CLIP-feature k-means; one cluster held out as test). re:vision
-  *Method 2* (out-of-distribution clusters): average across all 5 folds.
+  *Method 2*.
 * ``tau`` — the MMD-matched 80/20 nearest-neighbour-distance split.
-  re:vision *Method 1* (independent within-distribution).
-
-Sizes:
-
-* ``random_*`` and ``tau`` are fixed at 80/20 of the pool (897/224
-  for the shared pool; 4666/1167 for per-subject pools).
-* ``cluster_k5_*`` test sizes vary with cluster population; train+test
-  always sum to the pool.
+  re:vision *Method 1*.
+* ``ood`` — train = the pool's regular images, test = all 371 OOD
+  shared images. re:vision *Method 3*. Test set is identical across
+  pools; train varies with pool.
 
 Loading
 -------
 
-The natural entry point is the :class:`~laion_fmri.subject.Subject` you
-already use for betas:
+The natural entry point is :func:`get_train_test_ids` (or
+:func:`get_split_masks` for trial-table masks):
 
->>> import laion_fmri
->>> sub = laion_fmri.load_subject("sub-01")
->>> train_ids, test_ids = sub.get_train_test_ids("tau")          # own pool
->>> train_ids, test_ids = sub.get_train_test_ids("tau",
-...                                              pool="shared")  # shared pool
+>>> from laion_fmri.splits import get_train_test_ids
+>>> train_ids, test_ids = get_train_test_ids("tau", pool="shared")
+>>> len(train_ids), len(test_ids)
+(897, 224)
 
-Or via the module-level functions:
+OOD type filter
+---------------
 
->>> from laion_fmri.splits import list_splits, load_split, get_train_test_ids
->>> list_splits()
-['cluster_k5_0', ..., 'tau']
->>> sp = load_split("tau", pool="shared")
->>> sp.pool, sp.n_train, sp.n_test
-('shared', 897, 224)
+The ``ood`` split's test set spans 9 OOD categories. Pass
+``ood_types=`` to restrict the test set to a subset:
+
+>>> from laion_fmri.splits import list_ood_types
+>>> list_ood_types()
+['cropped', 'gabor', 'gaudy', 'illusion-classic', 'illusion-natural', \
+'relations', 'selfmade', 'shape', 'unusual']
+>>> _, test_shape = get_train_test_ids(
+...     "ood", pool="shared", ood_types=["shape"],
+... )
+>>> len(test_shape)
+82
 
 The returned image_ids match the ``label`` column of every session's
 events TSV. Slice betas with the existing ``get_betas`` filter system —
@@ -64,9 +63,10 @@ see :doc:`/laion_fmri_package/load` for details.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -78,12 +78,58 @@ _SUBJECT_POOLS: Tuple[str, ...] = (
 )
 _SHARED_POOL = "shared"
 
-# All split names available in every pool. 11 names × 6 pools = 66 JSONs.
+# All split names available in every pool. 12 names × 6 pools = 72 JSONs.
 _SPLIT_NAMES: Tuple[str, ...] = (
     "random_0", "random_1", "random_2", "random_3", "random_4",
     "cluster_k5_0", "cluster_k5_1", "cluster_k5_2", "cluster_k5_3", "cluster_k5_4",
     "tau",
+    "ood",
 )
+
+
+# OOD categories present in the bundled `ood` split. Same 371 images
+# across all pools; only the train side differs by pool. Categories
+# come from the filename pattern shared_4rep_OOD_<type>_<...>.{png,jpg}.
+_OOD_TYPES: Tuple[str, ...] = (
+    "cropped",
+    "gabor",
+    "gaudy",
+    "illusion-classic",
+    "illusion-natural",
+    "relations",
+    "selfmade",
+    "shape",
+    "unusual",
+)
+_OOD_FILENAME_RE = re.compile(
+    r"^shared_4rep_OOD_([a-zA-Z0-9-]+)_.+\.(png|jpg)$"
+)
+
+
+def list_ood_types() -> List[str]:
+    """Return the 9 OOD categories present in the ``ood`` split."""
+    return list(_OOD_TYPES)
+
+
+def _ood_type_for_image(image_id: str) -> Optional[str]:
+    """Return the OOD category of an image_id, or None if not an OOD image."""
+    m = _OOD_FILENAME_RE.match(image_id)
+    return m.group(1) if m else None
+
+
+def _validate_ood_types(types: Optional[Union[str, Iterable[str]]]) -> Optional[Tuple[str, ...]]:
+    """Coerce an ``ood_types`` argument to a tuple of valid type names."""
+    if types is None:
+        return None
+    if isinstance(types, str):
+        types = [types]
+    out = tuple(types)
+    bad = [t for t in out if t not in _OOD_TYPES]
+    if bad:
+        raise ValueError(
+            f"Unknown ood_types {bad!r}. Valid: {list(_OOD_TYPES)}"
+        )
+    return out
 
 
 @dataclass
@@ -110,13 +156,15 @@ class Split:
 
     @property
     def split_family(self) -> str:
-        """Coarse family: ``"random"``, ``"cluster_k5"``, or ``"tau"``."""
+        """Coarse family: ``"random"``, ``"cluster_k5"``, ``"tau"``, or ``"ood"``."""
         if self.name.startswith("random_"):
             return "random"
         if self.name.startswith("cluster_k5_"):
             return "cluster_k5"
         if self.name == "tau":
             return "tau"
+        if self.name == "ood":
+            return "ood"
         return "other"
 
 
@@ -210,21 +258,41 @@ def get_train_test_ids(
     name: str,
     pool: str,
     variant_id: int = 0,
+    ood_types: Optional[Union[str, Iterable[str]]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Convenience: return ``(train_ids, test_ids)`` for one variant.
 
     Most splits have a single ``variant_id=0``. The five ``random_*``
     and the five ``cluster_k5_*`` splits each ARE the variants — pick
     the split name; ``variant_id`` stays 0.
+
+    Parameters
+    ----------
+    ood_types : str, list[str], or None
+        Only meaningful when ``name == "ood"``. Restricts the test set
+        to image_ids of these OOD categories (see :func:`list_ood_types`).
+        ``None`` keeps all 9 categories.
     """
     sp = load_split(name, pool)
     for v in sp.variants:
         if v.variant_id == variant_id:
-            return list(v.train_ids), list(v.test_ids)
-    raise ValueError(
-        f"variant_id={variant_id} not in split {name!r} (pool {pool}). "
-        f"Available variants: {[v.variant_id for v in sp.variants]}"
-    )
+            train, test = list(v.train_ids), list(v.test_ids)
+            break
+    else:
+        raise ValueError(
+            f"variant_id={variant_id} not in split {name!r} (pool {pool}). "
+            f"Available variants: {[v.variant_id for v in sp.variants]}"
+        )
+
+    types = _validate_ood_types(ood_types)
+    if types is not None:
+        if name != "ood":
+            raise ValueError(
+                f"`ood_types` is only valid for the 'ood' split, got name={name!r}."
+            )
+        keep = set(types)
+        test = [iid for iid in test if _ood_type_for_image(iid) in keep]
+    return train, test
 
 
 def get_split_masks(
@@ -232,6 +300,7 @@ def get_split_masks(
     name: str,
     pool: str,
     variant_id: int = 0,
+    ood_types: Optional[Union[str, Iterable[str]]] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Build ``(train_mask, test_mask)`` over rows of a trial table.
 
@@ -247,12 +316,15 @@ def get_split_masks(
         is used; otherwise the input is treated as label values
         directly.
     name : str
-        One of the 11 split names (see :func:`list_splits`).
+        One of the 12 split names (see :func:`list_splits`).
     pool : str
         ``"shared"`` or a subject id like ``"sub-01"`` (see
         :func:`list_pools`).
     variant_id : int, default 0
         Variant within the split. Almost always 0.
+    ood_types : str, list[str], or None
+        Only meaningful when ``name == "ood"``. See
+        :func:`get_train_test_ids`.
 
     Returns
     -------
@@ -271,7 +343,9 @@ def get_split_masks(
     ... )
     >>> betas[train_mask], betas[test_mask]   # doctest: +SKIP
     """
-    train_ids, test_ids = get_train_test_ids(name, pool, variant_id=variant_id)
+    train_ids, test_ids = get_train_test_ids(
+        name, pool, variant_id=variant_id, ood_types=ood_types,
+    )
     train_set = set(train_ids)
     test_set = set(test_ids)
 
@@ -292,6 +366,7 @@ __all__ = [
     "SplitVariant",
     "list_pools",
     "list_splits",
+    "list_ood_types",
     "load_split",
     "load_all_splits",
     "get_train_test_ids",

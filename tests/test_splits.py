@@ -13,6 +13,7 @@ from laion_fmri.splits import (
     SplitVariant,
     get_split_masks,
     get_train_test_ids,
+    list_ood_types,
     list_pools,
     list_splits,
     load_all_splits,
@@ -22,6 +23,7 @@ from laion_fmri.splits import (
 
 _POOL_SIZE_PER_SUBJECT = 5833      # 1121 shared + 4712 unique
 _POOL_SIZE_SHARED = 1121           # cross-subject shared (non-OOD)
+_N_OOD = 371                        # OOD-shared images (re:vision Method 3)
 
 
 # ── Catalogue ──────────────────────────────────────────────────
@@ -33,12 +35,13 @@ def test_list_pools_includes_shared_and_five_subjects():
     assert set(pools[1:]) == {"sub-01", "sub-03", "sub-05", "sub-06", "sub-07"}
 
 
-def test_list_splits_returns_eleven_names():
+def test_list_splits_returns_twelve_names():
     names = list_splits()
-    assert len(names) == 11
+    assert len(names) == 12
     assert sum(n.startswith("random_") for n in names) == 5
     assert sum(n.startswith("cluster_k5_") for n in names) == 5
     assert "tau" in names
+    assert "ood" in names
 
 
 # ── Loading single splits ──────────────────────────────────────
@@ -76,10 +79,80 @@ def test_split_family():
     assert load_split("tau", pool="sub-01").split_family == "tau"
 
 
-def test_load_all_splits_returns_eleven():
+def test_load_all_splits_returns_twelve():
     all_sp = load_all_splits(pool="sub-01")
-    assert len(all_sp) == 11
+    assert len(all_sp) == 12
     assert all(isinstance(sp, Split) for sp in all_sp.values())
+
+
+# ── OOD split (re:vision Method 3) ─────────────────────────────
+
+
+def test_list_ood_types_returns_nine_categories():
+    types = list_ood_types()
+    assert len(types) == 9
+    assert types == sorted(types)
+    assert "shape" in types and "illusion-classic" in types
+
+
+@pytest.mark.parametrize("pool,expected_train", [
+    ("shared", _POOL_SIZE_SHARED),
+    ("sub-01", _POOL_SIZE_PER_SUBJECT),
+    ("sub-07", _POOL_SIZE_PER_SUBJECT),
+])
+def test_ood_split_sizes(pool, expected_train):
+    train, test = get_train_test_ids("ood", pool=pool)
+    assert len(train) == expected_train
+    assert len(test) == _N_OOD
+    assert all(iid.startswith("shared_4rep_OOD_") for iid in test)
+    assert load_split("ood", pool=pool).split_family == "ood"
+
+
+def test_ood_test_set_is_identical_across_pools():
+    """OOD images are shared-block — same 371 across every pool."""
+    _, test_shared = get_train_test_ids("ood", pool="shared")
+    for sub in ("sub-01", "sub-03", "sub-05", "sub-06", "sub-07"):
+        _, test_sub = get_train_test_ids("ood", pool=sub)
+        assert test_sub == test_shared
+
+
+def test_ood_types_filter_keeps_only_requested_categories():
+    train, test_shape = get_train_test_ids(
+        "ood", pool="shared", ood_types=["shape"],
+    )
+    assert len(train) == _POOL_SIZE_SHARED
+    assert len(test_shape) == 82
+    assert all("_OOD_shape_" in iid for iid in test_shape)
+
+    _, test_two = get_train_test_ids(
+        "ood", pool="shared", ood_types=["shape", "unusual"],
+    )
+    assert len(test_two) == 82 + 64
+
+
+def test_ood_types_filter_accepts_string():
+    _, test = get_train_test_ids("ood", pool="shared", ood_types="gabor")
+    assert len(test) == 10
+
+
+def test_ood_types_rejects_unknown():
+    with pytest.raises(ValueError, match="Unknown ood_types"):
+        get_train_test_ids("ood", pool="shared", ood_types=["nonsense"])
+
+
+def test_ood_types_only_for_ood_split():
+    with pytest.raises(ValueError, match="only valid for the 'ood' split"):
+        get_train_test_ids("tau", pool="shared", ood_types=["shape"])
+
+
+def test_get_split_masks_with_ood_types():
+    _, test_shape = get_train_test_ids("ood", pool="shared", ood_types=["shape"])
+    trials = pd.DataFrame({"label": test_shape + ["unrelated.jpg"] * 5})
+    train_mask, test_mask = get_split_masks(
+        trials, "ood", pool="shared", ood_types=["shape"],
+    )
+    assert test_mask.sum() == 82
+    assert train_mask.sum() == 0  # none of the OOD test ids are in the train pool
 
 
 # ── Variants ───────────────────────────────────────────────────

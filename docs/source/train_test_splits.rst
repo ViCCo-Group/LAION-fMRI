@@ -4,8 +4,8 @@ Train / Test Splits
 
 LAION-fMRI ships with **predefined train/test splits** so that
 encoding-model and representation-similarity replications can
-report comparable generalization scores. The splits implement
-*Method 1* and *Method 2* of the
+report comparable generalization scores. The splits implement all
+three methods of the
 `re:vision generalization framework <https://re-vision-initiative.org/generalization/>`_:
 
 * **Method 1 — Independent within-distribution.** An 80/20 split
@@ -15,12 +15,15 @@ report comparable generalization scores. The splits implement
 * **Method 2 — Out-of-distribution clusters.** Five-fold
   CLIP-feature cluster holdout. Use the ``cluster_k5_0`` …
   ``cluster_k5_4`` splits and average results across folds.
+* **Method 3 — Out-of-distribution images.** Train on the pool's
+  regular images, test on the 371 held-out OOD stimuli. Use the
+  ``ood`` split. Optionally restrict the test set to specific
+  OOD categories with the ``ood_types=`` keyword on
+  :func:`~laion_fmri.splits.get_train_test_ids` /
+  :func:`~laion_fmri.splits.get_split_masks`.
 * **Random** baselines (``random_0`` … ``random_4``) are also
   bundled — comparing them against ``tau`` quantifies how much
   of a model's score depends on train/test similarity.
-
-OOD images (re:vision *Method 3*) are a separate stimulus set,
-not a partition of any pool — see :doc:`stimulus_data`.
 
 .. figure:: _static/splits_summary_panel.png
    :align: center
@@ -54,7 +57,8 @@ Pools
 =====
 
 Every split is bundled for **six pools**. Pick the one whose
-stimulus subset matches the original study:
+stimulus subset matches the original study — see
+:func:`~laion_fmri.splits.list_pools`.
 
 * ``"shared"`` — the **1,121 cross-subject shared images** (non-OOD
   subset of the shared block). Use this when the original study
@@ -69,7 +73,8 @@ stimulus subset matches the original study:
 Split names
 ===========
 
-Eleven names exist in every pool:
+Twelve names exist in every pool — see
+:func:`~laion_fmri.splits.list_splits`.
 
 .. list-table::
    :header-rows: 1
@@ -94,6 +99,13 @@ Eleven names exist in every pool:
        but each test image is kept maximally far from its
        nearest training neighbour in feature space. Single
        fixed split per pool.
+   * - ``ood``
+     - Method 3
+     - Train = the pool's regular images, test = the 371
+       held-out OOD shared images. The test set is identical
+       across pools; train varies. See
+       :ref:`splits-ood-section` below for the 9 OOD
+       categories and how to filter to a subset of them.
 
 Split sizes:
 
@@ -101,14 +113,17 @@ Split sizes:
   897 / 224 for the shared pool and 4666 / 1167 per subject.
 * ``cluster_k5_*`` test sizes vary with cluster population; train
   + test always equals the pool size.
+* ``ood`` test = **371** for every pool. Train = the pool itself
+  (1,121 for ``shared``, 5,833 for the subject pools).
 
 Loading splits
 ==============
 
-The simplest path is :func:`laion_fmri.splits.get_train_test_ids`,
+The simplest path is :func:`~laion_fmri.splits.get_train_test_ids`,
 which returns the train and test image-id lists. Match those
-against the ``label`` column of any trial table, then apply the
-mask to your betas:
+against the ``label`` column of the
+:meth:`~laion_fmri.subject.Subject.get_trial_info` output, then
+apply the mask to your betas:
 
 .. code-block:: python
 
@@ -140,7 +155,7 @@ are the same strings as the ``label`` column entries (e.g.
 ``"shared_12rep_LAION_cluster_1003_i0.jpg"``), so no
 normalisation is needed.
 
-For convenience, :func:`laion_fmri.splits.get_split_masks`
+For convenience, :func:`~laion_fmri.splits.get_split_masks`
 collapses those last three lines:
 
 .. code-block:: python
@@ -167,6 +182,66 @@ Method 2 — five-fold cluster average
 
    m2 = float(np.mean(scores))
 
+.. _splits-ood-section:
+
+Method 3 — OOD images
+=====================
+
+The ``ood`` split holds out **371 OOD stimuli** as a test set, with
+the train side being the pool's regular images. Every subject saw
+all 371 OOD images, so ``test_ids`` is the same set regardless of
+``pool``; what changes is what counts as "regular" training data.
+
+.. code-block:: python
+
+   from laion_fmri.splits import get_split_masks
+
+   # Method 3: train on shared, test on OOD-shared
+   train_mask, test_mask = get_split_masks(trials, "ood", pool="shared")
+   fit_encoding(features[train_mask], betas[train_mask])
+   m3 = score(features[test_mask], betas[test_mask])
+
+OOD categories
+--------------
+
+The 371 OOD images span 9 categories. Discoverable at runtime via
+:func:`~laion_fmri.splits.list_ood_types`:
+
+==================  ===  ==========================================
+type                  n  what's in it
+==================  ===  ==========================================
+``shape``            82  abstract shape, colour and digit stimuli
+``relations``        72  unusual spatial relations between objects
+``unusual``          64  natural scenes with unusual content
+``cropped``          60  zoomed-in / cropped object close-ups
+``selfmade``         30  custom-shot stimuli
+``gaudy``            24  highly saturated / patterned scenes
+``illusion-classic`` 21  textbook visual illusions
+``gabor``            10  Gabor patches
+``illusion-natural``  8  natural-image illusions
+==================  ===  ==========================================
+
+Pass ``ood_types=`` to
+:func:`~laion_fmri.splits.get_train_test_ids` or
+:func:`~laion_fmri.splits.get_split_masks` to restrict the test
+set to specific categories — useful when only some OOD types
+make sense for the original study (e.g. an object-recognition
+finding probably shouldn't be evaluated on Gabor patches):
+
+.. code-block:: python
+
+   # Just shape / unusual / cropped (positively biased toward objects)
+   train_mask, test_mask = get_split_masks(
+       trials, "ood", pool="shared",
+       ood_types=["shape", "unusual", "cropped"],
+   )
+
+   # Or one type at a time, to compare per-category generalization:
+   per_type_scores = {}
+   for t in list_ood_types():
+       _, m = get_split_masks(trials, "ood", pool="shared", ood_types=[t])
+       per_type_scores[t] = score(features[m], betas[m])
+
 Inspection
 ==========
 
@@ -180,7 +255,7 @@ For the full :class:`~laion_fmri.splits.Split` object — including
    >>> list_pools()
    ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
    >>> list_splits()
-   ['random_0', ..., 'cluster_k5_4', 'tau']
+   ['cluster_k5_0', ..., 'random_0', ..., 'ood', 'tau']
    >>> sp = load_split("tau", pool="shared")
    >>> sp.n_train, sp.n_test, sp.split_family
    (897, 224, 'tau')
@@ -217,4 +292,5 @@ See also
 
 * :doc:`stimulus_data` — how stimulus filenames map to dataset labels.
 * :doc:`glmsingle_betas` — per-trial beta estimates the splits slice into.
-* :doc:`laion_fmri_package/load` — the ``Subject`` accessors used above.
+* :doc:`laion_fmri_package/load` — the
+  :class:`~laion_fmri.subject.Subject` accessors used above.
