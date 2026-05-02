@@ -25,11 +25,30 @@ the main pool. See :doc:`stimulus_data` for that path.
 .. figure:: _static/splits_summary_panel.png
    :align: center
    :width: 95%
-   :alt: Summary panel of the bundled splits.
+   :alt: Cross-pool diagnostics for the bundled tau split.
 
-   Per-pool diagnostics for the bundled splits — image-space
-   coverage, decoder quality, train/test similarity by feature
-   space (CLIP, DINOv2, DreamSim).
+   Cross-pool diagnostics for the ``tau`` split, on two
+   representative pools (left: cross-subject ``shared``;
+   right: ``sub-01``). Each block is 3 × 3 — rows are
+   diagnostics, columns are the three feature spaces used to
+   construct the splits (CLIP, DINOv2, DreamSim).
+   **Row 1, t-SNE coverage:** test images (green) overlaid on
+   the training pool (grey); ``tau`` test points spread across
+   the embedding rather than clustering anywhere.
+   **Row 2, 1-NN density:** kernel density of each test image's
+   distance to its nearest *training* neighbour, ``tau``
+   (green) vs the random baseline (grey); dashed lines mark
+   medians. ``tau`` shifts the distribution toward larger NN
+   distances — i.e. a *harder* test set than random — while
+   keeping the population matched at the MMD level.
+   **Row 3, τ-frontier:** the population-level discrepancy
+   (squared MMD between train and test, log scale) as the
+   minimum-NN feasibility threshold τ is swept from permissive
+   to tight. The blue curve is the best-of-3000 candidate at
+   each τ; grey dots are the five ``random_*`` baselines, purple
+   dots the five ``cluster_k5_*`` folds, and the green star is
+   the bundled ``tau`` split — chosen at the tightest τ whose
+   MMD still matches the random baseline.
 
 Pools
 =====
