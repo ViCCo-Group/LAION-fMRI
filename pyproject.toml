@@ -55,6 +55,12 @@ docs = [
     "furo>=2024.0",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["laion_fmri"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"laion_fmri/splits/data" = "laion_fmri/splits/data"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [

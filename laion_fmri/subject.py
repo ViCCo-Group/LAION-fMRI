@@ -304,7 +304,7 @@ class Subject:
         Exactly one of ``session`` or ``desc`` must be set:
 
         * ``session="ses-01"`` -> per-session NC NIfTI.
-        * ``desc="Noiseceiling12rep"`` -> the subject-level
+        * ``desc="noiseceiling33ses"`` -> the subject-level
           aggregate NC NIfTI with the given ``desc-...`` token.
 
         Either argument also accepts a list, in which case the
