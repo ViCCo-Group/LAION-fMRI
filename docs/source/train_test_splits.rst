@@ -4,23 +4,23 @@ Train / Test Splits
 
 LAION-fMRI ships with **predefined train/test splits** so that
 encoding-model and representation-similarity replications can
-report generalization on a common footing. The splits implement
+report comparable generalization scores. The splits implement
 *Method 1* and *Method 2* of the
 `re:vision generalization framework <https://re-vision-initiative.org/generalization/>`_:
 
 * **Method 1 — Independent within-distribution.** An 80/20 split
-  designed to maximise within-distribution coverage while
-  controlling for leakage from overly similar images. Use the
-  ``tau`` split.
-* **Method 2 — Out-of-distribution clusters.** Five-fold CLIP-feature
-  cluster holdout. Use the ``cluster_k5_0`` … ``cluster_k5_4`` splits
-  and average across folds.
+  that covers the image distribution as fully as possible while
+  penalising train/test pairs that are too close in feature
+  space. Use the ``tau`` split.
+* **Method 2 — Out-of-distribution clusters.** Five-fold
+  CLIP-feature cluster holdout. Use the ``cluster_k5_0`` …
+  ``cluster_k5_4`` splits and average results across folds.
 * **Random** baselines (``random_0`` … ``random_4``) are also
-  bundled — comparing them to ``tau`` quantifies how much of a
-  model's score depends on test-set similarity to training.
+  bundled — comparing them against ``tau`` quantifies how much
+  of a model's score depends on train/test similarity.
 
-OOD images for *Method 3* are not splits; they live alongside
-the main pool. See :doc:`stimulus_data` for that path.
+OOD images (re:vision *Method 3*) are a separate stimulus set,
+not a partition of any pool — see :doc:`stimulus_data`.
 
 .. figure:: _static/splits_summary_panel.png
    :align: center
@@ -34,7 +34,7 @@ the main pool. See :doc:`stimulus_data` for that path.
    construct the splits (CLIP, DINOv2, DreamSim).
    **Row 1, t-SNE coverage:** test images (green) overlaid on
    the training pool (grey); ``tau`` test points spread across
-   the embedding rather than clustering anywhere.
+   the embedding rather than concentrating in one region.
    **Row 2, 1-NN density:** kernel density of each test image's
    distance to its nearest *training* neighbour, ``tau``
    (green) vs the random baseline (grey); dashed lines mark
@@ -53,17 +53,18 @@ the main pool. See :doc:`stimulus_data` for that path.
 Pools
 =====
 
-Every split is bundled for **six pools**, all valid choices
-depending on which images your replicated study used:
+Every split is bundled for **six pools**. Pick the one whose
+stimulus subset matches the original study:
 
 * ``"shared"`` — the **1,121 cross-subject shared images** (non-OOD
-  subset of the shared block). Pick this when the original study
-  used only the shared subset (e.g. NSD / Conwell-style
-  benchmarks).
+  subset of the shared block). Use this when the original study
+  used only stimuli that every subject saw (e.g. NSD- or
+  Conwell-style benchmarks).
 * ``"sub-01"``, ``"sub-03"``, ``"sub-05"``, ``"sub-06"``, ``"sub-07"``
-  — the per-subject pools (1,121 shared + 4,712 unique = **5,833
-  images each**). Pick the subject's own pool when you're
-  replicating a study that used everything that subject saw.
+  — the per-subject pools (1,121 shared + 4,712 subject-unique
+  images = **5,833 images each**). Use a subject's pool when the
+  original analysis was per-subject and used that subject's full
+  stimulus set.
 
 Split names
 ===========
@@ -83,14 +84,15 @@ Eleven names exist in every pool:
        baseline for any generalization metric.
    * - ``cluster_k5_0`` … ``cluster_k5_4``
      - Method 2
-     - Hold-out one of five CLIP-feature k-means clusters as test.
-       Variable test sizes (cluster populations differ); train +
-       test always sum to the pool.
+     - Each split holds out one of five CLIP-feature k-means
+       clusters as the test fold. Test sizes vary with cluster
+       population; train + test always sum to the pool.
    * - ``tau``
      - Method 1
      - The MMD-matched 80/20 nearest-neighbour-distance split.
-       Test set is matched to training at the population level
-       while staying maximally distinct image-by-image. Single
+       Train and test match at the population level (low MMD),
+       but each test image is kept maximally far from its
+       nearest training neighbour in feature space. Single
        fixed split per pool.
 
 Split sizes:
@@ -133,12 +135,13 @@ mask to your betas:
 
    X_train, X_test = betas[train_mask], betas[test_mask]
 
-The matching is direct: the ``train_ids`` / ``test_ids`` are
-strings exactly equal to the ``label`` column entries (e.g.
-``"shared_12rep_LAION_cluster_1003_i0.jpg"``).
+Matching is by string equality: ``train_ids`` / ``test_ids``
+are the same strings as the ``label`` column entries (e.g.
+``"shared_12rep_LAION_cluster_1003_i0.jpg"``), so no
+normalisation is needed.
 
 For convenience, :func:`laion_fmri.splits.get_split_masks`
-combines those last three lines:
+collapses those last three lines:
 
 .. code-block:: python
 
