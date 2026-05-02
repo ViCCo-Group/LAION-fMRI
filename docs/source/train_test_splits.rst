@@ -6,7 +6,7 @@ LAION-fMRI ships with **predefined train/test splits** so that
 encoding-model and representation-similarity replications can
 report generalization on a common footing. The splits implement
 *Method 1* and *Method 2* of the
-`re:vision generalization framework <https://www.revision.brain.mpg.de/>`_:
+`re:vision generalization framework <https://re-vision-initiative.org/generalization/>`_:
 
 * **Method 1 — Independent within-distribution.** An 80/20 split
   designed to maximise within-distribution coverage while
