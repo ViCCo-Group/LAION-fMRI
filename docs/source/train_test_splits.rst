@@ -74,15 +74,6 @@ Twelve names exist in every pool — see
    * - name
      - re:vision method
      - notes
-   * - ``random_0`` … ``random_4``
-     - baseline
-     - Five seeded uniform-random 80/20 partitions. Use them as a
-       baseline for any generalization metric.
-   * - ``cluster_k5_0`` … ``cluster_k5_4``
-     - Method 2
-     - Each split holds out one of five CLIP-feature k-means
-       clusters as the test fold. Test sizes vary with cluster
-       population; train + test always sum to the pool.
    * - ``tau``
      - Method 1
      - The MMD-matched 80/20 nearest-neighbour-distance split.
@@ -90,6 +81,11 @@ Twelve names exist in every pool — see
        but each test image is kept maximally far from its
        nearest training neighbour in feature space. Single
        fixed split per pool.
+   * - ``cluster_k5_0`` … ``cluster_k5_4``
+     - Method 2
+     - Each split holds out one of five CLIP-feature k-means
+       clusters as the test fold. Test sizes vary with cluster
+       population; train + test always sum to the pool.
    * - ``ood``
      - Method 3
      - Train = the pool's regular images, test = the 371
@@ -97,6 +93,10 @@ Twelve names exist in every pool — see
        across pools; train varies. See
        :ref:`splits-ood-section` below for the 9 OOD
        categories and how to filter to a subset of them.
+   * - ``random_0`` … ``random_4``
+     - baseline
+     - Five seeded uniform-random 80/20 partitions. Use them as a
+       baseline for any generalization metric.
 
 Split sizes:
 
