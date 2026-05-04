@@ -2,8 +2,6 @@
 Stimulus Selection
 ===================
 
-How the visual stimuli for the LAION-fMRI dataset were selected and curated.
-
 Stimuli for LAION-fMRI were explicitly designed to maximise visual-semantic
 diversity and coverage of the natural image space. The majority of stimuli
 were selected from `LAION-natural`_ using an effective-dimensionality
@@ -26,10 +24,10 @@ distinct images sampled across the experiment. Both classes needed to broadly
 and uniformly cover the space of natural images, depicting scenes, objects,
 and events rather than synthetic graphics or other non-photographic content.
 
-The majority of stimuli were drawn from `LAION-natural`_, a curated subset
-of approximately 120 million natural photographs filtered from LAION-2B (see
-:doc:`stimulus_data`). To anchor the stimulus set in well-characterised
-existing datasets and enable cross-study comparisons, we additionally
+The majority of stimuli were drawn from LAION-natural, a curated subset
+of approximately 120 million natural photographs filtered from LAION-2B.
+To anchor the stimulus set in well-characterised existing datasets and enable
+cross-study comparisons, we additionally
 incorporated images from the Natural Scenes Dataset (NSD; Allen et al., 2022)
 and from two related object-image databases: THINGS, a collection of 1,854
 object concepts with over 26,000 naturalistic images (Hebart et al., 2019),
@@ -42,7 +40,7 @@ Selection Criteria
 Diversity-optimised selection
 -----------------------------
 
-From `LAION-natural`_, we drew a random subset of approximately 10 million
+From LAION-natural, we drew a random subset of approximately 10 million
 images, reduced their CLIP ViT-L/14 visual embeddings to 323 dimensions via
 incremental PCA, and applied mini-batch :math:`K`-means
 (:math:`k = 1{,}121`) to partition the reduced feature space. The selected
@@ -72,7 +70,7 @@ Because the experimental design required multiple images per region of the
 feature space (one shared stimulus plus one unique stimulus per
 participant), we next retrieved visually similar alternatives for each
 prototype. We built an approximate nearest-neighbour index (Annoy; 50 trees,
-Euclidean metric) over up to 100 million `LAION-natural`_ images in the
+Euclidean metric) over up to 100 million LAION-natural images in the
 original (non-PCA-reduced) CLIP embedding space, and retrieved the 200
 nearest neighbours for each of the 5,499 prototypes. Near-exact duplicates
 (pairwise distance ``< 0.01`` in the original embedding space) were removed.
@@ -159,7 +157,7 @@ we first retrieved additional candidates from deeper in the existing
 nearest-neighbour lists (beyond the initial 25 images per pool used during
 quality review, drawing from the remaining ~175 neighbours retrieved in
 the earlier Annoy step). We also ran two further rounds of ED optimisation
-on fresh `LAION-natural`_ samples to add candidate pools in undercovered
+on fresh LAION-natural samples to add candidate pools in undercovered
 regions of the feature space: the first round drew from a new
 10-million-image sample and added 1,200 prototypes; the second added 500
 more. Each newly selected prototype received its own nearest-neighbour
