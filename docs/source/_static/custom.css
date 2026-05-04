@@ -69,7 +69,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 h1 {
-    font-size: calc(2.5em - 1px) !important;
+    font-size: calc(2.5em - 2px) !important;
     font-weight: 700 !important;
     color: var(--rv-heading-fg) !important;
     border-bottom: 2px solid var(--rv-slate) !important;
@@ -77,27 +77,27 @@ h1 {
 }
 
 h2 {
-    font-size: calc(2em - 1px) !important;
+    font-size: calc(2em - 2px) !important;
     font-weight: 700 !important;
     color: var(--rv-heading-fg) !important;
 }
 
 h3 {
-    font-size: calc(1.5em - 1px) !important;
+    font-size: calc(1.5em - 2px) !important;
     color: var(--rv-h3-fg) !important;
     font-weight: 600 !important;
 }
 
 h4 {
-    font-size: calc(1.25em - 1px) !important;
+    font-size: calc(1.25em - 2px) !important;
 }
 
 h5 {
-    font-size: calc(1.125em - 1px) !important;
+    font-size: calc(1.125em - 2px) !important;
 }
 
 h6 {
-    font-size: calc(1em - 1px) !important;
+    font-size: calc(1em - 2px) !important;
 }
 
 /* ---- Links ---- */
