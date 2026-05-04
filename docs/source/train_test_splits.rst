@@ -28,30 +28,21 @@ three methods of the
 .. figure:: _static/splits_summary_panel.png
    :align: center
    :width: 95%
-   :alt: Cross-pool diagnostics for the bundled tau split.
+   :alt: Diagnostics for the bundled tau split in shared and per-subject pools.
 
-   Cross-pool diagnostics for the ``tau`` split, on two
-   representative pools (left: cross-subject ``shared``;
-   right: ``sub-01``). Each block is 3 × 3 — rows are
-   diagnostics, columns are the three feature spaces used to
-   construct the splits (CLIP, DINOv2, DreamSim).
-   **Row 1, t-SNE coverage:** test images (green) overlaid on
-   the training pool (grey); ``tau`` test points spread across
-   the embedding rather than concentrating in one region.
-   **Row 2, 1-NN density:** kernel density of each test image's
-   distance to its nearest *training* neighbour, ``tau``
-   (green) vs the random baseline (grey); dashed lines mark
-   medians. ``tau`` shifts the distribution toward larger NN
-   distances — i.e. a *harder* test set than random — while
-   keeping the population matched at the MMD level.
-   **Row 3, τ-frontier:** the population-level discrepancy
-   (squared MMD between train and test, log scale) as the
-   minimum-NN feasibility threshold τ is swept from permissive
-   to tight. The blue curve is the best-of-3000 candidate at
-   each τ; grey dots are the five ``random_*`` baselines, purple
-   dots the five ``cluster_k5_*`` folds, and the green star is
-   the bundled ``tau`` split — chosen at the tightest τ whose
-   MMD still matches the random baseline.
+   Diagnostics for the bundled ``tau`` split, labelled here as the
+   balanced (MMD-matched) split, in two pools: ``shared`` LAION
+   images (left) and the full ``sub-01`` pool (right). Columns show
+   CLIP, DreamSim, and DINOv2 feature spaces. The top row shows
+   t-SNE coverage of the balanced test images (green) against the
+   train pool (grey). The middle row compares 1-nearest-neighbour
+   distance distributions for the balanced test split and random
+   80/20 baselines, with dashed lines marking medians. The bottom
+   row plots each candidate split by median 1-NN distance and
+   train/test MMD² (log scale): grey points are random 80/20
+   baselines, purple points are ``cluster_k5_*`` folds, the dotted
+   line is the random-pool MMD² reference, and the green star marks
+   the selected balanced split.
 
 Pools
 =====
@@ -207,19 +198,19 @@ OOD categories
 The 371 OOD images span 9 categories. Discoverable at runtime via
 :func:`~laion_fmri.splits.list_ood_types`:
 
-==================  ===  ==========================================
-type                  n  what's in it
-==================  ===  ==========================================
-``shape``            82  abstract shape, colour and digit stimuli
-``relations``        72  unusual spatial relations between objects
-``unusual``          64  natural scenes with unusual content
-``cropped``          60  zoomed-in / cropped object close-ups
-``selfmade``         30  custom-shot stimuli
-``gaudy``            24  highly saturated / patterned scenes
-``illusion-classic`` 21  textbook visual illusions
-``gabor``            10  Gabor patches
-``illusion-natural``  8  natural-image illusions
-==================  ===  ==========================================
+======================  ===  ==========================================
+type                      n  what's in it
+======================  ===  ==========================================
+``shape``                82  abstract shape, colour and digit stimuli
+``relations``            72  unusual spatial relations between objects
+``unusual``              64  natural scenes with unusual content
+``cropped``              60  zoomed-in / cropped object close-ups
+``selfmade``             30  custom-shot stimuli
+``gaudy``                24  highly saturated / patterned scenes
+``illusion-classic``     21  textbook visual illusions
+``gabor``                10  Gabor patches
+``illusion-natural``      8  natural-image illusions
+======================  ===  ==========================================
 
 Pass ``ood_types=`` to
 :func:`~laion_fmri.splits.get_train_test_ids` or

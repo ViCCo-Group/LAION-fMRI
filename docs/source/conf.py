@@ -120,7 +120,7 @@ html_theme_options = {
         # Fonts
         "font-stack": "Outfit, -apple-system, BlinkMacSystemFont, sans-serif",
         "font-stack--monospace": "Fira Code, SFMono-Regular, Menlo, Consolas, monospace",
-        "font-stack--headings": "Syne, Outfit, -apple-system, BlinkMacSystemFont, sans-serif",
+        "font-stack--headings": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
     },
     "light_css_variables": {
         # Light mode — clean white with re:vision accent colors
@@ -166,7 +166,7 @@ html_theme_options = {
         # Fonts
         "font-stack": "Outfit, -apple-system, BlinkMacSystemFont, sans-serif",
         "font-stack--monospace": "Fira Code, SFMono-Regular, Menlo, Consolas, monospace",
-        "font-stack--headings": "Syne, Outfit, -apple-system, BlinkMacSystemFont, sans-serif",
+        "font-stack--headings": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
     },
     "source_repository": "https://github.com/ViCCo-Group/LAION-fMRI",
     "source_branch": "main",

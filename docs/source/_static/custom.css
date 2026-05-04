@@ -1,7 +1,15 @@
 /* LAION-fMRI Documentation — re:vision theme overrides for Furo */
 
-/* Google Fonts: Syne (headings), Outfit (body), Fira Code (mono) */
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Syne:wght@500;600;700;800&display=swap');
+/* Google Fonts: Outfit (body), Fira Code (mono) */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --rv-font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+body {
+    font-size: 15px;
+}
 
 /* ---- Color tokens per mode ---- */
 
@@ -53,14 +61,15 @@ body:not([data-theme="dark"]) {
     --rv-noise-opacity: 0;
 }
 
-/* ---- Headings: Syne font ---- */
+/* ---- Headings: match re:vision system sans ---- */
 h1, h2, h3, h4, h5, h6,
 .sidebar-title {
-    font-family: 'Syne', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    letter-spacing: -0.01em;
+    font-family: var(--rv-font-heading) !important;
+    letter-spacing: 0;
 }
 
 h1 {
+    font-size: calc(2.5em - 1px) !important;
     font-weight: 700 !important;
     color: var(--rv-heading-fg) !important;
     border-bottom: 2px solid var(--rv-slate) !important;
@@ -68,13 +77,27 @@ h1 {
 }
 
 h2 {
-    font-weight: 600 !important;
+    font-size: calc(2em - 1px) !important;
+    font-weight: 700 !important;
     color: var(--rv-heading-fg) !important;
 }
 
 h3 {
+    font-size: calc(1.5em - 1px) !important;
     color: var(--rv-h3-fg) !important;
     font-weight: 600 !important;
+}
+
+h4 {
+    font-size: calc(1.25em - 1px) !important;
+}
+
+h5 {
+    font-size: calc(1.125em - 1px) !important;
+}
+
+h6 {
+    font-size: calc(1em - 1px) !important;
 }
 
 /* ---- Links ---- */
@@ -87,7 +110,7 @@ h3 {
 /* ---- Sidebar captions (section labels) ---- */
 .sidebar-tree .caption-text {
     color: var(--rv-cyan) !important;
-    font-family: 'Syne', sans-serif !important;
+    font-family: var(--rv-font-heading) !important;
     font-size: 0.72rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
@@ -102,22 +125,38 @@ h3 {
 }
 
 /* ---- Code blocks ---- */
-pre {
+pre,
+.highlight pre,
+pre.literal-block {
     background: var(--rv-code-bg) !important;
     border: 1px solid var(--rv-code-border) !important;
     border-radius: 8px !important;
     padding: 1em 1.2em !important;
-    font-size: 0.85rem !important;
+    font-size: 15px !important;
     line-height: 1.7 !important;
 }
 
-code.literal {
+.highlighttable .linenodiv {
+    font-size: 15px !important;
+}
+
+code.literal,
+.sig-inline {
     background: var(--rv-inline-code-bg) !important;
     color: var(--rv-inline-code-fg) !important;
     padding: 2px 6px !important;
     border-radius: 4px !important;
-    font-size: 0.88em !important;
+    font-size: 1em !important;
     border: 1px solid var(--rv-slate) !important;
+}
+
+article code.literal,
+article .sig-inline {
+    font-size: 15px !important;
+}
+
+article .caption-text code.literal {
+    font-size: 1em !important;
 }
 
 /* ---- Cards (sphinx-design) ---- */
@@ -170,7 +209,7 @@ code.literal {
 .admonition > .admonition-title {
     background: transparent !important;
     font-weight: 600 !important;
-    font-family: 'Syne', sans-serif !important;
+    font-family: var(--rv-font-heading) !important;
 }
 
 /* ---- Tables ---- */
@@ -182,7 +221,7 @@ th {
     background: var(--rv-surface-light) !important;
     color: var(--rv-fg) !important;
     font-weight: 600 !important;
-    font-family: 'Syne', sans-serif !important;
+    font-family: var(--rv-font-heading) !important;
     border: 1px solid var(--rv-slate) !important;
 }
 
@@ -193,6 +232,47 @@ td {
 table td.stub {
     color: var(--rv-fg) !important;
     font-weight: 500 !important;
+}
+
+/* ---- Figures ---- */
+.content figure,
+.content .figure {
+    margin: 2.2rem auto 2.6rem !important;
+}
+
+.content figure img,
+.content .figure img {
+    display: block;
+    box-sizing: border-box;
+    margin-right: auto;
+    margin-left: auto;
+    border: 1px solid var(--rv-slate);
+    border-radius: 8px;
+    background: var(--rv-surface);
+    box-shadow: 0 14px 36px rgba(10, 14, 26, 0.08);
+}
+
+body[data-theme="dark"] .content figure img,
+body[data-theme="dark"] .content .figure img {
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+}
+
+.content figure figcaption,
+.content .figure .caption {
+    max-width: 48rem;
+    margin: 0.8rem auto 0 !important;
+    padding: 0.7rem 0 0 1rem;
+    border-top: 1px solid var(--rv-slate);
+    border-left: 3px solid var(--rv-cyan);
+    color: var(--rv-fg-dim) !important;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    text-align: left !important;
+}
+
+.content figure figcaption p,
+.content .figure .caption {
+    margin: 0;
 }
 
 /* ---- Tabs (sphinx-tabs) ---- */
