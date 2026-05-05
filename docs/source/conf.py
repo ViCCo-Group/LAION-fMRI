@@ -174,7 +174,7 @@ html_theme_options = {
     "navigation_with_keys": True,
 }
 
-html_title = "LAION-fMRI - Documentation"
+html_title = "LAION-fMRI | Documentation"
 html_short_title = "LAION-fMRI"
 
 html_static_path = ["_static"]
