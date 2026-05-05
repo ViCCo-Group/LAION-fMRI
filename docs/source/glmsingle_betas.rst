@@ -9,19 +9,14 @@ encoding models, decoding, and representational similarity analyses (RSA).
 If you want to relate brain activity to a specific image, you are at the
 right place to start.
 
-.. todo::
-
-   Add a figure showing example beta maps for a few stimuli (e.g., 3-4
-   example images with their corresponding brain activation maps side by
-   side).
-
-.. figure:: _static/placeholder_betas_examples.png
+.. figure:: _static/glmsingle_beta_carpet.png
    :align: center
-   :width: 80%
-   :alt: Example single-trial beta maps
+   :width: 100%
+   :alt: GLMsingle beta carpet plot
 
-   Example single-trial beta maps for selected stimuli. *(placeholder —
-   replace with actual figure)*
+   GLMsingle TYPED beta carpet plot for ``sub-03``. Columns are sampled image
+   presentations, rows are high-variance voxels sorted by response variance,
+   and colors show beta weights z-scored within each voxel.
 
 Overview
 ========
