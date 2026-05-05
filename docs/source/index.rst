@@ -115,9 +115,7 @@ Getting Started
 
    anatomical_data
    fmri_data
-   diffusion
    rois
-   retinotopy
    localizers
    glmsingle_betas
 
@@ -147,7 +145,6 @@ Getting Started
    :caption: Reference
 
    faq
-   technical_notes
    example_methods_text
    contributing
    release-history
