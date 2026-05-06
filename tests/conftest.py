@@ -24,9 +24,15 @@ Layout:
         │       ├── <single-trial effect statmap .nii.gz>
         │       ├── <per-session noise-ceiling statmap .nii.gz>
         │       └── <GLMsingle events .tsv>
-        └── atlases/sub-XX/rois/
-            ├── visual.nii.gz
-            └── hlvis.nii.gz
+        └── rois/sub-XX/
+            ├── visualcat/
+            │   ├── sub-XX_space-T1w_res-1pt8_label-visual_mask.nii.gz
+            │   ├── sub-XX_hemi-L_space-fsnative_label-visual_mask.func.gii
+            │   ├── sub-XX_hemi-L_space-fsnative_label-visual_mask.label
+            │   ├── sub-XX_hemi-R_space-fsnative_label-visual_mask.func.gii
+            │   └── sub-XX_hemi-R_space-fsnative_label-visual_mask.label
+            └── hlviscat/
+                └── ... (same five files for label-hlvis)
 
 See ``_trial_betas_filename`` etc. below for the exact patterns.
 """
@@ -54,6 +60,18 @@ N_REPS_PER_STIMULUS = 3
 N_TRIALS_PER_SESSION = N_STIMULI * N_REPS_PER_STIMULUS  # 60
 AFFINE = np.eye(4)
 SUBJECT_NC_DESC = "Noiseceiling12rep"
+
+# ROI categories on disk under derivatives/rois/{sub}/{category}/
+VISUAL_CATEGORY = "visualcat"
+HLVIS_CATEGORY = "hlviscat"
+
+# Surface mesh sizes used by GIFTI / FreeSurfer-label fixtures
+N_VERTICES_L = 8
+N_VERTICES_R = 6
+VISUAL_VERT_INDICES_L = (0, 1, 2, 3)
+VISUAL_VERT_INDICES_R = (0, 1, 2)
+HLVIS_VERT_INDICES_L = (0, 1)
+HLVIS_VERT_INDICES_R = (0,)
 
 
 # ── File-name helpers ───────────────────────────────────────────
@@ -232,16 +250,104 @@ def _build_subject(data_dir, sub_id, brain_mask, stim_meta, rng):
         )
 
 
-def _build_atlases(data_dir, sub_id, brain_mask):
-    """Optional ROI atlases (used by ROI-related tests)."""
-    visual_vol, hlvis_vol = _make_roi_masks(brain_mask)
+def _save_gifti_mask(mask_array, path):
+    """Write a 1-D bool mask as a tiny ``.func.gii`` file."""
+    data = np.asarray(mask_array, dtype=np.float32)
+    darray = nib.gifti.GiftiDataArray(data)
+    img = nib.gifti.GiftiImage(darrays=[darray])
+    nib.save(img, str(path))
 
-    roi_dir = (
-        data_dir / "derivatives" / "atlases" / sub_id / "rois"
+
+def _save_freesurfer_label(vertex_indices, path):
+    """Write a minimal FreeSurfer ASCII ``.label`` file."""
+    indices = list(vertex_indices)
+    lines = [
+        "#!ascii label, from synthetic conftest",
+        f"{len(indices)}",
+    ]
+    for vid in indices:
+        lines.append(f"{vid} 0.000 0.000 0.000 0.000")
+    path.write_text("\n".join(lines) + "\n")
+
+
+def _surface_mask(vertex_indices, n_vertices):
+    """Boolean 1-D mask flagging ``vertex_indices`` as True."""
+    mask = np.zeros(n_vertices, dtype=bool)
+    for vid in vertex_indices:
+        mask[vid] = True
+    return mask
+
+
+def _write_roi_files(
+    category_dir, sub_id, roi, vol_mask,
+    indices_l, indices_r,
+):
+    """Write the five ROI files (volume + per-hemi func.gii + label)."""
+    base = f"{sub_id}"
+
+    # Volume
+    _save_nifti(
+        vol_mask,
+        category_dir / (
+            f"{base}_space-T1w_res-1pt8_"
+            f"label-{roi}_mask.nii.gz"
+        ),
+        dtype=np.uint8,
     )
-    roi_dir.mkdir(parents=True)
-    _save_nifti(visual_vol, roi_dir / "visual.nii.gz", dtype=np.uint8)
-    _save_nifti(hlvis_vol, roi_dir / "hlvis.nii.gz", dtype=np.uint8)
+
+    # Surface (per hemi)
+    surf_l = _surface_mask(indices_l, N_VERTICES_L)
+    surf_r = _surface_mask(indices_r, N_VERTICES_R)
+    _save_gifti_mask(
+        surf_l,
+        category_dir / (
+            f"{base}_hemi-L_space-fsnative_"
+            f"label-{roi}_mask.func.gii"
+        ),
+    )
+    _save_gifti_mask(
+        surf_r,
+        category_dir / (
+            f"{base}_hemi-R_space-fsnative_"
+            f"label-{roi}_mask.func.gii"
+        ),
+    )
+
+    # FreeSurfer ASCII label
+    _save_freesurfer_label(
+        indices_l,
+        category_dir / (
+            f"{base}_hemi-L_space-fsnative_"
+            f"label-{roi}_mask.label"
+        ),
+    )
+    _save_freesurfer_label(
+        indices_r,
+        category_dir / (
+            f"{base}_hemi-R_space-fsnative_"
+            f"label-{roi}_mask.label"
+        ),
+    )
+
+
+def _build_rois(data_dir, sub_id, brain_mask):
+    """Build per-subject ROI tree under ``derivatives/rois/``."""
+    visual_vol, hlvis_vol = _make_roi_masks(brain_mask)
+    rois_root = data_dir / "derivatives" / "rois" / sub_id
+
+    visual_dir = rois_root / VISUAL_CATEGORY
+    visual_dir.mkdir(parents=True)
+    _write_roi_files(
+        visual_dir, sub_id, "visual", visual_vol,
+        VISUAL_VERT_INDICES_L, VISUAL_VERT_INDICES_R,
+    )
+
+    hlvis_dir = rois_root / HLVIS_CATEGORY
+    hlvis_dir.mkdir(parents=True)
+    _write_roi_files(
+        hlvis_dir, sub_id, "hlvis", hlvis_vol,
+        HLVIS_VERT_INDICES_L, HLVIS_VERT_INDICES_R,
+    )
 
 
 # ── Fixtures ────────────────────────────────────────────────────
@@ -295,7 +401,7 @@ def synthetic_data_dir(tmp_path):
     # Per-subject derivatives
     for sub_id in ["sub-01", "sub-03"]:
         _build_subject(data_dir, sub_id, brain_mask, stim_meta, rng)
-        _build_atlases(data_dir, sub_id, brain_mask)
+        _build_rois(data_dir, sub_id, brain_mask)
 
     return data_dir
 

@@ -12,7 +12,7 @@ from laion_fmri.discovery import describe, get_rois, get_subjects
 
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_lists_from_bucket(mock_lcp):
-    # First call: glmsingle-tedana, second call: atlases
+    # First call: glmsingle-tedana, second call: rois
     mock_lcp.side_effect = [
         ["sub-01", "sub-03"],
         ["sub-01", "sub-03", "sub-05"],
@@ -22,7 +22,7 @@ def test_get_subjects_lists_from_bucket(mock_lcp):
 
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_union_across_derivatives(mock_lcp):
-    """Subject present only in atlases is still returned."""
+    """Subject present only in rois is still returned."""
     mock_lcp.side_effect = [[], ["sub-01"]]
     assert get_subjects() == ["sub-01"]
 
@@ -31,12 +31,11 @@ def test_get_subjects_union_across_derivatives(mock_lcp):
 def test_get_subjects_probes_glmsingle_tedana_first(mock_lcp):
     """glmsingle-tedana is the primary derivative tree."""
     mock_lcp.side_effect = [[], []]
-    import pytest as _pytest
-    with _pytest.warns(UserWarning):
+    with pytest.warns(UserWarning):
         get_subjects()
     prefixes = [call.args[1] for call in mock_lcp.call_args_list]
     assert prefixes[0] == "derivatives/glmsingle-tedana/"
-    assert "derivatives/atlases/" in prefixes
+    assert "derivatives/rois/" in prefixes
 
 
 @patch("laion_fmri.discovery.list_common_prefixes")
@@ -60,28 +59,52 @@ def test_get_subjects_queries_both_derivative_prefixes(mock_lcp):
         get_subjects()
     prefixes = [call.args[1] for call in mock_lcp.call_args_list]
     assert "derivatives/glmsingle-tedana/" in prefixes
-    assert "derivatives/atlases/" in prefixes
+    assert "derivatives/rois/" in prefixes
 
 
 # ── get_rois ────────────────────────────────────────────────────
 
 
 @patch("laion_fmri.discovery.list_prefix_keys")
-def test_get_rois_lists_from_bucket(mock_lpk):
+def test_get_rois_lists_bidsified_names_from_bucket(mock_lpk):
+    """Hyphenated label values are normalized to BIDS-clean form."""
     mock_lpk.return_value = [
-        "derivatives/atlases/sub-01/rois/visual.nii.gz",
-        "derivatives/atlases/sub-01/rois/face_area.nii.gz",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-FFA-1_mask.nii.gz",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",
     ]
-    assert get_rois(subject="sub-01") == ["face_area", "visual"]
+    assert get_rois(subject="sub-01") == ["FFA1", "OFA"]
 
 
 @patch("laion_fmri.discovery.list_prefix_keys")
-def test_get_rois_ignores_non_roi_files(mock_lpk):
+def test_get_rois_uses_volume_files_only(mock_lpk):
+    """Volume nii.gz is the source of truth; surface files are ignored."""
     mock_lpk.return_value = [
-        "derivatives/atlases/sub-01/rois/visual.nii.gz",
-        "derivatives/atlases/sub-01/rois/notes.txt",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_hemi-L_space-fsnative_label-OFA_mask.func.gii",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_hemi-L_space-fsnative_label-OFA_mask.label",
     ]
-    assert get_rois(subject="sub-01") == ["visual"]
+    assert get_rois(subject="sub-01") == ["OFA"]
+
+
+@patch("laion_fmri.discovery.list_prefix_keys")
+def test_get_rois_category_filter(mock_lpk):
+    mock_lpk.return_value = [
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-FFA1_mask.nii.gz",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",
+        "derivatives/rois/sub-01/place/"
+        "sub-01_space-T1w_res-1pt8_label-PPA_mask.nii.gz",
+    ]
+    assert get_rois(subject="sub-01", category="face") == [
+        "FFA1", "OFA",
+    ]
+    assert get_rois(subject="sub-01", category="place") == ["PPA"]
 
 
 @patch("laion_fmri.discovery.list_prefix_keys")
@@ -91,9 +114,10 @@ def test_get_rois_default_subject_uses_first_in_bucket(
 ):
     mock_lcp.side_effect = [["sub-01"], []]  # get_subjects listings
     mock_lpk.return_value = [
-        "derivatives/atlases/sub-01/rois/visual.nii.gz",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",
     ]
-    assert get_rois() == ["visual"]
+    assert get_rois() == ["OFA"]
 
 
 @patch("laion_fmri.discovery.list_prefix_keys")
@@ -122,7 +146,8 @@ def test_describe_prints_bucket_summary(
 ):
     mock_lcp.side_effect = [["sub-01", "sub-03"], []]
     mock_lpk.return_value = [
-        "derivatives/atlases/sub-01/rois/visual.nii.gz",
+        "derivatives/rois/sub-01/face/"
+        "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",
     ]
 
     describe()
@@ -131,4 +156,4 @@ def test_describe_prints_bucket_summary(
     assert "s3://laion-fmri" in out
     assert "sub-01" in out
     assert "sub-03" in out
-    assert "visual" in out
+    assert "OFA" in out

@@ -89,9 +89,26 @@ def subject_noise_ceiling_path(data_dir, subject, desc):
 
 # ── ROI atlases ─────────────────────────────────────────────────
 
+def rois_subject_dir(data_dir, subject):
+    """Stub: GREEN moves rois under derivatives/rois/{sub}/."""
+    raise NotImplementedError("rois_subject_dir lands in GREEN")
+
+
 def roi_mask_path(data_dir, subject, roi):
-    """Path to an ROI mask NIfTI for a subject."""
-    return rois_dir(data_dir, subject) / f"{roi}.nii.gz"
+    """Stub: GREEN globs the volumetric mask under the new layout."""
+    raise NotImplementedError("roi_mask_path GREEN rewrite pending")
+
+
+def roi_surface_path(data_dir, subject, roi, hemi):
+    """Stub: GREEN globs the per-hemi func.gii surface mask."""
+    raise NotImplementedError("roi_surface_path lands in GREEN")
+
+
+def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
+    """Stub: GREEN globs the per-hemi FreeSurfer .label file."""
+    raise NotImplementedError(
+        "roi_freesurfer_label_path lands in GREEN"
+    )
 
 
 # ── Stimuli (forward-compat) ────────────────────────────────────

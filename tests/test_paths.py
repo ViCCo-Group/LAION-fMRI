@@ -1,14 +1,17 @@
 from pathlib import Path
 
+import pytest
+
 from laion_fmri._paths import (
-    atlases_subject_dir,
     betas_path,
     brain_mask_path,
     glmsingle_subject_dir,
     license_marker_path,
     participants_tsv_path,
+    roi_freesurfer_label_path,
     roi_mask_path,
-    rois_dir,
+    roi_surface_path,
+    rois_subject_dir,
     session_func_dir,
     session_noise_ceiling_path,
     stimuli_dir_path,
@@ -81,23 +84,87 @@ def test_subject_noise_ceiling_path():
     )
 
 
-def test_roi_mask_path():
-    result = roi_mask_path("/data", "sub-03", "visual")
-    assert result == Path(
-        "/data/derivatives/atlases/sub-03/rois/visual.nii.gz"
+# ── ROI path resolvers ─────────────────────────────────────────
+
+
+def test_rois_subject_dir():
+    assert rois_subject_dir("/d", "sub-03") == Path(
+        "/d/derivatives/rois/sub-03"
     )
 
 
-def test_atlases_subject_dir():
-    assert atlases_subject_dir("/d", "sub-03") == Path(
-        "/d/derivatives/atlases/sub-03"
+def test_roi_mask_path_finds_volume(tmp_path):
+    """Volume mask file is glob-resolved by ROI label."""
+    face_dir = tmp_path / "derivatives/rois/sub-03/face"
+    face_dir.mkdir(parents=True)
+    expected = (
+        face_dir
+        / "sub-03_space-T1w_res-1pt8_label-FFA1_mask.nii.gz"
     )
+    expected.touch()
+
+    assert roi_mask_path(tmp_path, "sub-03", "FFA1") == expected
 
 
-def test_rois_dir():
-    assert rois_dir("/d", "sub-03") == Path(
-        "/d/derivatives/atlases/sub-03/rois"
+def test_roi_mask_path_unknown_raises(tmp_path):
+    rois_dir = tmp_path / "derivatives/rois/sub-03/face"
+    rois_dir.mkdir(parents=True)
+
+    with pytest.raises(FileNotFoundError, match="FFA99"):
+        roi_mask_path(tmp_path, "sub-03", "FFA99")
+
+
+def test_roi_surface_path_finds_func_gii_per_hemi(tmp_path):
+    place_dir = tmp_path / "derivatives/rois/sub-03/place"
+    place_dir.mkdir(parents=True)
+    expected_l = (
+        place_dir
+        / "sub-03_hemi-L_space-fsnative_label-PPA_mask.func.gii"
     )
+    expected_r = (
+        place_dir
+        / "sub-03_hemi-R_space-fsnative_label-PPA_mask.func.gii"
+    )
+    expected_l.touch()
+    expected_r.touch()
+
+    assert roi_surface_path(
+        tmp_path, "sub-03", "PPA", "L",
+    ) == expected_l
+    assert roi_surface_path(
+        tmp_path, "sub-03", "PPA", "R",
+    ) == expected_r
+
+
+def test_roi_surface_path_unknown_raises(tmp_path):
+    rois_dir = tmp_path / "derivatives/rois/sub-03/face"
+    rois_dir.mkdir(parents=True)
+    with pytest.raises(FileNotFoundError):
+        roi_surface_path(tmp_path, "sub-03", "PPA", "L")
+
+
+def test_roi_freesurfer_label_path_finds_per_hemi(tmp_path):
+    place_dir = tmp_path / "derivatives/rois/sub-03/place"
+    place_dir.mkdir(parents=True)
+    expected = (
+        place_dir
+        / "sub-03_hemi-L_space-fsnative_label-PPA_mask.label"
+    )
+    expected.touch()
+
+    assert roi_freesurfer_label_path(
+        tmp_path, "sub-03", "PPA", "L",
+    ) == expected
+
+
+def test_roi_freesurfer_label_path_unknown_raises(tmp_path):
+    rois_dir = tmp_path / "derivatives/rois/sub-03/face"
+    rois_dir.mkdir(parents=True)
+    with pytest.raises(FileNotFoundError):
+        roi_freesurfer_label_path(tmp_path, "sub-03", "PPA", "L")
+
+
+# ── Stimuli / metadata / markers ───────────────────────────────
 
 
 def test_stimuli_dir_path():
@@ -126,21 +193,3 @@ def test_tou_marker_path():
     assert tou_marker_path("/data") == Path(
         "/data/.laion_fmri/stimuli_terms_accepted"
     )
-
-
-def test_all_paths_return_path_objects():
-    assert isinstance(betas_path("/d", "s", "ses"), Path)
-    assert isinstance(
-        session_noise_ceiling_path("/d", "s", "ses"), Path,
-    )
-    assert isinstance(trialinfo_path("/d", "s", "ses"), Path)
-    assert isinstance(brain_mask_path("/d", "s"), Path)
-    assert isinstance(
-        subject_noise_ceiling_path("/d", "s", "x"), Path,
-    )
-    assert isinstance(roi_mask_path("/d", "s", "r"), Path)
-    assert isinstance(stimuli_dir_path("/d"), Path)
-    assert isinstance(stimuli_metadata_path("/d"), Path)
-    assert isinstance(participants_tsv_path("/d"), Path)
-    assert isinstance(glmsingle_subject_dir("/d", "s"), Path)
-    assert isinstance(session_func_dir("/d", "s", "ses"), Path)
