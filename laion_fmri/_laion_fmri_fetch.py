@@ -110,6 +110,23 @@ def _matches_filters(key, filters):
     base, _, ext = filename.partition(".")
     suffix = base.rsplit("_", 1)[-1] if "_" in base else base
 
+    # JSON sidecars carry the BIDS metadata for their NIfTI sibling.
+    # When the caller filtered by ``suffix=`` and a sidecar matches
+    # that suffix, pull it through regardless of the ``extension``
+    # filter so the data file and its sidecar always travel together.
+    suffix_filter = filters.get("suffix")
+    if isinstance(suffix_filter, str):
+        suffix_filter_values = [suffix_filter]
+    elif suffix_filter is None:
+        suffix_filter_values = None
+    else:
+        suffix_filter_values = list(suffix_filter)
+    sidecar_override = (
+        ext == "json"
+        and suffix_filter_values is not None
+        and suffix in suffix_filter_values
+    )
+
     for fname, fvalues in filters.items():
         if fvalues is None:
             continue
@@ -121,6 +138,8 @@ def _matches_filters(key, filters):
                 return False
             continue
         if fname == "extension":
+            if sidecar_override:
+                continue
             if ext not in fvalues:
                 return False
             continue

@@ -42,6 +42,7 @@ laion-fmri = "laion_fmri._cli:main"
 dev = [
     "pytest>=7.0",
     "flake8>=6.0",
+    "Flake8-pyproject>=1.2",
     "Pillow>=9.0",
 ]
 docs = [
@@ -51,6 +52,8 @@ docs = [
     "sphinx-tabs>=3.4",
     "sphinx-gallery>=0.14",
     "matplotlib>=3.0",
+    "seaborn>=0.12",
+    "nilearn>=0.10",
     "myst-parser>=2.0",
     "numpydoc>=1.5",
     "furo>=2024.0",

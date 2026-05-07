@@ -10,28 +10,31 @@ import sys
 sys.path.insert(0, os.path.abspath("../.."))
 
 
-# -- Shared example data dir ---------------------------------------------
+# -- Sphinx-gallery is opt-in -------------------------------------------
 #
-# Sphinx-gallery executes the example scripts. The download/load
-# examples touch the package's license/ToU prompts the first time
-# they run; in an automated docs build we don't have a TTY, so we
-# pre-write the marker files in a build-controlled data dir and
-# expose its path to the examples via an environment variable.
+# Executing the example scripts on every build is brittle: it
+# downloads ~GB of data, depends on AWS reachability, and can OOM
+# on small CI hosts. We commit the executed-gallery output instead.
 #
-# End users running the example scripts directly (no env var set)
-# fall back to a per-script working-dir path and still see the
-# real ``Type "I AGREE"`` prompts the first time.
+# To regenerate the committed gallery locally:
+#
+#     LAION_FMRI_BUILD_EXAMPLES=1 cd docs && uv run make html
+#     uv run python docs/scripts/sanitize_examples.py
+#     git add docs/source/auto_examples/
+#
+# Without the env var, sphinx-gallery is not loaded; sphinx renders
+# whatever rst lives under ``docs/source/auto_examples/``.
 
-_BUILD_DATA_ROOT = pathlib.Path(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "build"))
-)
-_EXAMPLE_DATA_DIR = _BUILD_DATA_ROOT / "_examples_data" / "laion_fmri_quickstart"
-(_EXAMPLE_DATA_DIR / ".laion_fmri").mkdir(parents=True, exist_ok=True)
-(_EXAMPLE_DATA_DIR / ".laion_fmri" / "license_accepted").touch()
-(_EXAMPLE_DATA_DIR / ".laion_fmri" / "stimuli_terms_accepted").touch()
-os.environ["LAION_FMRI_EXAMPLE_DATA_DIR"] = str(_EXAMPLE_DATA_DIR)
+_BUILD_EXAMPLES = bool(os.environ.get("LAION_FMRI_BUILD_EXAMPLES"))
+
 
 # -- General configuration ------------------------------------------------
+#
+# sphinx-gallery is loaded unconditionally so the ``image-sg``
+# directive in committed gallery RST is always recognized when CI
+# runs ``make html``. Whether the example scripts themselves get
+# *executed* is gated by ``plot_gallery`` below: only set when
+# LAION_FMRI_BUILD_EXAMPLES is in the environment.
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -47,15 +50,27 @@ extensions = [
     "sphinx_gallery.gen_gallery",
 ]
 
-# -- Sphinx-gallery configuration -----------------------------------------
-#
-# Examples live under <repo>/examples and are rendered as a gallery at
-# docs/source/auto_examples. The bucket is public, so example
-# scripts run end-to-end against the real S3 layer at build time.
-# License/ToU markers are pre-written above so the build is
-# non-interactive; brain-mask-dependent sections in plot_01 / plot_04
-# guard themselves and print a "pending upload" notice when the file
-# isn't in the bucket yet.
+if _BUILD_EXAMPLES:
+    # Pre-write license markers under a build-controlled data dir so
+    # the example scripts run non-interactively. End users running
+    # the example scripts directly still see the real prompts the
+    # first time.
+    _BUILD_DATA_ROOT = pathlib.Path(
+        os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "build")
+        )
+    )
+    _EXAMPLE_DATA_DIR = (
+        _BUILD_DATA_ROOT / "_examples_data" / "laion_fmri_quickstart"
+    )
+    (_EXAMPLE_DATA_DIR / ".laion_fmri").mkdir(
+        parents=True, exist_ok=True,
+    )
+    (_EXAMPLE_DATA_DIR / ".laion_fmri" / "license_accepted").touch()
+    (
+        _EXAMPLE_DATA_DIR / ".laion_fmri" / "stimuli_terms_accepted"
+    ).touch()
+    os.environ["LAION_FMRI_EXAMPLE_DATA_DIR"] = str(_EXAMPLE_DATA_DIR)
 
 from sphinx_gallery.sorting import FileNameSortKey  # noqa: E402
 
@@ -63,12 +78,22 @@ sphinx_gallery_conf = {
     "examples_dirs": ["../../examples"],
     "gallery_dirs": ["auto_examples"],
     "filename_pattern": r"plot_",
-    "plot_gallery": True,
+    # Execution gated by env var: True locally for a full rebuild,
+    # False on CI so the committed gallery is consumed as-is.
+    "plot_gallery": _BUILD_EXAMPLES,
     "remove_config_comments": True,
     "doc_module": ("laion_fmri",),
     # Render in plot_01, plot_02, ... order rather than the
     # default by-line-count.
     "within_subsection_order": FileNameSortKey,
+    # Branded fallback for examples that don't render figures
+    # (plot_02 prints license text, plot_03 prints discovery
+    # output) -- avoids sphinx-gallery's stock pinwheel.
+    "default_thumb_file": os.path.join(
+        os.path.dirname(__file__),
+        "_static",
+        "laion_fmri_logo_mosaic.png",
+    ),
 }
 
 # Configuration for sphinx-copybutton

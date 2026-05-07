@@ -101,6 +101,28 @@ def test_load_nifti_4d_rejects_3d(synthetic_data_dir):
         load_nifti_4d(nc_path, mask_path)
 
 
+def test_load_nifti_4d_bulk_matches_streaming(synthetic_data_dir):
+    """Bulk and streaming modes return identical arrays."""
+    betas_path = _trial_betas_file(
+        synthetic_data_dir, "sub-01", "ses-01",
+    )
+    mask_path = _brain_mask_file(synthetic_data_dir, "sub-01")
+    streamed = load_nifti_4d(betas_path, mask_path, streaming=True)
+    bulk = load_nifti_4d(betas_path, mask_path, streaming=False)
+    np.testing.assert_array_equal(streamed, bulk)
+
+
+def test_load_nifti_4d_default_is_streaming(synthetic_data_dir):
+    """Calling without ``streaming=`` matches ``streaming=True``."""
+    betas_path = _trial_betas_file(
+        synthetic_data_dir, "sub-01", "ses-01",
+    )
+    mask_path = _brain_mask_file(synthetic_data_dir, "sub-01")
+    default = load_nifti_4d(betas_path, mask_path)
+    streamed = load_nifti_4d(betas_path, mask_path, streaming=True)
+    np.testing.assert_array_equal(default, streamed)
+
+
 # ── load_nifti_with_affine ──────────────────────────────────────
 
 

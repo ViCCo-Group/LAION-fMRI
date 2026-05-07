@@ -55,6 +55,11 @@ SES_KEY = (
     "sub-03_ses-04_task-images_space-T1w_stat-effect_"
     "desc-SingletrialBetas_statmap.nii.gz"
 )
+SES_JSON_KEY = (
+    "derivatives/glmsingle-tedana/sub-03/ses-04/func/"
+    "sub-03_ses-04_task-images_space-T1w_stat-effect_"
+    "desc-SingletrialBetas_statmap.json"
+)
 SUBJECT_LEVEL_KEY = (
     "derivatives/glmsingle-tedana/sub-03/"
     "sub-03_task-images_space-T1w_"
@@ -207,6 +212,44 @@ def test_matches_filters_combined():
         SES_KEY,
         {"ses": "04", "stat": "noiseceiling"},
     ) is False
+
+
+def test_matches_filters_suffix_pulls_json_sidecar():
+    """Sidecar JSON tags along with its NIfTI under a ``suffix`` filter."""
+    assert (
+        _matches_filters(SES_JSON_KEY, {"suffix": "statmap"}) is True
+    )
+
+
+def test_matches_filters_suffix_pulls_json_despite_extension():
+    """JSON sidecar bypasses the ``extension`` filter when suffix matched.
+
+    Without this guarantee, a caller passing ``suffix=["statmap"]`` and
+    ``extension=["nii.gz"]`` would silently lose the BIDS metadata
+    sidecar that belongs with the data file -- forcing them to
+    duplicate the call with ``extension=["json"]`` to get them back.
+    """
+    assert _matches_filters(
+        SES_JSON_KEY,
+        {"suffix": "statmap", "extension": "nii.gz"},
+    ) is True
+
+
+def test_matches_filters_unmatched_json_still_rejected():
+    """A JSON whose suffix doesn't match the filter is still rejected."""
+    assert (
+        _matches_filters(SES_JSON_KEY, {"suffix": "events"}) is False
+    )
+
+
+def test_matches_filters_json_without_suffix_filter_uses_extension():
+    """No suffix filter: extension filter applies to JSON normally."""
+    assert (
+        _matches_filters(SES_JSON_KEY, {"extension": "json"}) is True
+    )
+    assert (
+        _matches_filters(SES_JSON_KEY, {"extension": "nii.gz"}) is False
+    )
 
 
 # ── fetch_laion_fmri ────────────────────────────────────────────

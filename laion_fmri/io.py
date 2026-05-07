@@ -41,22 +41,27 @@ def load_nifti_data(path, mask_path):
     return data[mask]
 
 
-def load_nifti_4d(path, mask_path):
+def load_nifti_4d(path, mask_path, streaming=False):
     """Load a 4-D NIfTI's values within a brain mask.
 
     Returns each volume as a row of voxel values.
-
-    Streams the data one volume at a time so the masking step
-    runs against a Fortran-contiguous 3-D slab rather than against
-    a strided 4-D reshape. NIfTI files are F-contiguous on disk;
-    a single ``flat[mask]`` over the full 4-D would force ~50k
-    cache-cold gathers across several GB of memory and is orders
-    of magnitude slower than the per-volume loop.
 
     Parameters
     ----------
     path : str or Path
     mask_path : str or Path
+    streaming : bool
+        If False (default), materialize the full 4-D array up
+        front, then mask per volume. Decompresses any ``.nii.gz``
+        once and is the right choice for the bucket's compressed
+        files; peak memory is the full 4-D file plus the masked
+        output, so a real session is ~12 GB. If True, read one
+        volume at a time -- peak memory stays at one volume plus
+        the masked output. **Streaming is only fast on raw
+        uncompressed ``.nii``** (or with the file already in OS
+        cache); on ``.nii.gz`` nibabel re-decompresses up to the
+        offset on every slice, so streaming becomes effectively
+        quadratic in the number of volumes.
 
     Returns
     -------
@@ -65,19 +70,25 @@ def load_nifti_4d(path, mask_path):
         C-contiguous so row indexing is cheap.
     """
     img = nib.load(str(path))
-    data = np.asarray(img.dataobj)
-    if data.ndim != 4:
+    shape = img.shape
+    if len(shape) != 4:
         raise ValueError(
-            f"Expected 4-D NIfTI at {path}, got shape {data.shape}"
+            f"Expected 4-D NIfTI at {path}, got shape {shape}"
         )
 
-    n_volumes = data.shape[3]
+    n_volumes = shape[3]
     mask = load_nifti_mask(mask_path)
     n_voxels = int(mask.sum())
 
     out = np.empty((n_volumes, n_voxels), dtype=np.float32)
-    for t in range(n_volumes):
-        out[t] = data[..., t].ravel()[mask]
+    if streaming:
+        for t in range(n_volumes):
+            vol = np.asarray(img.dataobj[..., t])
+            out[t] = vol.ravel()[mask]
+    else:
+        data = np.asarray(img.dataobj)
+        for t in range(n_volumes):
+            out[t] = data[..., t].ravel()[mask]
     return out
 
 
