@@ -3,7 +3,11 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =  # Removed "-W" to not treat warnings as errors
-SPHINXBUILD   = uv run sphinx-build
+# Use ``uv run`` locally so the project's pinned sphinx is always
+# picked up regardless of what's on $PATH (anaconda etc.). On the
+# deploy server the project venv is already on $PATH and uv may
+# not be installed, so fall back to plain ``sphinx-build`` there.
+SPHINXBUILD   = $(if $(shell command -v uv 2>/dev/null),uv run sphinx-build,sphinx-build)
 SPHINXPROJ    = PackagingScientificPython
 SOURCEDIR     = source
 BUILDDIR      = build
