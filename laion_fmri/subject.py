@@ -236,6 +236,7 @@ class Subject:
         mask=None,
         nc_threshold=None,
         stimuli=None,
+        streaming=False,
     ):
         """Load single-trial betas for one or more sessions.
 
@@ -255,6 +256,17 @@ class Subject:
         stimuli : "shared", "unique", or None
             Trial-level filter using the stimulus-metadata
             ``shared`` flag.
+        streaming : bool
+            If False (default), materialize the full 4-D NIfTI
+            up front and mask per volume. Decompresses any
+            ``.nii.gz`` once and is the right choice for the
+            bucket's compressed files; peak memory is the full
+            file plus the masked output (~12 GB for a real
+            session). If True, read one volume at a time -- peak
+            memory stays at one volume plus the masked output.
+            Streaming is only fast on raw uncompressed ``.nii``
+            files; on ``.nii.gz`` it re-decompresses on every
+            slice and slows to a crawl.
 
         Returns
         -------
@@ -267,6 +279,7 @@ class Subject:
                 s: self.get_betas(
                     session=s, roi=roi, mask=mask,
                     nc_threshold=nc_threshold, stimuli=stimuli,
+                    streaming=streaming,
                 )
                 for s in session
             }
@@ -286,7 +299,7 @@ class Subject:
         mask_path = r2mean_path(
             self._data_dir, self._subject_id,
         )
-        betas = load_nifti_4d(path, mask_path)
+        betas = load_nifti_4d(path, mask_path, streaming=streaming)
 
         voxel_mask = self._build_voxel_mask(
             roi, mask, nc_threshold, session,
