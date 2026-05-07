@@ -58,7 +58,7 @@ SES_KEY = (
 SUBJECT_LEVEL_KEY = (
     "derivatives/glmsingle-tedana/sub-03/"
     "sub-03_task-images_space-T1w_"
-    "desc-meanR2gt15mask_mask.nii.gz"
+    "stat-rsquare_desc-R2mean_statmap.nii.gz"
 )
 
 
@@ -302,7 +302,7 @@ def test_fetch_ses_filter_narrows_downloads(
     brain_mask = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-meanR2gt15mask_mask.nii.gz"
+        "stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
     other_summary = (
         "derivatives/glmsingle-tedana/sub-03/"
@@ -346,7 +346,7 @@ def test_fetch_ses_averages_keeps_all_subject_level(
     brain_mask = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-meanR2gt15mask_mask.nii.gz"
+        "stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
     other_summary = (
         "derivatives/glmsingle-tedana/sub-03/"
@@ -404,7 +404,7 @@ def test_fetch_does_not_warn_when_local_dir_has_data(
     mock_list_objects.return_value = []
 
     for prefix in (
-        "derivatives/atlases/sub-03",
+        "derivatives/rois/sub-03",
         "derivatives/glmsingle-tedana/sub-03",
     ):
         d = tmp_path / prefix
@@ -434,7 +434,7 @@ def test_fetch_skips_already_complete_file(
     key = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-meanR2gt15mask_mask.nii.gz"
+        "stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
     local = tmp_path / key
     local.parent.mkdir(parents=True)
@@ -464,7 +464,7 @@ def test_fetch_redownloads_when_size_mismatch(
     key = (
         "derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-meanR2gt15mask_mask.nii.gz"
+        "stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
     local = tmp_path / key
     local.parent.mkdir(parents=True)
@@ -563,6 +563,46 @@ def test_fetch_local_path_unchanged_when_label_value_is_clean(
     assert "label-OFA" in dest
 
 
+# ── ROI prefix ignores the ses filter ───────────────────────────
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_rois_pulled_even_with_ses_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """ROIs are subject-level (no ses entity); the strict ses filter
+    must not drop them when the caller asks for a specific session."""
+    roi_key = (
+        "derivatives/rois/sub-03/face/"
+        "sub-03_space-T1w_res-1pt8_label-FFA1_mask.nii.gz"
+    )
+
+    def listing(_bucket, prefix):
+        if prefix.endswith("derivatives/rois/sub-03/"):
+            return [{"Key": roi_key, "Size": 1}]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03", ses="ses-01",
+        )
+
+    # The ROI file was downloaded even though ses was specified.
+    keys = [c.args[1] for c in mock_download_key.call_args_list]
+    assert roi_key in keys
+
+    # No "no objects matching" warning for the ROI prefix.
+    relevant = [
+        w for w in record
+        if "derivatives/rois/sub-03" in str(w.message)
+    ]
+    assert relevant == []
+
+
 # ── n_jobs (parallel downloads) ─────────────────────────────────
 
 
@@ -625,7 +665,7 @@ def test_is_held_out_false_for_subject_level_key():
     key = (
         "derivatives/glmsingle-tedana/sub-01/"
         "sub-01_task-images_space-T1w_"
-        "desc-meanR2gt15mask_mask.nii.gz"
+        "stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
     assert _is_held_out(key) is False
 

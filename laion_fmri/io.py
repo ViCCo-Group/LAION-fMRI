@@ -110,3 +110,35 @@ def load_tsv(path):
     pd.DataFrame
     """
     return pd.read_csv(str(path), sep="\t")
+
+
+def load_gifti_mask(path):
+    """Load a ``.func.gii`` surface mask as a 1-D boolean array.
+
+    Parameters
+    ----------
+    path : str or Path
+
+    Returns
+    -------
+    np.ndarray
+        Shape ``(n_vertices,)``, dtype bool.
+    """
+    img = nib.load(str(path))
+    return np.asarray(img.darrays[0].data).astype(bool)
+
+
+def load_freesurfer_label(path):
+    """Load a FreeSurfer ``.label`` file's vertex indices.
+
+    Parameters
+    ----------
+    path : str or Path
+
+    Returns
+    -------
+    np.ndarray
+        Shape ``(n_label_vertices,)``, dtype int.
+    """
+    indices = nib.freesurfer.io.read_label(str(path))
+    return np.asarray(indices, dtype=int)

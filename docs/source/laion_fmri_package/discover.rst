@@ -17,10 +17,11 @@ download.
        inspect_bucket,
    )
 
-   get_subjects()             # ['sub-03', ...]
-   get_rois("sub-03")         # ROI atlas names, when available
-   describe()                 # human-readable summary
-   inspect_bucket()           # diagnostic listing for troubleshooting
+   get_subjects()                                # ['sub-01', ...]
+   get_rois("sub-01")                            # ['AFP1', 'EBA', ...]
+   get_rois("sub-01", category="face")           # face-area ROIs only
+   describe()                                    # human-readable summary
+   inspect_bucket()                              # diagnostic listing
 
 What each one does
 ==================
@@ -28,13 +29,18 @@ What each one does
 ``get_subjects()``
    Lists all subjects exposed by the bucket (every ``sub-*``
    subdirectory under ``derivatives/glmsingle-tedana/`` or
-   ``derivatives/atlases/``; the union of both is returned).
+   ``derivatives/rois/``; the union of both is returned).
 
-``get_rois(subject)``
-   Lists ROI atlas names available for a subject.  ROI atlases
-   are a forward-compatible feature: today the bucket exposes
-   none, so this returns ``[]`` with a clear warning. When
-   atlases are uploaded, the call lights up automatically.
+``get_rois(subject, category=None)``
+   Lists ROI labels available for a subject. The bucket groups
+   ROIs by category (``body``, ``character``, ``face``,
+   ``laion``, ``motion``, ``object``, ``place``,
+   ``retinotopy``); pass ``category=`` to restrict the listing.
+   ROI labels are returned in BIDS-clean form -- the bucket
+   sometimes ships hyphenated label values (``label-FFA-1``,
+   ``label-pSTS-faces``) that the package rewrites locally to
+   ``FFA1`` / ``pSTSfaces`` so the on-disk mirror passes the
+   BIDS validator.
 
 ``describe()``
    Prints a human-readable summary of bucket contents.
@@ -53,7 +59,7 @@ A populated bucket:
    LAION-fMRI Dataset
      Bucket:    s3://laion-fmri
      Subjects:  3 (sub-01, sub-03, sub-05)
-     ROIs:      hlvis, visual
+     ROIs:      AFP1, AFP2, EBA, FBA, FFA1, ...
 
 A bucket that is reachable but partially populated (common
 during the dev phase):
@@ -72,8 +78,8 @@ top-level layout plus a per-prefix subject count:
    Bucket: s3://laion-fmri
    Top-level prefixes (1):
      derivatives/
-   derivatives/glmsingle-tedana/: 1 entries, 1 sub-* entries
-   derivatives/atlases/: 0 entries, 0 sub-* entries
+   derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
+   derivatives/rois/: 6 entries, 6 sub-* entries
 
 Empty-listing warnings
 ======================

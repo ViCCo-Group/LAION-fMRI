@@ -4,10 +4,10 @@ import pytest
 
 from laion_fmri._paths import (
     betas_path,
-    brain_mask_path,
     glmsingle_subject_dir,
     license_marker_path,
     participants_tsv_path,
+    r2mean_path,
     roi_freesurfer_label_path,
     roi_mask_path,
     roi_surface_path,
@@ -64,12 +64,12 @@ def test_trialinfo_path():
     )
 
 
-def test_brain_mask_path_subject_level():
-    result = brain_mask_path("/data", "sub-03")
+def test_r2mean_path():
+    result = r2mean_path("/data", "sub-03")
     assert result == Path(
         "/data/derivatives/glmsingle-tedana/sub-03/"
         "sub-03_task-images_space-T1w_"
-        "desc-meanR2gt15mask_mask.nii.gz"
+        "stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
 
 

@@ -10,9 +10,9 @@ Two licenses apply:
   stimulus images.
 
 On the very first download the licenses are presented as
-``Type "I AGREE"`` prompts; on acceptance, marker files are
-written under ``{data_dir}/.laion_fmri/`` so the prompts don't
-fire again.
+``Type "I AGREE"`` prompts. The acceptances persist across
+sessions, so the prompts only appear the first time you run
+``download(...)`` against a new data directory.
 
 Reviewing up front
 ==================

@@ -97,10 +97,11 @@ def _events_filename(sub, ses):
     )
 
 
-def _brain_mask_filename(sub):
+def _r2mean_filename(sub):
+    """Subject-level mean-R^2 file the loader uses to derive the brain mask."""
     return (
-        f"{sub}_task-images_space-T1w_desc-meanR2gt15mask_"
-        f"mask.nii.gz"
+        f"{sub}_task-images_space-T1w_"
+        f"stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
 
 
@@ -193,10 +194,13 @@ def _build_subject(data_dir, sub_id, brain_mask, stim_meta, rng):
     )
     sub_dir.mkdir(parents=True)
 
-    # Subject-level brain mask
+    # Subject-level R2mean (the file the loader derives the brain
+    # mask from). Synthetic R^2: positive value where the brain
+    # mask is True, zero elsewhere.
+    r2_subject = brain_mask.astype(np.float32) * 0.5
     _save_nifti(
-        brain_mask, sub_dir / _brain_mask_filename(sub_id),
-        dtype=np.uint8,
+        r2_subject, sub_dir / _r2mean_filename(sub_id),
+        dtype=np.float32,
     )
 
     # Subject-level NC variant (one is enough for tests)
