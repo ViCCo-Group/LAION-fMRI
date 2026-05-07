@@ -4,9 +4,12 @@
 # Ignore Sphinx build output
 /docs/build/*
 
-# Sphinx-gallery generated output
-/docs/source/auto_examples/
+# Sphinx-gallery's per-build timing reports. The gallery itself
+# (auto_examples/) is committed -- regenerated locally with
+# LAION_FMRI_BUILD_EXAMPLES=1 and sanitized via
+# docs/scripts/sanitize_examples.py.
 /docs/source/sg_execution_times.rst
+/docs/source/auto_examples/sg_execution_times.rst
 
 # Autosummary-generated API stubs
 /docs/source/laion_fmri_package/_autosummary/
