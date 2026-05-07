@@ -402,3 +402,12 @@ body::before {
         padding-right: 1em;
     }
 }
+
+/* ---- Justified body paragraphs ---- */
+article p,
+article li > p,
+article dd > p {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+}

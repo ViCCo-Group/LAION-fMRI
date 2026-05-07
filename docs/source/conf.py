@@ -4,9 +4,32 @@
 # LAION-fMRI documentation build configuration file
 
 import os
+import pathlib
 import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
+
+
+# -- Shared example data dir ---------------------------------------------
+#
+# Sphinx-gallery executes the example scripts. The download/load
+# examples touch the package's license/ToU prompts the first time
+# they run; in an automated docs build we don't have a TTY, so we
+# pre-write the marker files in a build-controlled data dir and
+# expose its path to the examples via an environment variable.
+#
+# End users running the example scripts directly (no env var set)
+# fall back to a per-script working-dir path and still see the
+# real ``Type "I AGREE"`` prompts the first time.
+
+_BUILD_DATA_ROOT = pathlib.Path(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "build"))
+)
+_EXAMPLE_DATA_DIR = _BUILD_DATA_ROOT / "_examples_data" / "laion_fmri_quickstart"
+(_EXAMPLE_DATA_DIR / ".laion_fmri").mkdir(parents=True, exist_ok=True)
+(_EXAMPLE_DATA_DIR / ".laion_fmri" / "license_accepted").touch()
+(_EXAMPLE_DATA_DIR / ".laion_fmri" / "stimuli_terms_accepted").touch()
+os.environ["LAION_FMRI_EXAMPLE_DATA_DIR"] = str(_EXAMPLE_DATA_DIR)
 
 # -- General configuration ------------------------------------------------
 
@@ -27,18 +50,25 @@ extensions = [
 # -- Sphinx-gallery configuration -----------------------------------------
 #
 # Examples live under <repo>/examples and are rendered as a gallery at
-# docs/source/auto_examples. We deliberately do NOT execute them at build
-# time -- they call download() / load_subject(), which would require AWS
-# credentials and several GB of bandwidth. ``plot_gallery=False`` keeps
-# the source narratives + code blocks but skips execution.
+# docs/source/auto_examples. The bucket is public, so example
+# scripts run end-to-end against the real S3 layer at build time.
+# License/ToU markers are pre-written above so the build is
+# non-interactive; brain-mask-dependent sections in plot_01 / plot_04
+# guard themselves and print a "pending upload" notice when the file
+# isn't in the bucket yet.
+
+from sphinx_gallery.sorting import FileNameSortKey  # noqa: E402
 
 sphinx_gallery_conf = {
     "examples_dirs": ["../../examples"],
     "gallery_dirs": ["auto_examples"],
     "filename_pattern": r"plot_",
-    "plot_gallery": False,
+    "plot_gallery": True,
     "remove_config_comments": True,
     "doc_module": ("laion_fmri",),
+    # Render in plot_01, plot_02, ... order rather than the
+    # default by-line-count.
+    "within_subsection_order": FileNameSortKey,
 }
 
 # Configuration for sphinx-copybutton

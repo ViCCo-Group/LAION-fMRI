@@ -2,7 +2,7 @@
 ``laion_fmri``
 ==============
 
-A pure data downloader and wrangler for the LAION-fMRI dataset.
+A data downloader and wrangler for the LAION-fMRI dataset.
 The package mirrors the bucket layout to your local disk via the
 official AWS CLI, keeps every accessor as a one-to-one map onto a
 single file in S3, and applies BIDS-entity filters so you only
