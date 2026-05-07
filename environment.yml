@@ -8,9 +8,11 @@ dependencies:
   - pip:
     - sphinx>=4.0
     - sphinx-rtd-theme>=1.0
+    - furo
     - myst-parser
     - sphinx-copybutton
     - sphinx-design
     - sphinx-tabs
     - sphinx-gallery
+    - matplotlib
     - numpydoc
