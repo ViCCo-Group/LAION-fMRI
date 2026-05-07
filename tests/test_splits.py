@@ -75,7 +75,10 @@ def test_cluster_k5_sums_to_pool_size(k):
 
 def test_split_family():
     assert load_split("random_0", pool="sub-01").split_family == "random"
-    assert load_split("cluster_k5_2", pool="sub-01").split_family == "cluster_k5"
+    assert (
+        load_split("cluster_k5_2", pool="sub-01").split_family
+        == "cluster_k5"
+    )
     assert load_split("tau", pool="sub-01").split_family == "tau"
 
 
@@ -146,13 +149,16 @@ def test_ood_types_only_for_ood_split():
 
 
 def test_get_split_masks_with_ood_types():
-    _, test_shape = get_train_test_ids("ood", pool="shared", ood_types=["shape"])
+    _, test_shape = get_train_test_ids(
+        "ood", pool="shared", ood_types=["shape"],
+    )
     trials = pd.DataFrame({"label": test_shape + ["unrelated.jpg"] * 5})
     train_mask, test_mask = get_split_masks(
         trials, "ood", pool="shared", ood_types=["shape"],
     )
     assert test_mask.sum() == 82
-    assert train_mask.sum() == 0  # none of the OOD test ids are in the train pool
+    # none of the OOD test ids are in the train pool
+    assert train_mask.sum() == 0
 
 
 # ── Variants ───────────────────────────────────────────────────

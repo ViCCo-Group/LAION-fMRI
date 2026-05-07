@@ -22,7 +22,6 @@ import pytest
 from laion_fmri._s3_engine import (
     download_key,
     list_common_prefixes,
-    list_prefix_keys,
     sync_prefix,
 )
 from laion_fmri._sources import LAION_FMRI_BUCKET
@@ -132,7 +131,8 @@ def test_download_one_session_and_load(
     """Targeted, low-bandwidth integration check.
 
     Downloads only the dataset-level metadata, the subject-level
-    brain mask, and *one* session's ``func/`` directory -- then
+    R2mean (used to derive the brain mask), and *one* session's
+    ``func/`` directory -- then
     loads betas through the public ``Subject`` API to confirm the
     file format on S3 round-trips correctly through the package.
 
@@ -154,7 +154,7 @@ def test_download_one_session_and_load(
         )
     session = sessions[0]
 
-    from laion_fmri._paths import brain_mask_path
+    from laion_fmri._paths import r2mean_path
     from laion_fmri.config import dataset_initialize
     from laion_fmri.subject import load_subject
 
@@ -177,22 +177,14 @@ def test_download_one_session_and_load(
             LAION_FMRI_BUCKET, key, data_dir / key,
         )
 
-    # Subject-level brain mask -- skip the round-trip if the file
-    # is not yet uploaded under the expected name.
-    bm_local = brain_mask_path(data_dir, subject)
-    bm_key = (
+    # Subject-level R2mean: the loader derives the brain mask from
+    # this file's non-zero voxels.
+    r2_local = r2mean_path(data_dir, subject)
+    r2_key = (
         f"derivatives/glmsingle-tedana/{subject}/"
-        f"{bm_local.name}"
+        f"{r2_local.name}"
     )
-    subject_keys = list_prefix_keys(
-        LAION_FMRI_BUCKET,
-        f"derivatives/glmsingle-tedana/{subject}/",
-    )
-    if bm_key not in subject_keys:
-        pytest.skip(
-            f"Brain mask not yet in bucket: s3://{LAION_FMRI_BUCKET}/{bm_key}"
-        )
-    download_key(LAION_FMRI_BUCKET, bm_key, bm_local)
+    download_key(LAION_FMRI_BUCKET, r2_key, r2_local)
 
     # One session's func dir only
     session_prefix = (
@@ -202,8 +194,8 @@ def test_download_one_session_and_load(
 
     # Files actually landed
     assert (data_dir / "dataset_description.json").exists()
-    assert bm_local.exists(), (
-        f"Brain-mask file missing locally: {bm_local}"
+    assert r2_local.exists(), (
+        f"R2mean file missing locally: {r2_local}"
     )
     func_dir = (
         data_dir / "derivatives" / "glmsingle-tedana"

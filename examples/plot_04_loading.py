@@ -9,35 +9,38 @@ Every accessor maps to one file in the bucket. The loader does no
 math (no averaging across sessions, no rebinning) -- it returns the
 raw contents of the file you pick.
 
+The "brain mask" is **derived on the fly** from the subject-level
+mean-R^2 map (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``):
+voxels with any non-zero GLMsingle fit are considered "in brain".
+The bucket does not ship a separate brain-mask file.
+
 .. note::
 
    Run :doc:`plot_01 <plot_01_quickstart>` first so at least one
-   subject is downloaded into the shared quickstart directory.
+   subject is downloaded into the shared quickstart directory. A
+   single session of full-brain betas is ``~1000 trials × ~270k
+   voxels × 4 bytes ≈ 1 GB``; pass an ``roi=`` filter to keep
+   per-call memory in the tens of MB.
 """
 
 # %%
 # Bind the quickstart's data directory
 # -------------------------------------
-#
-# Loading reads files off disk, so we point at the same data
-# directory the quickstart populated. Run that example first if
-# you haven't already.
 
 import os
 
-from laion_fmri.config import dataset_initialize
+from laion_fmri.config import dataset_initialize, get_data_dir
 
-data_dir = os.path.join(os.getcwd(), "laion_fmri_quickstart")
+data_dir = os.environ.get(
+    "LAION_FMRI_EXAMPLE_DATA_DIR",
+    os.path.join(os.getcwd(), "laion_fmri_quickstart"),
+)
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 
 # %%
 # Load a subject and pick a session
 # ----------------------------------
-#
-# ``get_betas``, ``get_trial_info``, and per-session
-# ``get_noise_ceiling`` all require a session, since the bucket
-# stores them per-session.
 
 from laion_fmri.discovery import get_subjects
 from laion_fmri.subject import load_subject
@@ -47,6 +50,7 @@ sub = load_subject(subject_id)
 
 session = sub.get_sessions()[0]
 print(f"Subject: {subject_id} | session: {session}")
+print(f"Voxels in brain mask: {sub.get_n_voxels()}")
 
 available_rois = sub.get_available_rois()
 roi = available_rois[0] if available_rois else None
@@ -57,11 +61,9 @@ if roi is not None:
 # Single-trial betas for one session
 # ------------------------------------
 #
-# Returns a ``(n_trials, n_voxels)`` array. Voxels can be filtered
-# by ROI, custom boolean mask, or noise-ceiling threshold.
-
-betas = sub.get_betas(session=session)
-print(f"All voxels:          {betas.shape}")
+# Returns ``(n_trials, n_voxels)``. **Always pass an ROI filter
+# unless you really want the full brain-masked array** -- the
+# ``roi=`` form drops memory by 1-2 orders of magnitude.
 
 if roi is not None:
     betas_roi = sub.get_betas(session=session, roi=roi)
@@ -84,13 +86,14 @@ if roi is not None:
 # subset (relies on the dataset-level stimulus metadata, which
 # the bucket doesn't yet expose).
 
-if sub.has_stimuli():
-    betas_shared = sub.get_betas(session=session, stimuli="shared")
+if roi is not None and sub.has_stimuli():
+    betas_shared = sub.get_betas(
+        session=session, roi=roi, stimuli="shared",
+    )
     print(f"Shared trials:       {betas_shared.shape}")
 else:
     print(
-        "Stimulus subsets need stimuli/stimuli.tsv; skipping "
-        "until the bucket's stimuli/ is populated."
+        "Skipped: stimulus subset filter needs stimuli/stimuli.tsv."
     )
 
 # %%
@@ -110,13 +113,23 @@ if roi is not None:
     print(f"Custom betas:       {betas_custom.shape}")
 
 # %%
-# ROI masks
-# ----------
+# ROI masks (multi-level query)
+# ------------------------------
+#
+# ``get_roi_mask`` accepts a specific ROI name, a category, or
+# ``"all"``. Lists union and de-dup.
 
 if available_rois:
-    all_masks = sub.get_roi_masks(available_rois)
-    for name, m in all_masks.items():
-        print(f"  {name}: {m.sum()} voxels")
+    if roi is not None:
+        single = sub.get_roi_mask(roi)
+        print(f"  {roi}: {single.sum()} voxels")
+    categories = sub.get_available_categories()
+    if categories:
+        first_cat = categories[0]
+        cat_mask = sub.get_roi_mask(first_cat)
+        print(f"  {first_cat} (category): {cat_mask.sum()} voxels")
+    union = sub.get_roi_mask("all")
+    print(f"  all: {union.sum()} voxels")
 
 # %%
 # Noise ceiling
@@ -190,21 +203,26 @@ print(f"Voxel coordinates: {coords.shape}")
 # ``Group`` holds several ``Subject`` instances and exposes
 # cross-subject loaders that delegate to each one.
 
+from laion_fmri._paths import glmsingle_subject_dir
 from laion_fmri.group import load_subjects
 
-group = load_subjects(get_subjects()[:2])
+# Group loading reads each subject's local files, so we restrict to
+# subjects whose data is actually on disk.
+on_disk = [
+    s for s in get_subjects()
+    if glmsingle_subject_dir(get_data_dir(), s).is_dir()
+]
+group = load_subjects(on_disk[:2])
 print(f"Group size: {len(group)}")
 
-# Shared-stimulus betas need the dataset-level stimulus metadata
-# to know which trials are "shared" -- skipped until the bucket's
-# stimuli/ is populated.
+# Shared-stimulus betas need stimulus metadata.
 if roi is not None and sub.has_stimuli():
     shared = group.get_shared_betas(session=session, roi=roi)
     for sub_id, arr in shared.items():
         print(f"  {sub_id}: {arr.shape}")
 else:
     print(
-        "Skipping shared-stimulus betas: needs stimuli/stimuli.tsv."
+        "Skipped: shared-stimulus betas need stimuli/stimuli.tsv."
     )
 
 # %%
@@ -220,11 +238,11 @@ else:
 #
 #     uv pip install "laion-fmri[torch]"
 
-from torch.utils.data import DataLoader
-
 # The PyTorch dataset pairs each beta with a stimulus image, so it
-# also requires the stimuli/ prefix to be populated.
+# requires the stimuli/ prefix to be populated.
 if sub.has_stimuli():
+    from torch.utils.data import DataLoader
+
     dataset = sub.to_torch_dataset(session=session, roi=roi)
     print(f"Dataset length: {len(dataset)}")
 

@@ -6,6 +6,7 @@ bucket via the AWS CLI. Local filesystem state is never consulted.
 
 import warnings
 
+from laion_fmri._bidsify import bidsify_local_key
 from laion_fmri._s3_engine import (
     list_common_prefixes,
     list_prefix_keys,
@@ -14,7 +15,7 @@ from laion_fmri._sources import LAION_FMRI_BUCKET
 
 SUBJECT_PREFIXES = (
     "derivatives/glmsingle-tedana/",
-    "derivatives/atlases/",
+    "derivatives/rois/",
 )
 
 
@@ -48,19 +49,29 @@ def get_subjects():
     return sorted(found)
 
 
-def get_rois(subject=None):
+def get_rois(subject=None, category=None):
     """Return ROI names available for a subject in the S3 bucket.
+
+    The bucket layout is
+    ``derivatives/rois/{subject}/{category}/...`` with three file
+    types per ROI; only the volumetric ``.nii.gz`` files are used
+    here as the source of truth (one per ROI per subject).
+
+    Hyphenated label values (e.g. ``label-FFA-1``) are normalized
+    to BIDS-clean form (``"FFA1"``) before being returned.
 
     Parameters
     ----------
     subject : str or None
         BIDS subject ID. If None, uses the first subject in the
         bucket.
+    category : str or None
+        Optional category filter (``"face"``, ``"place"``, ...).
 
     Returns
     -------
     list[str]
-        Sorted ROI names (without the ``.nii.gz`` suffix).
+        Sorted bidsified ROI names.
     """
     if subject is None:
         subjects = get_subjects()
@@ -68,13 +79,30 @@ def get_rois(subject=None):
             return []
         subject = subjects[0]
 
-    prefix = f"derivatives/atlases/{subject}/rois/"
+    prefix = f"derivatives/rois/{subject}/"
     keys = list_prefix_keys(LAION_FMRI_BUCKET, prefix)
-    rois = []
+
+    rois = set()
     for key in keys:
-        name = key[len(prefix):]
-        if name.endswith(".nii.gz") and "/" not in name:
-            rois.append(name[: -len(".nii.gz")])
+        if not key.endswith("_mask.nii.gz"):
+            continue
+        if "_space-T1w_res-1pt8_" not in key:
+            continue
+        relative = key[len(prefix):]
+        parts = relative.split("/")
+        if len(parts) != 2:
+            continue
+        file_category, fname = parts
+        if category is not None and file_category != category:
+            continue
+        # Bidsify before extracting label-{ROI}.
+        clean = bidsify_local_key(fname)
+        head = f"{subject}_space-T1w_res-1pt8_label-"
+        tail = "_mask.nii.gz"
+        if not clean.startswith(head) or not clean.endswith(tail):
+            continue
+        roi = clean[len(head):-len(tail)]
+        rois.add(roi)
 
     if not rois:
         warnings.warn(

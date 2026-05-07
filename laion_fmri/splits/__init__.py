@@ -81,7 +81,8 @@ _SHARED_POOL = "shared"
 # All split names available in every pool. 12 names × 6 pools = 72 JSONs.
 _SPLIT_NAMES: Tuple[str, ...] = (
     "random_0", "random_1", "random_2", "random_3", "random_4",
-    "cluster_k5_0", "cluster_k5_1", "cluster_k5_2", "cluster_k5_3", "cluster_k5_4",
+    "cluster_k5_0", "cluster_k5_1", "cluster_k5_2",
+    "cluster_k5_3", "cluster_k5_4",
     "tau",
     "ood",
 )
@@ -117,7 +118,9 @@ def _ood_type_for_image(image_id: str) -> Optional[str]:
     return m.group(1) if m else None
 
 
-def _validate_ood_types(types: Optional[Union[str, Iterable[str]]]) -> Optional[Tuple[str, ...]]:
+def _validate_ood_types(
+    types: Optional[Union[str, Iterable[str]]],
+) -> Optional[Tuple[str, ...]]:
     """Coerce an ``ood_types`` argument to a tuple of valid type names."""
     if types is None:
         return None
@@ -156,7 +159,11 @@ class Split:
 
     @property
     def split_family(self) -> str:
-        """Coarse family: ``"random"``, ``"cluster_k5"``, ``"tau"``, or ``"ood"``."""
+        """Coarse family.
+
+        One of ``"random"``, ``"cluster_k5"``, ``"tau"``, or
+        ``"ood"``.
+        """
         if self.name.startswith("random_"):
             return "random"
         if self.name.startswith("cluster_k5_"):
@@ -288,7 +295,8 @@ def get_train_test_ids(
     if types is not None:
         if name != "ood":
             raise ValueError(
-                f"`ood_types` is only valid for the 'ood' split, got name={name!r}."
+                "`ood_types` is only valid for the 'ood' split, "
+                f"got name={name!r}."
             )
         keep = set(types)
         test = [iid for iid in test if _ood_type_for_image(iid) in keep]
@@ -349,7 +357,10 @@ def get_split_masks(
     train_set = set(train_ids)
     test_set = set(test_ids)
 
-    if hasattr(trials, "columns") and "label" in getattr(trials, "columns", ()):
+    if (
+        hasattr(trials, "columns")
+        and "label" in getattr(trials, "columns", ())
+    ):
         labels = trials["label"].to_numpy()
     elif hasattr(trials, "to_numpy"):
         labels = trials.to_numpy()

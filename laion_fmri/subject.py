@@ -15,10 +15,12 @@ from laion_fmri._errors import (
 )
 from laion_fmri._paths import (
     betas_path,
-    brain_mask_path,
     glmsingle_subject_dir,
+    r2mean_path,
+    roi_freesurfer_label_path,
     roi_mask_path,
-    rois_dir,
+    roi_surface_path,
+    rois_subject_dir,
     session_noise_ceiling_path,
     stimuli_dir_path,
     stimuli_metadata_path,
@@ -27,12 +29,20 @@ from laion_fmri._paths import (
 )
 from laion_fmri.config import get_data_dir
 from laion_fmri.io import (
+    load_freesurfer_label,
+    load_gifti_mask,
     load_nifti_4d,
     load_nifti_data,
     load_nifti_mask,
     load_nifti_with_affine,
     load_tsv,
 )
+
+
+_VALID_FORMATS = {
+    "all", "volume", "nii.gz", "gii", "func.gii", "label",
+}
+_VALID_HEMIS = {"all", "L", "R"}
 
 
 def load_subject(subject):
@@ -100,16 +110,85 @@ class Subject:
                 sessions.append(d.name)
         return sessions
 
-    def get_available_rois(self):
-        """Return sorted list of available ROI names."""
-        roi_dir = rois_dir(self._data_dir, self._subject_id)
-        if not roi_dir.is_dir():
-            return []
-        rois = []
-        for f in sorted(roi_dir.iterdir()):
-            if f.suffix == ".gz" and f.stem.endswith(".nii"):
-                rois.append(f.stem.replace(".nii", ""))
-        return rois
+    def get_available_rois(self, category=None):
+        """Return sorted list of ROI names available on disk.
+
+        Parameters
+        ----------
+        category : str or None
+            Restrict to ROIs in this category subdirectory.
+
+        Returns
+        -------
+        list[str]
+            Sorted ROI names (BIDS-clean form).
+        """
+        by_cat = self._rois_by_category()
+        if category is not None:
+            return sorted(by_cat.get(category, []))
+        all_rois = set()
+        for rois in by_cat.values():
+            all_rois.update(rois)
+        return sorted(all_rois)
+
+    def get_available_categories(self):
+        """Return sorted list of ROI category directory names."""
+        return sorted(self._rois_by_category().keys())
+
+    def _rois_by_category(self):
+        """Walk local rois tree -> dict[category, list[roi]]."""
+        root = rois_subject_dir(self._data_dir, self._subject_id)
+        if not root.is_dir():
+            return {}
+        out = {}
+        head = f"{self._subject_id}_space-T1w_res-1pt8_label-"
+        tail = "_mask.nii.gz"
+        for cat_dir in sorted(root.iterdir()):
+            if not cat_dir.is_dir():
+                continue
+            rois = []
+            for f in sorted(cat_dir.iterdir()):
+                name = f.name
+                if name.startswith(head) and name.endswith(tail):
+                    rois.append(name[len(head):-len(tail)])
+            if rois:
+                out[cat_dir.name] = rois
+        return out
+
+    def _resolve_rois_query(self, query):
+        """Expand specific / category / "all" / list into flat ROI names.
+
+        See ``get_roi_mask`` for the user-visible grammar.
+        """
+        if isinstance(query, str):
+            query = [query]
+
+        by_cat = self._rois_by_category()
+        all_rois = sorted({r for rs in by_cat.values() for r in rs})
+        all_categories = sorted(by_cat.keys())
+
+        resolved = []
+        for item in query:
+            if item == "all":
+                resolved.extend(all_rois)
+            elif item in by_cat:
+                resolved.extend(by_cat[item])
+            elif item in all_rois:
+                resolved.append(item)
+            else:
+                raise ValueError(
+                    f"Unknown ROI/category: {item!r}. "
+                    f"Available ROIs: {all_rois}. "
+                    f"Available categories: {all_categories}."
+                )
+
+        seen = set()
+        deduped = []
+        for r in resolved:
+            if r not in seen:
+                seen.add(r)
+                deduped.append(r)
+        return deduped
 
     def get_n_stimuli(self, stimuli=None):
         """Return number of stimuli described in ``stimuli.tsv``.
@@ -134,13 +213,18 @@ class Subject:
     def get_brain_mask(self):
         """Load the subject's brain mask as a flat boolean array.
 
+        Derived from the subject-level mean-R^2 map: every voxel
+        where the GLMsingle model has any non-zero fit. The
+        bucket ships R2mean as ``..._stat-rsquare_desc-R2mean_
+        statmap.nii.gz`` rather than a pre-computed mask file.
+
         Returns
         -------
         np.ndarray
             1-D boolean array over the full image grid.
         """
         return load_nifti_mask(
-            brain_mask_path(self._data_dir, self._subject_id),
+            r2mean_path(self._data_dir, self._subject_id),
         )
 
     # ── Betas (single-trial NIfTI per session) ─────────────────
@@ -199,7 +283,7 @@ class Subject:
         path = betas_path(
             self._data_dir, self._subject_id, session,
         )
-        mask_path = brain_mask_path(
+        mask_path = r2mean_path(
             self._data_dir, self._subject_id,
         )
         betas = load_nifti_4d(path, mask_path)
@@ -221,12 +305,7 @@ class Subject:
         combined = None
 
         if roi is not None:
-            if isinstance(roi, str):
-                roi = [roi]
-            union = np.zeros(self.get_n_voxels(), dtype=bool)
-            for r in roi:
-                union |= self.get_roi_mask(r)
-            combined = union
+            combined = self.get_roi_mask(roi)
 
         if mask is not None:
             combined = mask
@@ -277,22 +356,125 @@ class Subject:
 
     # ── ROI masks ───────────────────────────────────────────────
 
-    def get_roi_mask(self, roi):
-        """Load a single ROI mask, restricted to brain-mask voxels."""
-        available = self.get_available_rois()
-        if roi not in available:
+    def get_roi_mask(self, query):
+        """Load one or more ROI masks, restricted to brain-mask voxels.
+
+        ``query`` accepts the multi-level grammar:
+
+        * a specific ROI name (``"FFA1"``);
+        * a category name (``"face"``) -- expands to every ROI
+          in that category;
+        * ``"all"`` -- expands to every ROI on disk;
+        * a list mixing any of the above.
+
+        Multi-element resolutions are unioned voxel-wise. Always
+        returns one 1-D bool array within the brain mask.
+        """
+        rois = self._resolve_rois_query(query)
+        union = np.zeros(self.get_n_voxels(), dtype=bool)
+        for roi in rois:
+            union |= self._load_roi_volume_mask(roi)
+        return union
+
+    def get_roi_masks(self, queries):
+        """Load several ROI masks at once.
+
+        ``queries`` is a list (or single string). Each element is
+        passed verbatim to ``get_roi_mask``; the returned dict is
+        keyed by the user's strings, so categories and "all" appear
+        as their original keys with a union mask as value.
+        """
+        if isinstance(queries, str):
+            queries = [queries]
+        return {q: self.get_roi_mask(q) for q in queries}
+
+    def get_roi_data(self, query, format=None, hemi=None):
+        """Load multi-format ROI data: volume, surface, FreeSurfer label.
+
+        Parameters
+        ----------
+        query : str or list[str]
+            Multi-level ROI query (see ``get_roi_mask``).
+        format : str or None
+            One of ``"all"``, ``"volume"`` / ``"nii.gz"`` (synonyms),
+            ``"gii"`` (per-hemi func.gii + label), ``"func.gii"``
+            (per-hemi surface mask only), ``"label"`` (per-hemi
+            FreeSurfer label only). ``None`` means ``"all"``.
+        hemi : str or None
+            One of ``"L"``, ``"R"``, or ``"all"`` (default).
+            Ignored when ``format`` resolves to volume only.
+
+        Returns
+        -------
+        dict
+            Top-level dict keyed by ROI name. Each value is a
+            nested dict shaped::
+
+                {
+                    "volume": <1-D bool ndarray>,
+                    "gii": {
+                        "hemi-L": {"func.gii": ..., "label": ...},
+                        "hemi-R": {...},
+                    },
+                }
+
+            Format/hemi filters prune this tree.
+        """
+        format = format or "all"
+        hemi = hemi or "all"
+        if format not in _VALID_FORMATS:
             raise ValueError(
-                f"ROI {roi!r} not found. Available: {available}"
+                f"format must be one of {sorted(_VALID_FORMATS)}, "
+                f"got {format!r}"
             )
+        if hemi not in _VALID_HEMIS:
+            raise ValueError(
+                f"hemi must be one of {sorted(_VALID_HEMIS)}, "
+                f"got {hemi!r}"
+            )
+
+        rois = self._resolve_rois_query(query)
+        return {roi: self._build_roi_data(roi, format, hemi)
+                for roi in rois}
+
+    def _load_roi_volume_mask(self, roi):
+        """Load a single volumetric ROI mask within the brain mask."""
         roi_vol = load_nifti_mask(
             roi_mask_path(self._data_dir, self._subject_id, roi),
         )
         brain = self.get_brain_mask()
         return roi_vol[brain]
 
-    def get_roi_masks(self, rois):
-        """Load several ROI masks at once."""
-        return {r: self.get_roi_mask(r) for r in rois}
+    def _build_roi_data(self, roi, format, hemi):
+        """Assemble the nested per-ROI dict, pruned by format/hemi."""
+        out = {}
+        want_volume = format in ("all", "volume", "nii.gz")
+        want_gii = format in ("all", "gii", "func.gii", "label")
+
+        if want_volume:
+            out["volume"] = self._load_roi_volume_mask(roi)
+
+        if want_gii:
+            hemis = ("L", "R") if hemi == "all" else (hemi,)
+            gii = {}
+            for h in hemis:
+                hemi_data = {}
+                if format in ("all", "gii", "func.gii"):
+                    hemi_data["func.gii"] = load_gifti_mask(
+                        roi_surface_path(
+                            self._data_dir, self._subject_id, roi, h,
+                        ),
+                    )
+                if format in ("all", "gii", "label"):
+                    hemi_data["label"] = load_freesurfer_label(
+                        roi_freesurfer_label_path(
+                            self._data_dir, self._subject_id, roi, h,
+                        ),
+                    )
+                gii[f"hemi-{h}"] = hemi_data
+            out["gii"] = gii
+
+        return out
 
     # ── Noise ceiling ───────────────────────────────────────────
 
@@ -355,7 +537,7 @@ class Subject:
                 f"Noise-ceiling file not found: {nc_file}"
             )
 
-        mask_file = brain_mask_path(
+        mask_file = r2mean_path(
             self._data_dir, self._subject_id,
         )
         nc = load_nifti_data(nc_file, mask_file)
@@ -509,7 +691,7 @@ class Subject:
         """Write a per-voxel array to a 3-D NIfTI volume."""
         from laion_fmri.brain import to_nifti
 
-        mask_file = brain_mask_path(
+        mask_file = r2mean_path(
             self._data_dir, self._subject_id,
         )
         _, affine = load_nifti_with_affine(mask_file)
@@ -531,7 +713,7 @@ class Subject:
         """Return MNI/T1w coordinates for the selected voxels."""
         from laion_fmri.brain import get_voxel_coordinates
 
-        mask_file = brain_mask_path(
+        mask_file = r2mean_path(
             self._data_dir, self._subject_id,
         )
         _, affine = load_nifti_with_affine(mask_file)

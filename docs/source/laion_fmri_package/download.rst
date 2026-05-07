@@ -32,11 +32,11 @@ Arguments
 Filter semantics
 ================
 
-* **Permissive (default for every entity except ``ses``):** a
+* **Permissive** (default for every entity except ``ses``): a
   file that doesn't carry the entity is *not* excluded by a
   filter on it. This lets subject-level summaries flow through
   alongside files that *do* carry the entity.
-* **Strict ``ses``:** specifying a session ID excludes
+* **Strict** ``ses``: specifying a session ID excludes
   per-subject summary files. Use the special value
   ``ses="averages"`` to fetch *only* those summaries; combine
   with session IDs in a list to fetch both:
@@ -47,10 +47,10 @@ Filter semantics
    download(subject="sub-03", ses="averages")                # summaries only
    download(subject="sub-03", ses=["ses-01", "averages"])    # both
 
-The **brain mask** at
-``derivatives/glmsingle-tedana/{sub}/{sub}_..._desc-meanR2gt15mask_mask.nii.gz``
-is *auto-pinned* whenever ``ses`` filters to specific sessions
--- the loader needs it to mask voxels.
+The subject-level mean-R^2 file is *auto-pinned* whenever
+``ses`` filters to specific sessions -- the loader needs it to
+derive the brain mask, so the strict ``ses`` filter doesn't
+drop it.
 
 Idempotent re-runs
 ==================

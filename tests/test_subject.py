@@ -328,6 +328,183 @@ def test_get_roi_mask_invalid_raises(configured_subject):
         configured_subject.get_roi_mask("nonexistent_roi")
 
 
+# ── Categories + multi-level ROI query ─────────────────────────
+
+
+def test_get_available_categories(configured_subject):
+    cats = configured_subject.get_available_categories()
+    assert cats == ["hlviscat", "visualcat"]
+
+
+def test_get_available_rois_category_filter(configured_subject):
+    visual_only = configured_subject.get_available_rois(
+        category="visualcat",
+    )
+    hlvis_only = configured_subject.get_available_rois(
+        category="hlviscat",
+    )
+    assert visual_only == ["visual"]
+    assert hlvis_only == ["hlvis"]
+
+
+def test_get_roi_mask_all_unions_every_roi(configured_subject):
+    """``"all"`` is the union of every ROI on disk.
+
+    In the fixture, hlvis ⊂ visual, so the union equals visual.
+    """
+    mask_all = configured_subject.get_roi_mask("all")
+    mask_visual = configured_subject.get_roi_mask("visual")
+    assert mask_all.sum() == mask_visual.sum()
+    assert (mask_all == mask_visual).all()
+
+
+def test_get_roi_mask_category_unions(configured_subject):
+    """Single-ROI category equals that ROI in the fixture."""
+    mask_cat = configured_subject.get_roi_mask("visualcat")
+    mask_named = configured_subject.get_roi_mask("visual")
+    assert (mask_cat == mask_named).all()
+
+
+def test_get_roi_mask_mixed_list(configured_subject):
+    """Mixing category + specific name unions correctly."""
+    mask = configured_subject.get_roi_mask(["visualcat", "hlvis"])
+    expected = configured_subject.get_roi_mask("visual")  # hlvis ⊂ visual
+    assert (mask == expected).all()
+
+
+def test_get_betas_roi_all(configured_subject):
+    betas = configured_subject.get_betas(
+        session="ses-01", roi="all",
+    )
+    assert betas.shape == (N_TRIALS_PER_SESSION, N_VISUAL_VOXELS)
+
+
+def test_get_betas_roi_category(configured_subject):
+    betas = configured_subject.get_betas(
+        session="ses-01", roi="visualcat",
+    )
+    assert betas.shape == (N_TRIALS_PER_SESSION, N_VISUAL_VOXELS)
+
+
+def test_get_betas_roi_mixed_list(configured_subject):
+    betas = configured_subject.get_betas(
+        session="ses-01", roi=["visualcat", "hlvis"],
+    )
+    assert betas.shape == (N_TRIALS_PER_SESSION, N_VISUAL_VOXELS)
+
+
+def test_roi_query_unknown_raises_with_hint(configured_subject):
+    """Error message lists both ROI names and category names."""
+    with pytest.raises(ValueError) as excinfo:
+        configured_subject.get_roi_mask("not_a_thing")
+    msg = str(excinfo.value)
+    assert "visual" in msg
+    assert "hlvis" in msg
+    assert "visualcat" in msg
+    assert "hlviscat" in msg
+
+
+def test_get_roi_masks_mixed_keys(configured_subject):
+    """Returned dict preserves user-supplied keys verbatim."""
+    masks = configured_subject.get_roi_masks(["visual", "visualcat"])
+    assert set(masks) == {"visual", "visualcat"}
+    # Both resolve to the visual ROI in the fixture.
+    assert (masks["visual"] == masks["visualcat"]).all()
+
+
+# ── get_roi_data (multi-format / hemi) ─────────────────────────
+
+
+def test_get_roi_data_specific_volume(configured_subject):
+    out = configured_subject.get_roi_data(
+        "visual", format="volume",
+    )
+    assert set(out) == {"visual"}
+    assert set(out["visual"]) == {"volume"}
+    vol = out["visual"]["volume"]
+    assert isinstance(vol, np.ndarray)
+    assert vol.dtype == bool
+    assert vol.sum() == N_VISUAL_VOXELS
+
+
+def test_get_roi_data_specific_format_nii_gz_synonym(configured_subject):
+    """``format="nii.gz"`` is a synonym for ``format="volume"``."""
+    out = configured_subject.get_roi_data(
+        "visual", format="nii.gz",
+    )
+    assert set(out["visual"]) == {"volume"}
+
+
+def test_get_roi_data_specific_gii_left(configured_subject):
+    out = configured_subject.get_roi_data(
+        "visual", format="gii", hemi="L",
+    )
+    visual = out["visual"]
+    assert set(visual) == {"gii"}
+    assert set(visual["gii"]) == {"hemi-L"}
+    inner = visual["gii"]["hemi-L"]
+    assert set(inner) == {"func.gii", "label"}
+    # func.gii is a 1-D bool of vertex count
+    assert inner["func.gii"].dtype == bool
+    assert inner["func.gii"].shape[0] > 0
+    # label is 1-D int vertex indices
+    assert np.issubdtype(inner["label"].dtype, np.integer)
+
+
+def test_get_roi_data_specific_format_func_gii_only(
+    configured_subject,
+):
+    out = configured_subject.get_roi_data(
+        "visual", format="func.gii",
+    )
+    visual = out["visual"]
+    assert set(visual["gii"]) == {"hemi-L", "hemi-R"}
+    # label key must be absent
+    assert "label" not in visual["gii"]["hemi-L"]
+    assert "label" not in visual["gii"]["hemi-R"]
+    assert "func.gii" in visual["gii"]["hemi-L"]
+
+
+def test_get_roi_data_all_formats_all_hemi(configured_subject):
+    out = configured_subject.get_roi_data(
+        "visual", format="all", hemi="all",
+    )
+    visual = out["visual"]
+    assert set(visual) == {"volume", "gii"}
+    assert set(visual["gii"]) == {"hemi-L", "hemi-R"}
+    for hemi in ("hemi-L", "hemi-R"):
+        assert set(visual["gii"][hemi]) == {"func.gii", "label"}
+
+
+def test_get_roi_data_category_returns_one_entry(
+    configured_subject,
+):
+    out = configured_subject.get_roi_data(
+        "visualcat", format="volume",
+    )
+    assert set(out) == {"visual"}
+    assert out["visual"]["volume"].sum() == N_VISUAL_VOXELS
+
+
+def test_get_roi_data_all_returns_one_entry_per_roi(
+    configured_subject,
+):
+    out = configured_subject.get_roi_data("all", format="volume")
+    assert set(out) == {"visual", "hlvis"}
+
+
+def test_get_roi_data_unknown_format_raises(configured_subject):
+    with pytest.raises(ValueError):
+        configured_subject.get_roi_data("visual", format="bogus")
+
+
+def test_get_roi_data_unknown_hemi_raises(configured_subject):
+    with pytest.raises(ValueError):
+        configured_subject.get_roi_data(
+            "visual", format="gii", hemi="X",
+        )
+
+
 # ── Noise ceiling ──────────────────────────────────────────────
 
 

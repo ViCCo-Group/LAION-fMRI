@@ -2,26 +2,27 @@
 Querying the Dataset
 =====================
 
-Explore subjects, sessions, runs, ROIs, stimuli, and trial metadata.
+Discover what is in the dataset without downloading anything.
 
-This example covers two layers of discovery:
+Every cell in this example either queries the S3 bucket directly
+(``laion_fmri.discovery``) or reads bundled metadata that ships with
+the package (``laion_fmri.splits``). No subject data is fetched.
+Where a query needs locally-downloaded files, the corresponding
+``download(...)`` and Subject-API calls are shown **commented out**,
+so you can copy them without this script triggering a download.
 
-* **Dataset-wide** queries (``get_subjects``, ``get_rois``,
-  ``describe``) read directly from the S3 bucket. They work
-  immediately after :doc:`initialization <plot_02_initialization>`,
-  with no subject downloaded yet.
-* **Per-subject** queries (``sub.get_sessions``, ``sub.get_trial_info``,
-  ...) operate on local files and require that the subject has
-  been downloaded by :doc:`plot_01 <plot_01_quickstart>`.
+Pick the subject you want to look at on the line below:
 """
 
+SUBJECT = "sub-01"
+
 # %%
-# Bind the quickstart's data directory
-# -------------------------------------
+# Initialize a data directory
+# ----------------------------
 #
-# This example shares the data directory the quickstart populated
-# so per-subject queries find data on disk. Run the quickstart
-# first if you haven't already.
+# Discovery and split listings don't need data on disk, but
+# ``dataset_initialize`` is still required so that any subsequent
+# (commented-out) ``download(...)`` would have a destination.
 
 import os
 
@@ -31,115 +32,190 @@ data_dir = os.path.join(os.getcwd(), "laion_fmri_quickstart")
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 
+from laion_fmri.discovery import (
+    describe,
+    get_rois,
+    get_subjects,
+    inspect_bucket,
+)
+
 # %%
-# Dataset-wide discovery
-# -----------------------
+# Top-level summary
+# ------------------
 #
-# The discovery API queries the S3 bucket directly -- it always
-# reflects the dataset, independent of what is downloaded locally.
-
-from laion_fmri.discovery import describe, get_rois, get_subjects
-
-print(f"Subjects:       {get_subjects()}")
-print(f"Available ROIs: {get_rois()}")
+# ``describe()`` prints a one-screen overview: bucket name, subject
+# count, and the first subject's ROI list. Run it first to confirm
+# the bucket is reachable.
 
 describe()
 
 # %%
-# Participants table
-# -------------------
+# Subjects in the bucket
+# -----------------------
 #
-# The BIDS ``participants.tsv`` lives at the dataset root and can be
-# read with pandas.
+# ``get_subjects`` lists every subject the bucket exposes. The
+# unioned listing covers both ``derivatives/glmsingle-tedana/`` and
+# ``derivatives/rois/``, so partially-populated subjects still show
+# up.
 
-import pandas as pd
+print(f"All subjects: {get_subjects()}")
+print(f"Querying subject: {SUBJECT}")
 
-from laion_fmri.config import get_data_dir
+# %%
+# ROI queries: specific / category / all
+# ---------------------------------------
+#
+# ROIs ship in eight categories on the bucket. ``get_rois`` accepts
+# an optional ``category=`` filter; with no filter it returns the
+# flat bidsified list (hyphens stripped from values like ``FFA-1``
+# → ``FFA1``).
 
-participants = pd.read_csv(
-    f"{get_data_dir()}/participants.tsv", sep="\t"
+ROI_CATEGORIES = (
+    "body", "character", "face", "laion",
+    "motion", "object", "place", "retinotopy",
 )
-print(participants)
+
+print(f"All ROIs ({len(get_rois(SUBJECT))}):")
+print(get_rois(SUBJECT))
+print()
+for cat in ROI_CATEGORIES:
+    rois = get_rois(SUBJECT, category=cat)
+    print(f"{cat}: {rois}")
 
 # %%
-# Per-subject discovery
-# ----------------------
-#
-# Each :class:`~laion_fmri.subject.Subject` exposes query methods for
-# sessions, voxels, ROIs, and stimulus counts. We pick the first
-# subject available in the bucket so the example adapts to whatever
-# is actually downloaded.
-
-from laion_fmri.subject import load_subject
-
-sub = load_subject(get_subjects()[0])
-
-print(f"Subject:        {sub.subject_id}")
-print(f"Sessions:       {sub.get_sessions()}")
-print(f"Voxels:         {sub.get_n_voxels()}")
-print(f"ROIs:           {sub.get_available_rois()}")
-
-# Stimulus counts depend on the dataset-wide ``stimuli/`` prefix,
-# which is forward-compat -- not yet populated in the bucket.
-if sub.has_stimuli():
-    print(f"Stimuli total:  {sub.get_n_stimuli()}")
-    print(f"  shared:       {sub.get_n_stimuli(stimuli='shared')}")
-    print(f"  unique:       {sub.get_n_stimuli(stimuli='unique')}")
-else:
-    print("Stimuli:        not yet uploaded to the bucket")
-
-# %%
-# Trial information: runs, repetitions, stimulus IDs
-# ----------------------------------------------------
-#
-# Trial information lives per session in a GLMsingle ``events.tsv``.
-# The ``session`` argument is required; pick one of the available
-# sessions on the subject.
-
-session = sub.get_sessions()[0]
-trial_info = sub.get_trial_info(session=session)
-print(f"Session: {session}")
-print(f"Columns: {list(trial_info.columns)}")
-print(f"Trials in this session: {len(trial_info)}")
-print(trial_info.head())
-
-# %%
-# Stimulus metadata
-# ------------------
-#
-# ``stimuli.tsv`` catalogues every image: its ID, whether it is part
-# of the shared subset, its filename, and a category label. The
-# ``stimuli/`` prefix is forward-compat -- once it lands in the
-# bucket, the cell below will print the full table.
-
-if sub.has_stimuli():
-    stim_meta = sub.get_stimulus_metadata()
-    print(f"Columns: {list(stim_meta.columns)}")
-    print(f"Total stimuli: {len(stim_meta)}")
-    print(stim_meta.head())
-
-    print(f"\nShared: {stim_meta['shared'].sum()}")
-    print(f"Unique: {(~stim_meta['shared']).sum()}")
-    print("\nCategories:")
-    print(stim_meta["category"].value_counts())
-else:
-    print("Stimulus metadata not yet uploaded to the bucket.")
-
-# %%
-# Trial-to-stimulus mapping
+# Bucket diagnostic listing
 # --------------------------
 #
-# For one session, ``get_trial_stimulus_indices`` returns the
-# stimulus-metadata row index that each trial points at. Like the
-# stimulus metadata itself, this depends on ``stimuli/`` being
-# populated.
+# ``inspect_bucket`` prints the immediate top-level prefixes plus a
+# count of subject directories under each derivative tree -- useful
+# when discovery returns surprises.
 
-if sub.has_stimuli():
-    stim_indices = sub.get_trial_stimulus_indices(session=session)
-    print(f"Mapping shape: {stim_indices.shape}")
-    print(f"First 10 trial -> stim idx: {stim_indices[:10]}")
-else:
-    print(
-        "Trial-to-stimulus mapping needs stimuli metadata; "
-        "skipping until the bucket's stimuli/ is populated."
-    )
+inspect_bucket()
+
+# %%
+# Bundled train/test splits (no download required)
+# -------------------------------------------------
+#
+# ``laion_fmri.splits`` ships predefined train/test partitions of
+# the stimulus set so callers can compare against the published
+# baselines without re-running any clustering or sampling.
+
+from laion_fmri.splits import (
+    get_train_test_ids,
+    list_ood_types,
+    list_pools,
+    list_splits,
+    load_split,
+)
+
+print(f"Pools:     {list_pools()}")
+print(f"Splits:    {list_splits()}")
+print(f"OOD types: {list_ood_types()}")
+
+# %%
+# Inspect one split
+# ------------------
+#
+# ``load_split(name, pool=...)`` returns a ``Split`` describing the
+# split's sizes and family. ``get_train_test_ids`` is the
+# convenience wrapper that gives you the actual ID lists in one
+# call.
+
+split = load_split("random_0", pool="shared")
+print(f"Split:    {split.name}")
+print(f"Pool:     {split.pool}")
+print(f"Family:   {split.split_family}")
+print(f"n_train:  {split.n_train}")
+print(f"n_test:   {split.n_test}")
+
+train_ids, test_ids = get_train_test_ids("random_0", pool="shared")
+print(f"Loaded:   {len(train_ids)} train / {len(test_ids)} test ids")
+
+# %%
+# OOD splits with a type filter
+# ------------------------------
+#
+# The ``ood`` split partitions held-out stimuli by category; the
+# ``ood_types=`` argument restricts which categories are kept in the
+# test set.
+
+_, test_shape = get_train_test_ids(
+    "ood", pool="shared", ood_types=["shape"],
+)
+print(f"OOD shape only:  test ids = {len(test_shape)}")
+
+# %%
+# Per-subject queries that need local data
+# -----------------------------------------
+#
+# The methods on :class:`~laion_fmri.subject.Subject` read on-disk
+# files. To run them you'd first download the subject (or just one
+# session of it). The block below is **commented out** so this
+# example stays offline. Copy the lines you need into your own
+# script:
+#
+# .. code-block:: python
+#
+#     from laion_fmri.download import download
+#     # one session for one subject (~few hundred MB):
+#     download(subject="sub-01", ses="ses-01")
+#
+#     from laion_fmri.subject import load_subject
+#     sub = load_subject("sub-01")
+#
+#     # Sessions present on disk
+#     print(sub.get_sessions())                      # ['ses-01', ...]
+#
+#     # Trial info: runs, repetitions, stimulus labels
+#     trials = sub.get_trial_info(session="ses-01")
+#     # columns: session, run, beta_index, label
+#     print(trials.columns.tolist())
+#     print(trials["run"].unique())                  # runs in this session
+#     print(len(trials))                             # trial count
+#
+#     # Single-trial betas with the multi-level ROI grammar
+#     betas_one  = sub.get_betas(session="ses-01", roi="FFA1")
+#     betas_face = sub.get_betas(session="ses-01", roi="face")
+#     betas_all  = sub.get_betas(session="ses-01", roi="all")
+#
+#     # Multi-format ROI loading
+#     roi = sub.get_roi_data("FFA1", format="all", hemi="all")
+#     # roi["FFA1"] is a nested dict:
+#     # {
+#     #   "volume": <1-D bool>,
+#     #   "gii": {"hemi-L": {"func.gii": ..., "label": ...},
+#     #           "hemi-R": {...}},
+#     # }
+
+# %%
+# Cross-subject discovery
+# ------------------------
+#
+# Loop ``get_subjects()`` to ask the same questions of every subject
+# in the bucket. ROI counts can differ across subjects (some ROIs
+# don't exist for everyone).
+
+for sub_id in get_subjects():
+    n_face = len(get_rois(sub_id, category="face"))
+    n_total = len(get_rois(sub_id))
+    print(f"  {sub_id}: {n_total:>3} ROIs total, {n_face} face")
+
+# %%
+# Stimulus metadata (forward-compat)
+# -----------------------------------
+#
+# The ``stimuli/`` prefix is reserved for the stimulus images and
+# their metadata table; it isn't populated yet. Once it lands, the
+# call below would print the catalogue (commented out for the same
+# offline-by-default reason as the Subject queries above):
+#
+# .. code-block:: python
+#
+#     # download(subject="sub-01", include_stimuli=True)
+#     # sub = load_subject("sub-01")
+#     # if sub.has_stimuli():
+#     #     stim = sub.get_stimulus_metadata()
+#     #     print(stim.head())
+#     #     print(f"Total stimuli: {len(stim)}")
+#     #     print(f"Shared:        {stim['shared'].sum()}")
+#     #     print(f"Categories:    {stim['category'].value_counts()}")

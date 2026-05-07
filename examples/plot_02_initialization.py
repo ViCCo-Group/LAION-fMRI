@@ -19,18 +19,22 @@ Downloads themselves are covered by the
 # Initialize the data directory
 # ------------------------------
 #
-# Pick a location with enough disk space. The path is persisted in
-# ``$XDG_CONFIG_HOME/laion_fmri/config.json`` (or ``~/.config`` by
-# default) so subsequent sessions pick it up automatically.
+# Pick a location with enough disk space. The choice is persisted
+# so subsequent sessions pick it up automatically -- you don't need
+# to call ``dataset_initialize`` again from the same machine.
 
 import os
 
 from laion_fmri.config import dataset_initialize, get_data_dir
 
-# Each example uses its own data directory; this one is isolated
-# from the quickstart (which downloads) so re-running here does
-# not perturb the quickstart's data.
-data_dir = os.path.join(os.getcwd(), "laion_fmri_init_demo")
+# Examples 1, 2, and 4 share one data directory so the licenses
+# accepted in :doc:`plot_01_quickstart` carry over here -- the
+# call to ``accept_licenses`` below becomes a no-op when the
+# marker files already exist.
+data_dir = os.environ.get(
+    "LAION_FMRI_EXAMPLE_DATA_DIR",
+    os.path.join(os.getcwd(), "laion_fmri_quickstart"),
+)
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 print(f"Configured: {get_data_dir()}")

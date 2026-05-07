@@ -1,8 +1,4 @@
-"""On-disk path resolution for laion_fmri.
-
-All file-layout assumptions are centralized here. If the bucket
-structure changes, only this module needs updating.
-"""
+"""Path resolution for the LAION-fMRI on-disk layout."""
 
 from pathlib import Path
 
@@ -21,16 +17,6 @@ def session_func_dir(data_dir, subject, session):
     return (
         glmsingle_subject_dir(data_dir, subject) / session / "func"
     )
-
-
-def atlases_subject_dir(data_dir, subject):
-    """Path to the atlases dir for a subject."""
-    return Path(data_dir) / "derivatives" / "atlases" / subject
-
-
-def rois_dir(data_dir, subject):
-    """Path to the ROI dir for a subject."""
-    return atlases_subject_dir(data_dir, subject) / "rois"
 
 
 # ── Per-session files (single-trial GLMsingle outputs) ─────────
@@ -64,11 +50,18 @@ def trialinfo_path(data_dir, subject, session):
 
 # ── Subject-level aggregate files ───────────────────────────────
 
-def brain_mask_path(data_dir, subject):
-    """Subject-level brain mask (R^2 > 15%)."""
+def r2mean_path(data_dir, subject):
+    """Subject-level mean-R^2 map.
+
+    The package derives the brain mask from this file
+    (``data > 0``) rather than carrying a separate mask file --
+    the bucket already ships R2mean and the GLMsingle output is
+    zero outside the model's support, so the threshold is
+    just "voxels with any model fit".
+    """
     fname = (
         f"{subject}_task-images_space-T1w_"
-        f"desc-meanR2gt15mask_mask.nii.gz"
+        f"stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
     return glmsingle_subject_dir(data_dir, subject) / fname
 
@@ -89,9 +82,101 @@ def subject_noise_ceiling_path(data_dir, subject, desc):
 
 # ── ROI atlases ─────────────────────────────────────────────────
 
+def rois_subject_dir(data_dir, subject):
+    """Path to the ROI dir for a subject."""
+    return Path(data_dir) / "derivatives" / "rois" / subject
+
+
 def roi_mask_path(data_dir, subject, roi):
-    """Path to an ROI mask NIfTI for a subject."""
-    return rois_dir(data_dir, subject) / f"{roi}.nii.gz"
+    """Resolve the volumetric ROI mask file for ``roi``.
+
+    The bucket groups ROIs by category
+    (``face/``, ``place/``, ...). The category is discovered by
+    globbing the subject's rois dir for the matching
+    ``label-{roi}_mask.nii.gz`` token.
+
+    Parameters
+    ----------
+    data_dir : str or Path
+    subject : str
+        BIDS subject ID (``"sub-XX"``).
+    roi : str
+        BIDS-clean ROI label (e.g. ``"FFA1"``, ``"pSTSfaces"``).
+
+    Raises
+    ------
+    FileNotFoundError
+        If no matching volumetric mask exists under the
+        subject's ROI tree.
+    """
+    pattern = (
+        f"*/{subject}_space-T1w_res-1pt8_"
+        f"label-{roi}_mask.nii.gz"
+    )
+    matches = list(rois_subject_dir(data_dir, subject).glob(pattern))
+    if not matches:
+        raise FileNotFoundError(
+            f"ROI {roi!r} not found under "
+            f"{rois_subject_dir(data_dir, subject)}. "
+            "See Subject.get_available_rois() for valid names."
+        )
+    return matches[0]
+
+
+def roi_surface_path(data_dir, subject, roi, hemi):
+    """Resolve the per-hemisphere ``.func.gii`` surface mask file.
+
+    Parameters
+    ----------
+    data_dir : str or Path
+    subject : str
+    roi : str
+        BIDS-clean ROI label.
+    hemi : ``"L"`` or ``"R"``
+
+    Raises
+    ------
+    FileNotFoundError
+    """
+    pattern = (
+        f"*/{subject}_hemi-{hemi}_space-fsnative_"
+        f"label-{roi}_mask.func.gii"
+    )
+    matches = list(rois_subject_dir(data_dir, subject).glob(pattern))
+    if not matches:
+        raise FileNotFoundError(
+            f"Surface ROI {roi!r} (hemi-{hemi}) not found under "
+            f"{rois_subject_dir(data_dir, subject)}."
+        )
+    return matches[0]
+
+
+def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
+    """Resolve the per-hemisphere FreeSurfer ``.label`` file.
+
+    Parameters
+    ----------
+    data_dir : str or Path
+    subject : str
+    roi : str
+        BIDS-clean ROI label.
+    hemi : ``"L"`` or ``"R"``
+
+    Raises
+    ------
+    FileNotFoundError
+    """
+    pattern = (
+        f"*/{subject}_hemi-{hemi}_space-fsnative_"
+        f"label-{roi}_mask.label"
+    )
+    matches = list(rois_subject_dir(data_dir, subject).glob(pattern))
+    if not matches:
+        raise FileNotFoundError(
+            f"FreeSurfer label {roi!r} (hemi-{hemi}) not found under "
+            f"{rois_subject_dir(data_dir, subject)}."
+        )
+    return matches[0]
 
 
 # ── Stimuli (forward-compat) ────────────────────────────────────

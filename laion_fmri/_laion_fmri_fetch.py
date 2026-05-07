@@ -16,7 +16,8 @@ import warnings
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from laion_fmri._paths import brain_mask_path
+from laion_fmri._bidsify import bidsify_local_key
+from laion_fmri._paths import r2mean_path
 from laion_fmri._s3_engine import (
     download_key,
     list_prefix_objects,
@@ -230,7 +231,8 @@ def _filtered_download(
     todo = [
         o for o in matching
         if not _local_matches(
-            Path(data_dir) / o["Key"], o["Size"],
+            Path(data_dir) / bidsify_local_key(o["Key"]),
+            o["Size"],
         )
     ]
     if not todo:
@@ -238,8 +240,9 @@ def _filtered_download(
 
     def _fetch(obj):
         key = obj["Key"]
+        local_path = Path(data_dir) / bidsify_local_key(key)
         try:
-            download_key(bucket, key, Path(data_dir) / key)
+            download_key(bucket, key, local_path)
         except subprocess.CalledProcessError as exc:
             stderr = exc.stderr or ""
             if (
@@ -322,7 +325,7 @@ def fetch_laion_fmri(
     # otherwise drop it, and the loader needs it.
     glm_force = set()
     if _ses_filters_specific_sessions(ses):
-        bm_local = brain_mask_path(data_dir, subject)
+        bm_local = r2mean_path(data_dir, subject)
         glm_force.add(
             bm_local.relative_to(data_dir).as_posix()
         )
@@ -331,9 +334,14 @@ def fetch_laion_fmri(
         bucket, f"derivatives/glmsingle-tedana/{subject}/",
         data_dir, filters, n_jobs=n_jobs, force_keys=glm_force,
     )
+    # ROI files are subject-level (no ses entity), so the strict
+    # ses semantic would drop them all when the caller filters to a
+    # specific session. Drop ses from the ROI-side filter dict so
+    # ROIs come along for any ses= the user passes.
+    roi_filters = {k: v for k, v in filters.items() if k != "ses"}
     _filtered_download(
-        bucket, f"derivatives/atlases/{subject}/",
-        data_dir, filters, n_jobs=n_jobs,
+        bucket, f"derivatives/rois/{subject}/",
+        data_dir, roi_filters, n_jobs=n_jobs,
     )
 
     if include_stimuli:

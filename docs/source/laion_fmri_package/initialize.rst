@@ -2,11 +2,11 @@
 Initialize the data directory
 =============================
 
-``dataset_initialize(path)`` records ``path`` as the local mirror
-of the bucket. The choice is persisted in
-``$XDG_CONFIG_HOME/laion_fmri/config.json`` (or
-``~/.config/laion_fmri/config.json``), so subsequent sessions
-pick it up automatically.
+``dataset_initialize(path)`` records ``path`` as the local
+mirror of the bucket. The choice is persisted across Python
+sessions, so subsequent calls on the same machine are
+unnecessary -- ``Subject`` / ``Group`` loaders pick the
+configured directory up automatically.
 
 .. code-block:: python
 
@@ -33,16 +33,10 @@ Requirements
 What gets created
 =================
 
-Inside the data directory, ``laion_fmri`` creates a hidden
-``.laion_fmri/`` subdirectory used for state that is local to
-the dataset:
-
-* ``.laion_fmri/license_accepted`` -- marker file written when
-  the dataset license is accepted (see :doc:`license`).
-* ``.laion_fmri/stimuli_terms_accepted`` -- marker file written
-  when the stimulus terms of use are accepted.
-
-Nothing else lives there. The bucket mirror itself is laid out
+License acceptance is recorded in a hidden ``.laion_fmri/``
+subdirectory of the data directory. To re-trigger the
+acceptance prompts (e.g. on a fresh dataset clone), delete
+that hidden folder. The bucket mirror itself is laid out
 under ``derivatives/``, ``stimuli/`` etc. directly in the data
 directory once ``download(...)`` runs.
 

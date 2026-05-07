@@ -2,7 +2,7 @@ import nibabel as nib
 import numpy as np
 import pytest
 
-from laion_fmri._paths import brain_mask_path, roi_mask_path
+from laion_fmri._paths import r2mean_path, roi_mask_path
 from laion_fmri.brain import get_voxel_coordinates, to_nifti
 from laion_fmri.io import load_nifti_mask
 from tests.conftest import (
@@ -13,7 +13,7 @@ from tests.conftest import (
 
 
 def _mask_path(synthetic_data_dir):
-    return str(brain_mask_path(synthetic_data_dir, "sub-01"))
+    return str(r2mean_path(synthetic_data_dir, "sub-01"))
 
 
 def _roi_within_brain(synthetic_data_dir, roi_name):

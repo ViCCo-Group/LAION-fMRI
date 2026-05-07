@@ -13,6 +13,14 @@ maps to exactly one file on disk** -- no averaging, no
 concatenation, no rebinning. Those operations are left to the
 caller, on the returned arrays.
 
+The "brain mask" is **derived on the fly** from the
+subject-level mean-R^2 map
+(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``): voxels with
+any non-zero GLMsingle fit are considered "in brain". The
+bucket does not ship a separate brain-mask file. This is
+consistent across sessions for a given subject, so betas
+stacked along the trial axis stay aligned on the voxel axis.
+
 Core accessors
 ==============
 
@@ -33,12 +41,83 @@ Core accessors
 Filters on ``get_betas``
 ========================
 
-* ``roi="..."`` or list -- ROI mask(s) (union when list).
+* ``roi="..."`` or list -- ROI mask(s); see "ROI queries"
+  below for the full grammar.
 * ``mask=ndarray[bool]`` -- custom voxel mask.
 * ``nc_threshold=0.2`` -- keep voxels whose per-session noise
   ceiling exceeds the threshold.
 * ``stimuli="shared"`` / ``"unique"`` -- restrict to trials
   whose stimulus is in the shared/unique subset.
+
+ROI queries
+===========
+
+ROI inputs accept three forms (or a list mixing them):
+
+* ``"FFA1"``  -- a specific ROI name.
+* ``"face"``  -- every ROI in that category (the bucket groups
+  ROIs into ``body``, ``character``, ``face``, ``laion``,
+  ``motion``, ``object``, ``place``, ``retinotopy``).
+* ``"all"``   -- every ROI for the subject.
+
+Categories and ROI names are disjoint, so a single string
+disambiguates by lookup. Lists union and de-dup the
+expansions.
+
+.. code-block:: python
+
+   sub.get_available_rois()                 # flat list of every ROI
+   sub.get_available_categories()           # 8 categories
+   sub.get_available_rois(category="face")  # face-area ROIs only
+
+   sub.get_roi_mask("FFA1")        # 1-D bool mask
+   sub.get_roi_mask("face")        # union of all face ROIs
+   sub.get_roi_mask("all")         # union of every ROI on disk
+   sub.get_roi_masks(["FFA1", "face"])  # dict keyed by your inputs
+
+ROI queries on ``get_betas`` follow the same grammar:
+
+.. code-block:: python
+
+   sub.get_betas(session="ses-01", roi="FFA1")
+   sub.get_betas(session="ses-01", roi="face")
+   sub.get_betas(session="ses-01", roi=["face", "place"])
+
+Note that ``get_roi_mask`` / ``get_betas(roi=...)`` are
+**volume-only**: they operate on the ``space-T1w_res-1pt8``
+NIfTI mask. Surface variants are loaded via ``get_roi_data``.
+
+Multi-format ROI loading
+========================
+
+Each ROI ships in three file types: a volumetric ``.nii.gz``
+mask, per-hemisphere ``.func.gii`` surface masks, and
+per-hemisphere FreeSurfer ``.label`` files. ``get_roi_data``
+returns a nested dict keyed by ROI; format and hemi axes
+prune the tree:
+
+.. code-block:: python
+
+   sub.get_roi_data("FFA1")  # full nested dict (default = all)
+   # {
+   #   "FFA1": {
+   #     "volume": <1-D bool ndarray>,
+   #     "gii": {
+   #       "hemi-L": {"func.gii": <bool>, "label": <int idx>},
+   #       "hemi-R": {...},
+   #     },
+   #   },
+   # }
+
+   sub.get_roi_data("FFA1", format="volume")          # vol only
+   sub.get_roi_data("FFA1", format="gii", hemi="L")   # left surface
+   sub.get_roi_data("FFA1", format="func.gii")        # surface masks only
+   sub.get_roi_data("face", format="volume")          # one entry per face ROI
+
+``format`` accepts ``"all"``, ``"volume"`` / ``"nii.gz"``
+(synonyms), ``"gii"`` (both surface types), ``"func.gii"``,
+or ``"label"``. ``hemi`` accepts ``"L"``, ``"R"``, or
+``"all"`` (default).
 
 Multi-session results
 =====================
@@ -84,10 +163,11 @@ That keeps the loader predictable, but means **you control
 how much you pull into RAM**. A few rules of thumb:
 
 * **One whole-brain session of betas** is ``n_trials × n_voxels``
-  ``float32``. With ~750 trials and ~100k brain-mask voxels,
-  that's roughly 300 MB per call. Comfortable for one session
-  on a laptop; multiplying by 30+ sessions per subject quickly
-  reaches many GB.
+  ``float32``. With ~1000 trials and ~270k brain-mask voxels,
+  that's roughly 1 GB per call. Doable for one session on a
+  laptop; multiplying by 30+ sessions per subject quickly
+  reaches many tens of GB. Always pass an ``roi=`` filter when
+  you can -- it cuts memory by 1-2 orders of magnitude.
 * **ROI filters cut memory dramatically.** ``roi="visual"``
   typically reduces voxel count by an order of magnitude;
   combining with ``nc_threshold`` reduces it further.

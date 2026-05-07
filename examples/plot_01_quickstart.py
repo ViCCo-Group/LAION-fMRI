@@ -22,17 +22,18 @@ For deeper dives into each step, see the focused examples on
 # Initialize the data directory
 # ------------------------------
 #
-# Each example uses its own data directory so they don't step on
-# each other when re-run. The quickstart's directory is also
-# reused by :doc:`querying <plot_03_querying>` and
-# :doc:`loading <plot_04_loading>`, since those examples need
-# the data this one downloads.
+# Examples 1, 2, and 4 share one data directory so the licenses
+# accepted here, and the data downloaded below, are reused by the
+# other examples without re-prompting or re-downloading.
 
 import os
 
 from laion_fmri.config import dataset_initialize, get_data_dir
 
-data_dir = os.path.join(os.getcwd(), "laion_fmri_quickstart")
+data_dir = os.environ.get(
+    "LAION_FMRI_EXAMPLE_DATA_DIR",
+    os.path.join(os.getcwd(), "laion_fmri_quickstart"),
+)
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 print(f"Data directory: {get_data_dir()}")
@@ -59,7 +60,7 @@ describe()
 # ``suffix``, ``extension``) as filters, so you can grab just the
 # slice you need.
 #
-# **About ``ses``:** when set to a session ID, only that session's
+# **About** ``ses``: when set to a session ID, only that session's
 # files are pulled -- subject-level aggregate maps (the per-subject
 # noise-ceiling variants, the mean-R^2 summaries, etc.) are
 # *excluded*. To pull only those aggregates, use the special value
@@ -100,7 +101,10 @@ download(
 # -----------------
 #
 # Once data is on disk, load a :class:`~laion_fmri.subject.Subject`
-# and inspect its sessions, voxel count, and available ROIs.
+# and inspect its sessions and available ROIs. The brain mask is
+# derived on the fly from the subject-level mean-R^2 file
+# (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``) -- voxels with
+# any non-zero GLMsingle fit are considered "in brain".
 
 from laion_fmri.subject import load_subject
 
@@ -111,16 +115,27 @@ print(f"Voxels:    {sub.get_n_voxels()}")
 print(f"ROIs:      {sub.get_available_rois()}")
 
 # %%
-# Load single-trial betas for one session
-# -----------------------------------------
+# Single-trial betas
+# -------------------
 #
-# Single-trial betas live per session in the bucket, so
-# ``session`` is required. ``get_betas`` returns a
-# ``(n_trials, n_voxels)`` array within the brain mask.
+# ``get_betas`` returns ``(n_trials, n_voxels)`` within the brain
+# mask. **For real subjects the brain-mask voxel count is ~270k**;
+# multiplied by ~1000 trials per session, that's ~1 GB per call.
+# In practice you should always pass an ``roi=`` filter to keep the
+# array small (face-area ROI, e.g. ~1000 voxels, drops the call to
+# a few MB).
 
 session = sub.get_sessions()[0]
-betas = sub.get_betas(session=session)
-print(f"{session} betas: {betas.shape}")
+
+# Without ROI: heavy but works.
+betas_all = sub.get_betas(session=session)
+print(f"{session} betas (full mask): {betas_all.shape}")
+
+# Recommended: use an ROI filter.
+rois_face = sub.get_available_rois(category="face")
+if rois_face:
+    betas_face = sub.get_betas(session=session, roi="face")
+    print(f"{session} betas (face union): {betas_face.shape}")
 
 # %%
 # Per-session noise ceiling

@@ -16,11 +16,12 @@ from tests.conftest import (
 
 
 def _brain_mask_file(synthetic_data_dir, sub):
+    """Path to the file the loader uses to derive the brain mask."""
     return (
         synthetic_data_dir / "derivatives" / "glmsingle-tedana"
         / sub
         / f"{sub}_task-images_space-T1w_"
-        f"desc-meanR2gt15mask_mask.nii.gz"
+        f"stat-rsquare_desc-R2mean_statmap.nii.gz"
     )
 
 
