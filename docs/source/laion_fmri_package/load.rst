@@ -9,9 +9,9 @@ Load
    sub = load_subject("sub-03")
 
 A ``Subject`` reads one file per accessor. **Every accessor
-maps to exactly one file on disk** -- no averaging, no
-concatenation, no rebinning. Those operations are left to the
-caller, on the returned arrays.
+maps to exactly one file on disk**, returned as raw arrays;
+combining sessions, averaging, or rebinning is the caller's
+responsibility.
 
 The "brain mask" is **derived on the fly** from the
 subject-level mean-R^2 map
@@ -72,8 +72,8 @@ ROI inputs accept three forms (or a list mixing them):
 * ``"all"``   -- every ROI for the subject.
 
 Categories and ROI names are disjoint, so a single string
-disambiguates by lookup. Lists union and de-dup the
-expansions.
+disambiguates by lookup. Pass a list to combine several at
+once -- overlapping voxels appear only once in the result.
 
 .. code-block:: python
 
