@@ -33,12 +33,13 @@ Requirements
 What gets created
 =================
 
-License acceptance is recorded in a hidden ``.laion_fmri/``
-subdirectory of the data directory. To re-trigger the
-acceptance prompts (e.g. on a fresh dataset clone), delete
-that hidden folder. The bucket mirror itself is laid out
-under ``derivatives/``, ``stimuli/`` etc. directly in the data
-directory once ``download(...)`` runs.
+The package records your license acceptance privately inside
+the data directory so subsequent ``download(...)`` calls don't
+re-prompt. If you want to start over with a fresh acceptance
+flow (e.g. on a new dataset clone), delete the data directory
+or its hidden configuration folder. The bucket mirror itself
+is laid out under ``derivatives/``, ``stimuli/`` etc. directly
+in the data directory once ``download(...)`` runs.
 
 Switching data directories
 ==========================

@@ -6,6 +6,7 @@ from laion_fmri.subject import load_subject  # noqa: E402
 from laion_fmri.torch_data import LaionFMRIDataset  # noqa: E402
 from tests.conftest import (  # noqa: E402
     N_HLVIS_VOXELS,
+    N_STIMULI,
     N_TRIALS_PER_SESSION,
 )
 
@@ -90,3 +91,36 @@ def test_torch_dataset_stimulus_id_is_string(configured_subject):
         configured_subject, session="ses-01", roi="hlvis",
     )
     assert isinstance(ds[0]["stimulus_id"], str)
+
+
+def test_torch_dataset_real_bucket_trials_derive_rep_index(
+    configured_subject, monkeypatch,
+):
+    """Real-bucket trial TSVs carry only ``session/run/beta_index/
+    label`` -- there is no ``rep_index`` column. The dataset should
+    derive it by counting prior occurrences of each stimulus label
+    rather than KeyError-ing on the missing column.
+    """
+    import pandas as pd
+
+    real_trials = pd.DataFrame({
+        "session": ["ses-01"] * N_TRIALS_PER_SESSION,
+        "run": ["run-01"] * N_TRIALS_PER_SESSION,
+        "beta_index": list(range(N_TRIALS_PER_SESSION)),
+        "label": [
+            f"stim_{(i % N_STIMULI):03d}"
+            for i in range(N_TRIALS_PER_SESSION)
+        ],
+    })
+    monkeypatch.setattr(
+        configured_subject, "get_trial_info",
+        lambda session=None: real_trials,
+    )
+
+    ds = LaionFMRIDataset(
+        configured_subject, session="ses-01", roi="hlvis",
+    )
+    # Trial 0: first occurrence of stim_000 -> rep_index 0.
+    assert ds[0]["rep_index"] == 0
+    # Trial N_STIMULI: second occurrence of stim_000 -> rep_index 1.
+    assert ds[N_STIMULI]["rep_index"] == 1

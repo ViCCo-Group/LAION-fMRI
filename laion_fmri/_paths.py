@@ -87,6 +87,20 @@ def rois_subject_dir(data_dir, subject):
     return Path(data_dir) / "derivatives" / "rois" / subject
 
 
+def parse_roi_label(filename, subject):
+    """Extract the ROI name from a volumetric ROI mask filename.
+
+    Returns the ROI label (e.g. ``"FFA1"``) when ``filename``
+    matches ``{subject}_space-T1w_res-1pt8_label-{ROI}_mask.nii.gz``,
+    otherwise returns ``None``.
+    """
+    head = f"{subject}_space-T1w_res-1pt8_label-"
+    tail = "_mask.nii.gz"
+    if filename.startswith(head) and filename.endswith(tail):
+        return filename[len(head):-len(tail)]
+    return None
+
+
 def roi_mask_path(data_dir, subject, roi):
     """Resolve the volumetric ROI mask file for ``roi``.
 

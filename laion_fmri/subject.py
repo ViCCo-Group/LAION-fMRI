@@ -16,6 +16,7 @@ from laion_fmri._errors import (
 from laion_fmri._paths import (
     betas_path,
     glmsingle_subject_dir,
+    parse_roi_label,
     r2mean_path,
     roi_freesurfer_label_path,
     roi_mask_path,
@@ -141,16 +142,15 @@ class Subject:
         if not root.is_dir():
             return {}
         out = {}
-        head = f"{self._subject_id}_space-T1w_res-1pt8_label-"
-        tail = "_mask.nii.gz"
         for cat_dir in sorted(root.iterdir()):
             if not cat_dir.is_dir():
                 continue
-            rois = []
-            for f in sorted(cat_dir.iterdir()):
-                name = f.name
-                if name.startswith(head) and name.endswith(tail):
-                    rois.append(name[len(head):-len(tail)])
+            rois = [
+                roi for f in sorted(cat_dir.iterdir())
+                if (roi := parse_roi_label(
+                    f.name, self._subject_id,
+                )) is not None
+            ]
             if rois:
                 out[cat_dir.name] = rois
         return out
@@ -694,9 +694,18 @@ class Subject:
         idx_map = {
             sid: i for i, sid in enumerate(meta["stimulus_id"])
         }
-        return np.array([
-            idx_map[sid] for sid in trials["stimulus_id"]
-        ])
+        # Dual schema: real bucket trial TSVs use ``label``,
+        # synthetic / future trials may use ``stimulus_id``.
+        if "label" in trials.columns:
+            ids = trials["label"]
+        elif "stimulus_id" in trials.columns:
+            ids = trials["stimulus_id"]
+        else:
+            raise ValueError(
+                "Trial info has neither 'label' nor 'stimulus_id' "
+                "column; cannot map trials to stimuli."
+            )
+        return np.array([idx_map[sid] for sid in ids])
 
     # ── Brain space ─────────────────────────────────────────────
 

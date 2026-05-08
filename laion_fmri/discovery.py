@@ -7,6 +7,7 @@ bucket via the AWS CLI. Local filesystem state is never consulted.
 import warnings
 
 from laion_fmri._bidsify import bidsify_local_key
+from laion_fmri._paths import parse_roi_label
 from laion_fmri._s3_engine import (
     list_common_prefixes,
     list_prefix_keys,
@@ -95,13 +96,9 @@ def get_rois(subject=None, category=None):
         file_category, fname = parts
         if category is not None and file_category != category:
             continue
-        # Bidsify before extracting label-{ROI}.
-        clean = bidsify_local_key(fname)
-        head = f"{subject}_space-T1w_res-1pt8_label-"
-        tail = "_mask.nii.gz"
-        if not clean.startswith(head) or not clean.endswith(tail):
+        roi = parse_roi_label(bidsify_local_key(fname), subject)
+        if roi is None:
             continue
-        roi = clean[len(head):-len(tail)]
         rois.add(roi)
 
     if not rois:

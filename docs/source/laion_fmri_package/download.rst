@@ -47,10 +47,10 @@ Filter semantics
    download(subject="sub-03", ses="averages")                # summaries only
    download(subject="sub-03", ses=["ses-01", "averages"])    # both
 
-The subject-level mean-R^2 file is *auto-pinned* whenever
-``ses`` filters to specific sessions -- the loader needs it to
-derive the brain mask, so the strict ``ses`` filter doesn't
-drop it.
+The subject-level mean-R^2 file is automatically included
+whenever ``ses`` filters to specific sessions -- the loader
+needs it to derive the brain mask, so the strict ``ses``
+filter doesn't drop it.
 
 Idempotent re-runs
 ==================

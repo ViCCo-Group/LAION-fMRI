@@ -5,9 +5,9 @@ Loading Data
 Load single-trial betas, noise-ceiling maps, ROI masks, and stimulus
 images.
 
-Every accessor maps to one file in the bucket. The loader does no
-math (no averaging across sessions, no rebinning) -- it returns the
-raw contents of the file you pick.
+Every accessor maps to one file in the bucket: it returns the raw
+contents of the file you pick. Combining sessions, averaging
+across trials, or rebinning is the caller's responsibility.
 
 The "brain mask" is **derived on the fly** from the subject-level
 mean-R^2 map (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``):
@@ -350,9 +350,12 @@ sub.to_nifti(
     ffa1, f"/tmp/{subject_id}_{session}_FFA1_mean.nii.gz", roi="FFA1",
 )
 
-# Companion: get_voxel_coordinates() returns the (i, j, k) of
-# every brain-mask voxel, in the same order as the 1-D arrays
-# returned by get_betas / get_noise_ceiling.
+# If you also need the (i, j, k) location of each voxel --
+# for example to build a custom voxel selection by spatial
+# proximity, or to overlay results outside ``to_nifti``'s
+# round-trip -- ``get_voxel_coordinates`` returns them in the
+# same order as the 1-D arrays from ``get_betas`` and
+# ``get_noise_ceiling``, so they line up index-for-index.
 coords = sub.get_voxel_coordinates()
 print(f"Voxel coordinates: {coords.shape}")
 

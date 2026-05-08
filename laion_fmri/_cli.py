@@ -23,7 +23,6 @@ def main(argv=None):
     )
     subparsers = parser.add_subparsers(dest="command")
 
-    # config subcommand
     config_parser = subparsers.add_parser(
         "config", help="Configure the data directory"
     )
@@ -32,7 +31,6 @@ def main(argv=None):
         help="Path to the data directory",
     )
 
-    # download subcommand
     download_parser = subparsers.add_parser(
         "download", help="Download dataset files"
     )
@@ -54,7 +52,6 @@ def main(argv=None):
         help="Include stimulus images (requires ToU acceptance)",
     )
 
-    # info subcommand
     info_parser = subparsers.add_parser(
         "info", help="Show dataset information"
     )
