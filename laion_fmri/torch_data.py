@@ -16,6 +16,34 @@ def _check_torch_available():
         )
 
 
+def _resolve_rep_indices(trial_info):
+    """Return a per-trial ``rep_index`` array.
+
+    Real bucket trial TSVs ship only ``session/run/beta_index/
+    label`` -- no ``rep_index`` column -- so the index is
+    derived by counting prior occurrences of each stimulus
+    identifier. When the column is already present (synthetic
+    fixtures, future schemas), it's used verbatim.
+    """
+    if "rep_index" in trial_info.columns:
+        return trial_info["rep_index"].to_numpy()
+    if "label" in trial_info.columns:
+        ids = trial_info["label"]
+    elif "stimulus_id" in trial_info.columns:
+        ids = trial_info["stimulus_id"]
+    else:
+        raise ValueError(
+            "Trial info has neither 'label' nor 'stimulus_id' "
+            "column; cannot derive rep_index."
+        )
+    seen = {}
+    rep = []
+    for sid in ids:
+        rep.append(seen.get(sid, 0))
+        seen[sid] = seen.get(sid, 0) + 1
+    return np.array(rep)
+
+
 class LaionFMRIDataset:
     """PyTorch Dataset wrapping one session of a LAION-fMRI subject.
 
@@ -64,6 +92,7 @@ class LaionFMRIDataset:
         self._stim_indices = subject.get_trial_stimulus_indices(
             session=session,
         )
+        self._rep_indices = _resolve_rep_indices(self._trial_info)
 
         stim_dir = stimuli_dir_path(subject._data_dir)
         self._image_paths = [
@@ -85,7 +114,6 @@ class LaionFMRIDataset:
             self._image_paths[stim_idx],
         ).convert("RGB")
         img_array = np.array(img, dtype=np.float32) / 255.0
-        # HWC -> CHW
         img_tensor = self._torch.tensor(
             img_array.transpose(2, 0, 1),
         )
@@ -93,7 +121,6 @@ class LaionFMRIDataset:
         if self._image_transform is not None:
             img_tensor = self._image_transform(img_tensor)
 
-        trial_row = self._trial_info.iloc[idx]
         return {
             "betas": betas_tensor,
             "image": img_tensor,
@@ -101,5 +128,5 @@ class LaionFMRIDataset:
                 "stimulus_id"
             ],
             "session": self._session,
-            "rep_index": int(trial_row["rep_index"]),
+            "rep_index": int(self._rep_indices[idx]),
         }

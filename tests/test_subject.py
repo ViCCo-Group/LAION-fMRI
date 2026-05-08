@@ -722,3 +722,46 @@ def test_get_trial_stimulus_indices_list_returns_dict(
     for arr in result.values():
         assert isinstance(arr, np.ndarray)
         assert len(arr) == N_TRIALS_PER_SESSION
+
+
+def test_get_trial_stimulus_indices_uses_label_column(
+    configured_subject, monkeypatch,
+):
+    """Real-bucket schema: trials carry a ``label`` column whose
+    values are the same identifiers stored in the metadata table's
+    ``stimulus_id`` column. ``get_trial_stimulus_indices`` must
+    map from one to the other; today it assumes ``stimulus_id``
+    on the trials side and raises ``KeyError`` against real data.
+    """
+    real_meta = pd.DataFrame({
+        "stimulus_id": [
+            "shared_12rep_LAION_cluster_1_i0.jpg",
+            "unique_LAION_initial_cluster_2_i1.jpg",
+        ],
+        "shared": [True, False],
+    })
+    label_trials = pd.DataFrame({
+        "session": ["ses-01"] * 4,
+        "run": [1] * 4,
+        "beta_index": list(range(4)),
+        "label": [
+            "shared_12rep_LAION_cluster_1_i0.jpg",
+            "unique_LAION_initial_cluster_2_i1.jpg",
+            "unique_LAION_initial_cluster_2_i1.jpg",
+            "shared_12rep_LAION_cluster_1_i0.jpg",
+        ],
+    })
+    monkeypatch.setattr(
+        configured_subject, "get_trial_info",
+        lambda session=None: label_trials,
+    )
+    monkeypatch.setattr(
+        configured_subject, "get_stimulus_metadata",
+        lambda: real_meta,
+    )
+
+    indices = configured_subject.get_trial_stimulus_indices(
+        session="ses-01",
+    )
+    assert isinstance(indices, np.ndarray)
+    assert indices.tolist() == [0, 1, 1, 0]
