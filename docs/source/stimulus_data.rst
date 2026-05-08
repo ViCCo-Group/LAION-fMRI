@@ -76,6 +76,39 @@ semantic annotations, model-derived features), see
    - Show a few example rows (copy from the actual file)
    - Document the companion ``stimuli.json`` sidecar if one exists
 
+Stimulus Embeddings
+  ===================
+
+  A packed HDF5 file of pretrained image embeddings is provided for the stimulus
+  set. The file is deduplicated across participants: each row corresponds to one
+  unique stimulus image ID, and all model embeddings share the same row order.
+
+  The file contains four global image embedding spaces:
+
+  * DINOv2 ViT-L/14, mean-pooled patch tokens from layer 23
+  * PE Core L/14 336px
+  * SigLIP2 SO400M Patch14 384px
+  * OpenCLIP LAION ViT-H/14
+
+  The HDF5 layout is:
+
+  .. code-block:: text
+
+     image_ids
+     subject_indices/sub-01
+     subject_indices/sub-03
+     subject_indices/sub-05
+     subject_indices/sub-06
+     subject_indices/sub-07
+     models/dinov2_vitl14_meanpatch_layer23/embedding
+     models/pe_core_l14_336/embedding
+     models/siglip2_so400m_patch14_384/embedding
+     models/openclip_laion_vith14/embedding
+
+  Rows in each ``models/<model>/embedding`` dataset map one-to-one to
+  ``image_ids``. To recover embeddings in a participant's stimulus order, index
+  the canonical embedding matrix with ``subject_indices/<subject>``.
+
 Distribution of Stimuli
 =======================
 
