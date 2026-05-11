@@ -1,8 +1,8 @@
 """Access the LAION-fMRI stimulus images from local cache.
 
 Use after the stimulus archive has been downloaded via
-``download(..., include_stimuli=True)`` (or
-``laion-fmri download --include-stimuli``).
+:func:`laion_fmri.download.download_stimuli` (or
+``laion-fmri download-stimuli``).
 
 The archive on disk is one HDF5 file with a 1-D ``images`` dataset of
 variable-length byte strings (raw JPEG bytes), aligned by index to the
@@ -12,11 +12,11 @@ and exposes name-keyed access plus optional PIL decoding.
 Quick start
 -----------
 
->>> from laion_fmri import Stimuli
->>> stim = Stimuli()
->>> stim.metadata.head()         # pandas DataFrame: name, dataset, ...
+>>> import laion_fmri
+>>> stim = laion_fmri.load_stimuli()      # mirrors load_subject(...)
+>>> stim.metadata.head()                  # pandas DataFrame: name, dataset, ...
 >>> jpeg_bytes = stim["shared_12rep_LAION_cluster_1003_i0.jpg"]
->>> img = stim.image(0)          # PIL.Image (requires Pillow)
+>>> img = stim.image(0)                   # PIL.Image (requires Pillow)
 """
 
 from __future__ import annotations
@@ -176,35 +176,30 @@ class Stimuli:
         )
 
 
-# ── module-level convenience ──────────────────────────────────
+# ── module-level loader (mirrors load_subject(...)) ──────────
 
 
-def load_stimulus_metadata(data_dir: str | Path | None = None) -> pd.DataFrame:
-    """Return the stimulus metadata CSV as a pandas DataFrame."""
-    return Stimuli(data_dir=data_dir).metadata
+def load_stimuli(data_dir: str | Path | None = None) -> Stimuli:
+    """Return a :class:`Stimuli` handle to the local stimulus archive.
 
-
-def load_stimulus(
-    key: int | str,
-    data_dir: str | Path | None = None,
-    *,
-    decode: bool = False,
-):
-    """Load one stimulus by name or index.
+    The naming mirrors :func:`laion_fmri.subject.load_subject` — the
+    package-level convention is ``load_X(...)`` returning a handle
+    object you then call methods on.
 
     Parameters
     ----------
-    key : int or str
-        Integer HDF5 index or image_name from the metadata CSV.
     data_dir : str or Path, optional
         Override the configured data directory.
-    decode : bool
-        If True, return a :class:`PIL.Image.Image`; else raw JPEG bytes.
-        Decoding requires Pillow.
 
     Returns
     -------
-    bytes or PIL.Image.Image
+    Stimuli
+        A handle to the on-disk HDF5 + metadata CSV.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the archive has not been downloaded yet. Run
+        :func:`laion_fmri.download.download_stimuli` first.
     """
-    stim = Stimuli(data_dir=data_dir)
-    return stim.image(key) if decode else stim[key]
+    return Stimuli(data_dir=data_dir)

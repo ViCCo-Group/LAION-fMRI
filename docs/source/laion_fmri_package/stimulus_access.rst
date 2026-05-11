@@ -35,14 +35,14 @@ form to re-fill.
 Reading the images
 ==================
 
-Once downloaded, read images out of the local archive with
-:class:`laion_fmri.Stimuli`:
+Once downloaded, open the local archive with
+:func:`laion_fmri.load_stimuli` (which mirrors :func:`load_subject`):
 
 .. code-block:: python
 
    import laion_fmri
 
-   stim = laion_fmri.Stimuli()
+   stim = laion_fmri.load_stimuli()
    stim.metadata.head()                          # pandas DataFrame, 25 052 rows
    stim["shared_12rep_LAION_cluster_1003_i0.jpg"]  # raw JPEG bytes
    stim.image(0)                                 # decoded PIL.Image (needs Pillow)

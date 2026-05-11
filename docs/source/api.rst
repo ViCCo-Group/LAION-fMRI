@@ -50,13 +50,11 @@ go through the access service at
 
 .. autofunction:: laion_fmri.request_stimulus_access
 
+.. autofunction:: laion_fmri.load_stimuli
+
 .. autoclass:: laion_fmri.Stimuli
    :members:
    :special-members: __getitem__, __len__, __iter__, __contains__
-
-.. autofunction:: laion_fmri.load_stimulus
-
-.. autofunction:: laion_fmri.load_stimulus_metadata
 
 
 Subject

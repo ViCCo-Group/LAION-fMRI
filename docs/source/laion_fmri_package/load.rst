@@ -202,14 +202,14 @@ Stimulus images
 ===============
 
 Stimulus images live in a single HDF5 archive that's dataset-wide (one
-file for all subjects, indexed by ``image_name``). Read it via
-:class:`laion_fmri.Stimuli`:
+file for all subjects, indexed by ``image_name``). The package's loader
+function mirrors :func:`load_subject`:
 
 .. code-block:: python
 
    import laion_fmri
 
-   stim = laion_fmri.Stimuli()                 # opens the local HDF5 lazily
+   stim = laion_fmri.load_stimuli()           # mirrors load_subject(...)
    stim.metadata.head()                        # pandas DataFrame
    len(stim)                                   # 25052
 
@@ -238,7 +238,7 @@ HDF5 index.
    :class:`Subject` has older stimulus methods (``get_images``,
    ``get_image``, ``get_stimulus_metadata``) that expect a per-PNG layout
    (``stimuli/images/*.png`` + ``stimuli/stimuli.tsv``). For the
-   access-service HDF5 schema, prefer :class:`Stimuli` above.
+   access-service HDF5 schema, prefer ``load_stimuli()`` above.
 
 Common workflow: per-session z-scoring + train/test split
 =========================================================

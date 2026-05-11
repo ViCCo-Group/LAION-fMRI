@@ -10,11 +10,7 @@ For downloading and access-service helpers, import from
 :mod:`laion_fmri.download` directly.
 """
 
-from laion_fmri.stimuli import (
-    Stimuli,
-    load_stimulus,
-    load_stimulus_metadata,
-)
+from laion_fmri.stimuli import Stimuli, load_stimuli
 
 # These don't collide with a module name (the module is `download`, not
 # `download_stimuli` / `request_stimulus_access`), so re-exporting at the
@@ -27,7 +23,6 @@ from laion_fmri.download import (  # noqa: E402
 __all__ = [
     "Stimuli",
     "download_stimuli",
-    "load_stimulus",
-    "load_stimulus_metadata",
+    "load_stimuli",
     "request_stimulus_access",
 ]
