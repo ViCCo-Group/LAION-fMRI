@@ -257,16 +257,18 @@ class Subject:
             Trial-level filter using the stimulus-metadata
             ``shared`` flag.
         streaming : bool
-            If False (default), materialize the full 4-D NIfTI
-            up front and mask per volume. Decompresses any
-            ``.nii.gz`` once and is the right choice for the
-            bucket's compressed files; peak memory is the full
-            file plus the masked output (~12 GB for a real
-            session). If True, read one volume at a time -- peak
-            memory stays at one volume plus the masked output.
-            Streaming is only fast on raw uncompressed ``.nii``
-            files; on ``.nii.gz`` it re-decompresses on every
-            slice and slows to a crawl.
+            If False (default), the full 4-D NIfTI is
+            materialized in RAM and then masked. Decompresses
+            any ``.nii.gz`` once; peak memory is the full file
+            (~12 GB for a real session) plus the masked output.
+            Best when you have plenty of RAM. If True, the file
+            is streamed volume-by-volume and the combined
+            brain + ROI + NC mask is applied inline: peak
+            memory is one volume (~10-50 MB) plus the masked
+            output. Use this on memory-constrained machines
+            like Colab. Works on both ``.nii`` (nibabel-managed
+            per-volume reads) and ``.nii.gz`` (a custom gzip
+            pipeline that never re-decompresses).
 
         Returns
         -------
@@ -299,13 +301,24 @@ class Subject:
         mask_path = r2mean_path(
             self._data_dir, self._subject_id,
         )
-        betas = load_nifti_4d(path, mask_path, streaming=streaming)
 
-        voxel_mask = self._build_voxel_mask(
+        # Build a single full-volume voxel mask before reading the
+        # betas: the streaming path then applies brain + ROI + NC
+        # inline, avoiding a brain-only intermediate (~1 GB on a
+        # real session).
+        brain_mask = load_nifti_mask(mask_path)
+        voxel_filter = self._build_voxel_mask(
             roi, mask, nc_threshold, session,
         )
-        if voxel_mask is not None:
-            betas = betas[:, voxel_mask]
+        if voxel_filter is None:
+            combined_mask = brain_mask
+        else:
+            combined_mask = brain_mask.copy()
+            combined_mask[brain_mask] = voxel_filter
+
+        betas = load_nifti_4d(
+            path, combined_mask, streaming=streaming,
+        )
 
         if stimuli is not None:
             trial_mask = self._stimulus_trial_filter(stimuli, session)
