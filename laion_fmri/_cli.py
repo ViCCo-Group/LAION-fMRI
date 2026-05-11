@@ -32,7 +32,7 @@ def main(argv=None):
     )
 
     download_parser = subparsers.add_parser(
-        "download", help="Download dataset files"
+        "download", help="Download fMRI files for a subject"
     )
     download_parser.add_argument(
         "--subject", required=True,
@@ -67,9 +67,9 @@ def main(argv=None):
     subparsers.add_parser(
         "download-stimuli",
         help=(
-            "Download just the gated stimulus archive (HDF5 + metadata "
-            "CSV); no fMRI data is fetched. First call walks through "
-            "the Data Use Agreement; subsequent calls reuse the cached "
+            "Download the gated stimulus archive (dataset-wide, "
+            "subject-independent). First call walks through the Data "
+            "Use Agreement; subsequent calls reuse the cached "
             "request_id."
         ),
     )

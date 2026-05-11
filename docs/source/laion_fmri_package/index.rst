@@ -54,17 +54,30 @@ The cards below walk through each step in detail.
       +++
       ``dataset_initialize`` · ``get_data_dir``
 
-   .. grid-item-card:: Licenses
+   .. grid-item-card:: License
       :link: license
       :link-type: doc
       :class-card: sd-border-0
       :shadow: sm
 
-      Review and accept the dataset and stimulus licenses up
-      front, or let ``download(...)`` prompt on first use.
+      Review and accept the CC0 dataset license up front, or
+      let ``download(...)`` prompt on first use.
 
       +++
-      ``accept_licenses``
+      ``accept_license``
+
+   .. grid-item-card:: Stimulus access
+      :link: stimulus_access
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Submit the Data Use Agreement form once, then ``laion_fmri``
+      caches a ``request_id`` and re-mints presigned download URLs
+      for every subsequent stimulus fetch.
+
+      +++
+      ``download_stimuli`` · ``request_stimulus_access``
 
    .. grid-item-card:: Discover
       :link: discover
@@ -135,6 +148,7 @@ The cards below walk through each step in detail.
 
    initialize
    license
+   stimulus_access
    discover
    download
    load

@@ -171,15 +171,13 @@ def _resolve_stimulus_access(server_url=ACCESS_SERVICE_URL):
 
 
 def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
-    """Download the gated stimulus archive (HDF5 + metadata CSV) only.
+    """Download the gated stimulus archive (HDF5 + metadata CSV).
 
-    No fMRI data is touched. Use this when you only need the images
-    (e.g. for stimulus-side analyses, image embeddings, etc.) and don't
-    want to mirror any of the fMRI derivatives.
-
-    If no cached ``request_id`` is present, walks the user through the
-    Data Use Agreement form interactively. Otherwise re-mints URLs via
-    ``/api/v1/refresh`` and downloads silently.
+    The stimulus archive is a single HDF5 covering all subjects — it is
+    dataset-wide, not per-subject — so this function takes no subject
+    argument. If no cached ``request_id`` is present, walks the user
+    through the Data Use Agreement form interactively. Otherwise
+    re-mints URLs via ``/api/v1/refresh`` and downloads silently.
 
     Parameters
     ----------
@@ -229,10 +227,6 @@ def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
     return expected
 
 
-# Internal alias for ``download(..., include_stimuli=True)``.
-_download_stimuli = download_stimuli
-
-
 # ── Public entry point ──────────────────────────────────────────
 
 
@@ -248,16 +242,23 @@ def download(
     include_stimuli=False,
     n_jobs=1,
 ):
-    """Download dataset files for a subject, narrowed by BIDS entities.
+    """Download fMRI dataset files for a subject, narrowed by BIDS entities.
 
     The download is **idempotent**: a file whose local size already
-    matches the S3 size is skipped, so re-running after an
-    interrupted transfer only fetches what's missing.
+    matches the S3 size is skipped, so re-running after an interrupted
+    transfer only fetches what's missing.
+
+    The stimulus archive is dataset-wide (one HDF5 for all subjects), so
+    it is not subject-keyed. For stimulus-only downloads use the
+    standalone :func:`download_stimuli` function. The
+    ``include_stimuli=True`` flag here is a convenience that calls
+    :func:`download_stimuli` after the fMRI fetch completes.
 
     Parameters
     ----------
-    subject : int, str, or "all"
-        Subject identifier (BIDS ID, integer index, or "all").
+    subject : str or "all"
+        Subject identifier (BIDS ID, e.g. ``"sub-01"`` / ``"01"``,
+        or ``"all"`` to iterate every subject).
     ses, task, space, desc, stat : str or list[str], optional
         BIDS-entity filters. Each accepts a bare value
         (``ses="04"``) or the full BIDS token (``ses="ses-04"``).
@@ -269,20 +270,14 @@ def download(
     extension : str or list[str], optional
         File extension filter (``"nii.gz"``, ``"tsv"``, ...).
     include_stimuli : bool
-        Whether to download the gated stimulus images. The first
-        time, the loader walks the user through a short Data Use
-        Agreement form (the same one served at
-        ``https://laion-fmri.hebartlab.com/request``) and caches a
-        ``request_id`` under ``~/.cache/laion-fmri/auth.json``.
-        Subsequent calls re-mint presigned URLs silently.
-
-        Set ``LAION_FMRI_REQUEST_ID`` to an existing id (obtained
-        from the web form) to skip the prompt on headless machines.
+        After the fMRI fetch, also call :func:`download_stimuli` to
+        pull the dataset-wide stimulus archive. Useful when you want
+        both in a single call. Use :func:`download_stimuli` directly
+        if you only need the stimuli.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (``aws s3 cp`` subprocesses). ``1`` (default) is sequential.
-        Does not affect stimulus downloads, which are streamed
-        sequentially.
+        Does not affect stimulus downloads.
 
     Raises
     ------
@@ -291,12 +286,12 @@ def download(
     LicenseNotAcceptedError
         If the CC0 dataset license is declined.
     AccessServiceError
-        If the stimulus access service rejects the request, the
-        cached request_id has been revoked, or a download fails.
+        If ``include_stimuli=True`` and the stimulus access service
+        rejects the request or a download fails.
     TermsOutdatedError
-        If the server's current Terms of Use version differs from
-        the version on the cached request_id. The error contains a
-        URL to visit for one-click re-acceptance.
+        If ``include_stimuli=True`` and the server's current Terms of
+        Use version differs from the version on the cached
+        ``request_id``.
     """
     data_dir = get_data_dir()
 
@@ -321,7 +316,7 @@ def download(
             stat=stat,
             suffix=suffix,
             extension=extension,
-            include_stimuli=False,    # stimuli are fetched separately below
+            include_stimuli=False,    # stimuli routed through access service
             n_jobs=n_jobs,
         )
 

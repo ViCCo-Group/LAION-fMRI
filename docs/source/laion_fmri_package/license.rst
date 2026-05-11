@@ -1,50 +1,17 @@
-==================
-License acceptance
-==================
+===============
+Dataset license
+===============
 
-Two licenses apply:
+The brain imaging and derivatives of LAION-fMRI are released under
+**CC0 1.0**. The stimulus images are not CC0; they're gated by a
+separate Data Use Agreement enforced by the access service — see
+:doc:`stimulus_access` for that flow.
 
-* The **dataset license** (CC0 1.0) covers the brain and
-  participant data.
-* The **stimulus license** (closed, research-only) covers the
-  stimulus images.
+CC0 acceptance prompt
+=====================
 
-On the very first download the licenses are presented as
-``Type "I AGREE"`` prompts. The acceptances persist across
-sessions, so the prompts only appear the first time you run
-``download(...)`` against a new data directory.
-
-Reviewing up front
-==================
-
-If you'd rather review and accept the licenses before any
-``download(...)`` call, use the standalone helper:
-
-.. code-block:: python
-
-   from laion_fmri.download import accept_licenses
-
-   accept_licenses(include_stimuli=True)
-
-* Without ``include_stimuli``, only the dataset license is
-  prompted.
-* With ``include_stimuli=True``, both licenses are prompted in
-  sequence.
-
-Errors
-======
-
-* A declined dataset license raises ``LicenseNotAcceptedError``.
-* A declined stimulus license raises ``RuntimeError``.
-
-Both are the same exceptions ``download(...)`` raises
-internally, so subsequent download calls behave identically
-whether acceptance happened standalone or inside a download.
-
-Dataset license (CC0 1.0)
-=========================
-
-The full text shown at the prompt:
+On the very first ``download(...)`` against a new data directory you'll
+see the CC0 license text and a ``Type "I AGREE"`` prompt:
 
 .. code-block:: text
 
@@ -57,30 +24,37 @@ The full text shown at the prompt:
 
    Full license text: https://creativecommons.org/publicdomain/zero/1.0/
 
-   NOTE: Stimulus images are NOT covered by CC0. They are subject to a
-   separate, restrictive license. You will be prompted to accept it if
-   you choose to download stimuli.
+   Type "I AGREE" to accept and continue with the download:
 
-Stimulus license
-================
+Accepting writes a marker file at
+``{data_dir}/.laion_fmri/license_accepted`` so the prompt only appears
+once per data directory.
 
-The full text shown at the prompt when ``include_stimuli=True``:
+Accepting up front
+==================
 
-.. code-block:: text
+To accept before any ``download(...)`` call:
 
-   === LAION-fMRI Stimulus License ===
+.. code-block:: python
 
-   The LAION-fMRI stimulus images are provided under a closed license.
-   All rights are reserved by the original copyright holders.
+   from laion_fmri.download import accept_license
+   accept_license()
 
-   You may ONLY use these images for non-commercial academic research.
-   All other uses are strictly prohibited. In particular, you may NOT:
+The older ``accept_licenses(include_stimuli=True)`` signature still
+works for back-compat, but ``include_stimuli=True`` is a no-op there —
+stimulus terms are accepted via the access service, not via a local
+prompt. See :doc:`stimulus_access`.
 
-     1. Share, redistribute, or make the images available to others.
-     2. Use the images for any commercial purpose.
-     3. Use the images to train, fine-tune, or evaluate commercial
-        AI/ML models or services.
-     4. Create derivative works from the images for any purpose
-        other than non-commercial academic research.
+Errors
+======
 
-   Full terms: https://laion-fmri.hebartlab.com/terms
+A declined CC0 license raises
+:class:`laion_fmri._errors.LicenseNotAcceptedError`.
+
+Stimulus images
+===============
+
+Different licensing applies — the stimulus images come from third-party
+web sources and are gated behind a Data Use Agreement. Acceptance
+happens via a short form (terminal or web). The full guide is on
+:doc:`stimulus_access`.

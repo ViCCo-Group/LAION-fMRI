@@ -198,6 +198,48 @@ PyTorch users: ``to_torch_dataset(...)`` exposes the same
 accessors lazily per ``__getitem__`` call, so total RAM stays
 proportional to batch size rather than the dataset.
 
+Stimulus images
+===============
+
+Stimulus images live in a single HDF5 archive that's dataset-wide (one
+file for all subjects, indexed by ``image_name``). Read it via
+:class:`laion_fmri.Stimuli`:
+
+.. code-block:: python
+
+   import laion_fmri
+
+   stim = laion_fmri.Stimuli()                 # opens the local HDF5 lazily
+   stim.metadata.head()                        # pandas DataFrame
+   len(stim)                                   # 25052
+
+   # Two equivalent lookups: by integer index or by image_name
+   jpeg_bytes = stim[0]
+   jpeg_bytes = stim["shared_12rep_LAION_cluster_1003_i0.jpg"]
+
+   # Decoded PIL.Image (requires Pillow)
+   img = stim.image(0)
+
+   # Iterate (name, bytes) in metadata order
+   for name, jpeg in stim:
+       ...
+
+The HDF5 + metadata CSV are downloaded via the gated access service —
+run :func:`laion_fmri.download_stimuli` (or
+``laion-fmri download-stimuli``) first. See :doc:`stimulus_access` for
+the full flow.
+
+The metadata CSV columns are ``image_name``, ``dataset``,
+``participant``, ``unique_or_shared``, ``n_reps``; row order matches the
+HDF5 index.
+
+.. note::
+
+   :class:`Subject` has older stimulus methods (``get_images``,
+   ``get_image``, ``get_stimulus_metadata``) that expect a per-PNG layout
+   (``stimuli/images/*.png`` + ``stimuli/stimuli.tsv``). For the
+   access-service HDF5 schema, prefer :class:`Stimuli` above.
+
 Common workflow: per-session z-scoring + train/test split
 =========================================================
 

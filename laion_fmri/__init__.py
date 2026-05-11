@@ -16,8 +16,18 @@ from laion_fmri.stimuli import (
     load_stimulus_metadata,
 )
 
+# These don't collide with a module name (the module is `download`, not
+# `download_stimuli` / `request_stimulus_access`), so re-exporting at the
+# top level is safe.
+from laion_fmri.download import (  # noqa: E402
+    download_stimuli,
+    request_stimulus_access,
+)
+
 __all__ = [
     "Stimuli",
+    "download_stimuli",
     "load_stimulus",
     "load_stimulus_metadata",
+    "request_stimulus_access",
 ]

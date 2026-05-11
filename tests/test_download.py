@@ -129,17 +129,12 @@ def test_download_include_stimuli_calls_access_service(configured_env):
     ) as mock_stim:
         download(subject="sub-01", include_stimuli=True)
 
-    # fetch is still called, but include_stimuli stays False
     mock_fetch.assert_called_once()
     assert mock_fetch.call_args.kwargs["include_stimuli"] is False
-
-    # download_stimuli is called once with the data dir.
     mock_stim.assert_called_once_with(data_dir=str(configured_env))
 
 
-def test_download_without_stimuli_does_not_call_access_service(
-    configured_env,
-):
+def test_download_without_stimuli_does_not_call_access_service(configured_env):
     with patch("laion_fmri.download.fetch_laion_fmri"), patch(
         "laion_fmri.download.download_stimuli"
     ) as mock_stim:

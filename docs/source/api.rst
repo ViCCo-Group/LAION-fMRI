@@ -39,6 +39,26 @@ Discovery
 .. autofunction:: laion_fmri.describe
 
 
+Stimulus Access
+---------------
+
+Gated stimulus archive (HDF5 + metadata CSV). Acceptance and download
+go through the access service at
+`laion-fmri.hebartlab.com <https://laion-fmri.hebartlab.com>`__.
+
+.. autofunction:: laion_fmri.download_stimuli
+
+.. autofunction:: laion_fmri.request_stimulus_access
+
+.. autoclass:: laion_fmri.Stimuli
+   :members:
+   :special-members: __getitem__, __len__, __iter__, __contains__
+
+.. autofunction:: laion_fmri.load_stimulus
+
+.. autofunction:: laion_fmri.load_stimulus_metadata
+
+
 Subject
 =======
 
