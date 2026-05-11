@@ -24,9 +24,9 @@ Loading Data
 Load single-trial betas, noise-ceiling maps, ROI masks, and stimulus
 images.
 
-Every accessor maps to one file in the bucket: it returns the raw
-contents of the file you pick. Combining sessions, averaging
-across trials, or rebinning is the caller's responsibility.
+Every accessor maps to one file in the bucket. The loader does no
+math (no averaging across sessions, no rebinning) -- it returns the
+raw contents of the file you pick.
 
 The "brain mask" is **derived on the fly** from the subject-level
 mean-R^2 map (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``):
@@ -63,6 +63,12 @@ Bind the quickstart's data directory
     dataset_initialize(data_dir)
 
 
+
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 42-44
 
 Load a subject and pick a session
@@ -85,6 +91,20 @@ Load a subject and pick a session
 
     available_rois = sub.get_available_rois()
     print(f"Primary ROI: {roi}")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Subject: sub-01 | session: ses-01
+    Voxels in brain mask: 272080
+    Primary ROI: FFA1
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 59-65
@@ -113,6 +133,20 @@ unless you really want the full brain-masked array** -- the
             session=session, roi=roi, nc_threshold=0.3,
         )
         print(f"ROI + NC > 0.3:      {betas_both.shape}")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    FFA1 ROI:           (1044, 222)
+    NC > 0.2:            (1044, 132612)
+    ROI + NC > 0.3:      (1044, 189)
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 80-91
@@ -215,6 +249,17 @@ greyscale so the colored contours stay visually dominant.
     plt.show()
 
 
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_04_loading_001.png
+   :alt: plot 04 loading
+   :srcset: /auto_examples/images/sphx_glr_plot_04_loading_001.png
+   :class: sphx-glr-single-img
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 173-179
 
 Single-trial filtering by stimulus type
@@ -240,6 +285,18 @@ the bucket doesn't yet expose).
         )
 
 
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Skipped: stimulus subset filter needs stimuli/stimuli.tsv.
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 191-196
 
 Custom voxel mask
@@ -261,6 +318,19 @@ pass the result back in via ``mask=``.
 
         betas_custom = sub.get_betas(session=session, mask=custom_mask)
         print(f"Custom betas:       {betas_custom.shape}")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Custom mask voxels: 152
+    Custom betas:       (1044, 152)
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 207-213
@@ -288,6 +358,20 @@ voxels appear only once in the resulting mask.
             print(f"  {first_cat} (category): {cat_mask.sum()} voxels")
         union = sub.get_roi_mask("all")
         print(f"  all: {union.sum()} voxels")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      MT: 183 voxels
+      body (category): 1539 voxels
+      all: 16569 voxels
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 227-237
@@ -339,6 +423,17 @@ and that ROI may not be reliable to analyse with.
         plt.show()
 
 
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_04_loading_002.png
+   :alt: FFA1, FFA2, OFA, pSTSfaces
+   :srcset: /auto_examples/images/sphx_glr_plot_04_loading_002.png
+   :class: sphx-glr-single-img
+
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 269-281
 
 Noise ceiling
@@ -373,6 +468,18 @@ stable ceiling or full coverage.
     #     nc_subj = sub.get_noise_ceiling(desc="Noiseceiling12rep")
 
 
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Per-session NC: shape=(272080,), range=[0.000, 95.076]
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 296-298
 
 Trial info and stimulus metadata
@@ -392,6 +499,25 @@ Trial info and stimulus metadata
         print(f"Stimulus metadata rows: {len(stim_meta)}")
     else:
         print("Stimulus metadata not yet uploaded to the bucket.")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Trials in ses-01: 1044
+      session  run  beta_index                                          label
+    0  ses-01    1           0       unique_LAION_new_cluster_475_i49_p01.jpg
+    1  ses-01    1           1  unique_LAION_initial_cluster_5192_i30_p01.jpg
+    2  ses-01    1           2         shared_12rep_LAION_cluster_2677_i5.jpg
+    3  ses-01    1           3   unique_LAION_initial_cluster_4651_i2_p01.jpg
+    4  ses-01    1           4   unique_LAION_initial_cluster_3457_i4_p01.jpg
+    Stimulus metadata not yet uploaded to the bucket.
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 310-315
@@ -417,6 +543,18 @@ not yet populated.
         print("No stimulus images on disk yet.")
 
 
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    No stimulus images on disk yet.
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 326-338
 
 Brain-space mapping: save derived results as NIfTI
@@ -432,7 +570,7 @@ back to disk for downstream tools (``fslview``, ``nilearn``,
 
 Example: trial-mean betas as a 3-D map.
 
-.. GENERATED FROM PYTHON SOURCE LINES 338-362
+.. GENERATED FROM PYTHON SOURCE LINES 338-359
 
 .. code-block:: Python
 
@@ -451,17 +589,28 @@ Example: trial-mean betas as a 3-D map.
         ffa1, f"/tmp/{subject_id}_{session}_FFA1_mean.nii.gz", roi="FFA1",
     )
 
-    # If you also need the (i, j, k) location of each voxel --
-    # for example to build a custom voxel selection by spatial
-    # proximity, or to overlay results outside ``to_nifti``'s
-    # round-trip -- ``get_voxel_coordinates`` returns them in the
-    # same order as the 1-D arrays from ``get_betas`` and
-    # ``get_noise_ceiling``, so they line up index-for-index.
+    # Companion: get_voxel_coordinates() returns the (i, j, k) of
+    # every brain-mask voxel, in the same order as the 1-D arrays
+    # returned by get_betas / get_noise_ceiling.
     coords = sub.get_voxel_coordinates()
     print(f"Voxel coordinates: {coords.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 363-368
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    per-voxel mean shape: (272080,)
+    Saved /tmp/sub-01_ses-01_mean_betas.nii.gz
+    Voxel coordinates: (272080, 3)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 360-365
 
 Multi-subject group loading
 -----------------------------
@@ -469,7 +618,7 @@ Multi-subject group loading
 ``Group`` holds several ``Subject`` instances and exposes
 cross-subject loaders that delegate to each one.
 
-.. GENERATED FROM PYTHON SOURCE LINES 368-393
+.. GENERATED FROM PYTHON SOURCE LINES 365-390
 
 .. code-block:: Python
 
@@ -499,7 +648,20 @@ cross-subject loaders that delegate to each one.
         )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 394-407
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Group size: 1
+    Skipped: shared-stimulus betas need stimuli/stimuli.tsv.
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 391-404
 
 PyTorch dataset integration
 ----------------------------
@@ -515,7 +677,7 @@ The PyTorch dependencies are optional -- install them with the
 
     uv pip install "laion-fmri[torch]"
 
-.. GENERATED FROM PYTHON SOURCE LINES 407-430
+.. GENERATED FROM PYTHON SOURCE LINES 404-427
 
 .. code-block:: Python
 
@@ -542,6 +704,23 @@ The PyTorch dependencies are optional -- install them with the
             "PyTorch dataset needs stimulus images; skipping until "
             "the bucket's stimuli/ is populated."
         )
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    PyTorch dataset needs stimulus images; skipping until the bucket's stimuli/ is populated.
+
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** (11 minutes 34.141 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_04_loading.py:
