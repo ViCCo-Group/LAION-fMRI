@@ -12,7 +12,7 @@ from laion_fmri._laion_fmri_fetch import fetch_laion_fmri
 from laion_fmri._paths import (
     license_marker_path,
     stimuli_h5_path,
-    stimuli_metadata_csv_path,
+    stimuli_metadata_path,
 )
 from laion_fmri._stimulus_access import (
     AccessNotFoundError,
@@ -205,7 +205,7 @@ def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
     payload = _resolve_stimulus_access(server_url=server_url)
     expected = {
         "task-images_stimuli.h5": stimuli_h5_path(data_dir),
-        "task-images_metadata.csv": stimuli_metadata_csv_path(data_dir),
+        "task-images_metadata.csv": stimuli_metadata_path(data_dir),
     }
     by_name = {f["name"]: f for f in payload["files"]}
     missing = set(expected) - set(by_name)
@@ -316,7 +316,6 @@ def download(
             stat=stat,
             suffix=suffix,
             extension=extension,
-            include_stimuli=False,    # stimuli routed through access service
             n_jobs=n_jobs,
         )
 

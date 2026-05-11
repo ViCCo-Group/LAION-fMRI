@@ -310,19 +310,16 @@ def test_fetch_skips_stimuli_by_default(
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
 @patch("laion_fmri._laion_fmri_fetch.download_key")
-def test_fetch_ignores_include_stimuli_flag(
+def test_fetch_does_not_list_stimuli_prefix(
     mock_download_key, mock_list_objects, tmp_path,
 ):
-    """``include_stimuli`` is now handled by ``laion_fmri.download`` via
-    the access service. ``fetch_laion_fmri`` accepts the flag for API
-    stability but no longer touches the public stimuli/ prefix."""
+    """``fetch_laion_fmri`` no longer touches the ``stimuli/`` S3
+    prefix — stimuli are handled separately by the access service."""
     mock_list_objects.return_value = []
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
-        fetch_laion_fmri(
-            str(tmp_path), subject="sub-03", include_stimuli=True,
-        )
+        fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
     listed = [c.args[1] for c in mock_list_objects.call_args_list]
     assert "stimuli/" not in listed

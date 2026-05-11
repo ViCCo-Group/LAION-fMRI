@@ -195,39 +195,20 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
 
 # ── Stimuli ─────────────────────────────────────────────────────
 
-# The package has two stimulus on-disk schemas living side-by-side:
-#
-# 1. The legacy per-PNG schema (``stimuli/images/*.png`` + ``stimuli/stimuli.tsv``)
-#    that :class:`laion_fmri.subject.Subject` consumes. Test fixtures
-#    populate this layout.
-#
-# 2. The HDF5 archive shipped by the access service
-#    (``stimuli/task-images_stimuli.h5`` + ``stimuli/task-images_metadata.csv``)
-#    that :class:`laion_fmri.stimuli.Stimuli` consumes. ``download(...,
-#    include_stimuli=True)`` writes this layout.
-#
-# Migrating ``Subject`` to the HDF5 schema is a separate task — both
-# helpers are kept for now.
-
 
 def stimuli_dir_path(data_dir):
-    """Path to the per-PNG stimulus images directory (legacy schema)."""
-    return Path(data_dir) / "stimuli" / "images"
-
-
-def stimuli_metadata_path(data_dir):
-    """Path to the stimulus metadata TSV (legacy schema)."""
-    return Path(data_dir) / "stimuli" / "stimuli.tsv"
+    """Directory holding the stimulus archive on disk."""
+    return Path(data_dir) / "stimuli"
 
 
 def stimuli_h5_path(data_dir):
-    """Path to the HDF5 archive of stimulus images (access-service schema)."""
-    return Path(data_dir) / "stimuli" / "task-images_stimuli.h5"
+    """HDF5 archive of all stimulus images, indexed 0..N-1 by row."""
+    return stimuli_dir_path(data_dir) / "task-images_stimuli.h5"
 
 
-def stimuli_metadata_csv_path(data_dir):
-    """Path to the stimulus metadata CSV (access-service schema)."""
-    return Path(data_dir) / "stimuli" / "task-images_metadata.csv"
+def stimuli_metadata_path(data_dir):
+    """Stimulus metadata CSV. Row ``i`` matches HDF5 index ``i``."""
+    return stimuli_dir_path(data_dir) / "task-images_metadata.csv"
 
 
 # ── Dataset-level files ─────────────────────────────────────────

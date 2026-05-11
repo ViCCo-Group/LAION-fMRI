@@ -4,8 +4,6 @@ import importlib.util
 
 import numpy as np
 
-from laion_fmri._paths import stimuli_dir_path
-
 
 def _check_torch_available():
     """Raise ImportError if torch is not installed."""
@@ -94,25 +92,20 @@ class LaionFMRIDataset:
         )
         self._rep_indices = _resolve_rep_indices(self._trial_info)
 
-        stim_dir = stimuli_dir_path(subject._data_dir)
-        self._image_paths = [
-            stim_dir / fn for fn in self._stim_meta["filename"]
-        ]
+        # Stimulus images come from the HDF5 archive (lazy reads).
+        from laion_fmri.stimuli import Stimuli
+        self._stimuli = Stimuli(data_dir=subject._data_dir)
 
     def __len__(self):
         return len(self._betas)
 
     def __getitem__(self, idx):
-        from PIL import Image
-
         betas_tensor = self._torch.tensor(
             self._betas[idx], dtype=self._torch.float32,
         )
 
         stim_idx = int(self._stim_indices[idx])
-        img = Image.open(
-            self._image_paths[stim_idx],
-        ).convert("RGB")
+        img = self._stimuli.image(stim_idx).convert("RGB")
         img_array = np.array(img, dtype=np.float32) / 255.0
         img_tensor = self._torch.tensor(
             img_array.transpose(2, 0, 1),
@@ -124,8 +117,8 @@ class LaionFMRIDataset:
         return {
             "betas": betas_tensor,
             "image": img_tensor,
-            "stimulus_id": self._stim_meta.iloc[stim_idx][
-                "stimulus_id"
+            "image_name": self._stim_meta.iloc[stim_idx][
+                "image_name"
             ],
             "session": self._session,
             "rep_index": int(self._rep_indices[idx]),

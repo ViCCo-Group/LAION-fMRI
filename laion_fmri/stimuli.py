@@ -30,7 +30,7 @@ import pandas as pd
 
 from laion_fmri._paths import (
     stimuli_h5_path,
-    stimuli_metadata_csv_path,
+    stimuli_metadata_path,
 )
 from laion_fmri.config import get_data_dir
 
@@ -55,7 +55,7 @@ class Stimuli:
     def __init__(self, data_dir: str | Path | None = None):
         self.data_dir = Path(data_dir) if data_dir is not None else Path(get_data_dir())
         self._h5_path = stimuli_h5_path(self.data_dir)
-        self._csv_path = stimuli_metadata_csv_path(self.data_dir)
+        self._csv_path = stimuli_metadata_path(self.data_dir)
         if not self._h5_path.exists() or not self._csv_path.exists():
             raise FileNotFoundError(
                 f"Stimulus archive not found under {self.data_dir / 'stimuli'}. "

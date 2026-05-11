@@ -16,7 +16,6 @@ from laion_fmri._paths import (
     session_noise_ceiling_path,
     stimuli_dir_path,
     stimuli_h5_path,
-    stimuli_metadata_csv_path,
     stimuli_metadata_path,
     subject_noise_ceiling_path,
     trialinfo_path,
@@ -169,27 +168,17 @@ def test_roi_freesurfer_label_path_unknown_raises(tmp_path):
 
 
 def test_stimuli_dir_path():
-    """Legacy per-PNG layout."""
-    assert stimuli_dir_path("/data") == Path("/data/stimuli/images")
-
-
-def test_stimuli_metadata_path():
-    """Legacy TSV metadata path (used by Subject)."""
-    assert stimuli_metadata_path("/data") == Path(
-        "/data/stimuli/stimuli.tsv"
-    )
+    assert stimuli_dir_path("/data") == Path("/data/stimuli")
 
 
 def test_stimuli_h5_path():
-    """New schema: single HDF5 archive."""
     assert stimuli_h5_path("/data") == Path(
         "/data/stimuli/task-images_stimuli.h5"
     )
 
 
-def test_stimuli_metadata_csv_path():
-    """New schema: CSV metadata paired with the HDF5."""
-    assert stimuli_metadata_csv_path("/data") == Path(
+def test_stimuli_metadata_path():
+    assert stimuli_metadata_path("/data") == Path(
         "/data/stimuli/task-images_metadata.csv"
     )
 

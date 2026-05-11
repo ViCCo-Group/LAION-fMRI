@@ -60,11 +60,11 @@ def test_download_rejects_empty_subject(configured_env):
         download(subject="")
 
 
-# fetch_laion_fmri no longer receives ``include_stimuli`` — stimuli are
-# downloaded via the access service in a separate call.
+# fetch_laion_fmri no longer accepts an ``include_stimuli`` flag —
+# stimuli are downloaded via the access service in a separate call.
 DEFAULT_FETCH_KWARGS = dict(
     ses=None, task=None, space=None, desc=None, stat=None,
-    suffix=None, extension=None, include_stimuli=False, n_jobs=1,
+    suffix=None, extension=None, n_jobs=1,
 )
 
 
@@ -122,15 +122,15 @@ def test_download_passes_bids_entity_filters(configured_env):
 
 def test_download_include_stimuli_calls_access_service(configured_env):
     """``include_stimuli=True`` triggers ``download_stimuli`` after the
-    fMRI fetch, and does NOT pass ``include_stimuli`` to
-    ``fetch_laion_fmri`` (which now ignores the flag)."""
+    fMRI fetch. ``fetch_laion_fmri`` itself no longer knows about
+    ``include_stimuli``."""
     with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch, patch(
         "laion_fmri.download.download_stimuli"
     ) as mock_stim:
         download(subject="sub-01", include_stimuli=True)
 
     mock_fetch.assert_called_once()
-    assert mock_fetch.call_args.kwargs["include_stimuli"] is False
+    assert "include_stimuli" not in mock_fetch.call_args.kwargs
     mock_stim.assert_called_once_with(data_dir=str(configured_env))
 
 

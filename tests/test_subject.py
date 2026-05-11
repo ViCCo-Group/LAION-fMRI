@@ -647,8 +647,8 @@ def test_get_images_not_downloaded_raises(tmp_path, monkeypatch):
 
 def test_get_stimulus_metadata(configured_subject):
     df = configured_subject.get_stimulus_metadata()
-    assert "stimulus_id" in df.columns
-    assert "shared" in df.columns
+    assert "image_name" in df.columns
+    assert "unique_or_shared" in df.columns
     assert len(df) == N_STIMULI
 
 
@@ -734,11 +734,11 @@ def test_get_trial_stimulus_indices_uses_label_column(
     on the trials side and raises ``KeyError`` against real data.
     """
     real_meta = pd.DataFrame({
-        "stimulus_id": [
+        "image_name": [
             "shared_12rep_LAION_cluster_1_i0.jpg",
             "unique_LAION_initial_cluster_2_i1.jpg",
         ],
-        "shared": [True, False],
+        "unique_or_shared": ["shared", "unique"],
     })
     label_trials = pd.DataFrame({
         "session": ["ses-01"] * 4,
