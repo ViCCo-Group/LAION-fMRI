@@ -261,12 +261,16 @@
         display: block;
         padding: 0;
     }
-    /* Canvas spans the full viewport (same as desktop). The fade is
-     * applied via mask-image on the canvas itself so the parent's radial
-     * gradient shows through cleanly — no bg-color overlay creating a
-     * visible horizontal seam against the radial gradient. */
+    /* Canvas occupies only the top half — text sits visibly below the
+     * brain. We apply a soft bottom fade via mask-image on the canvas
+     * itself so the lowest sprites don't cut hard against the gradient
+     * background. No bg-colour overlay (which caused the earlier seam). */
     .lf-hero__canvas-wrap {
-        inset: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 50%;
     }
     .lf-hero__canvas-wrap::before {
         background: none;
@@ -275,14 +279,14 @@
         -webkit-mask-image: linear-gradient(
             to bottom,
             black 0%,
-            black 50%,
-            transparent 78%
+            black 70%,
+            transparent 100%
         );
         mask-image: linear-gradient(
             to bottom,
             black 0%,
-            black 50%,
-            transparent 78%
+            black 70%,
+            transparent 100%
         );
     }
     .lf-hero__text {
