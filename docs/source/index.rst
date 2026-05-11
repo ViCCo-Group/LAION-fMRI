@@ -1,7 +1,36 @@
-.. image:: _static/laion_fmri_logo_mosaic.png
-   :align: center
-   :width: 800px
-   :alt: LAION-fMRI Logo
+.. raw:: html
+
+   <link rel="stylesheet" href="_static/hero/hero.css">
+   <div id="lf-hero-root">
+     <noscript>
+       <p style="text-align:center;margin:1.5em 0;">
+         <img src="_static/laion_fmri_logo_mosaic.png"
+              alt="LAION-fMRI"
+              style="max-width:800px;width:100%;">
+       </p>
+       <p style="text-align:center;">
+         A deeply-sampled 7T fMRI dataset of human vision.
+         <a href="quickstart.html">Get started</a> &middot;
+         <a href="https://laion-fmri.hebartlab.com/brain/">Brain viewer</a>
+       </p>
+     </noscript>
+   </div>
+   <script src="_static/hero/hero.js" defer></script>
+   <script>
+     window.addEventListener("DOMContentLoaded", function () {
+       if (!window.LaionFmriHero) return;
+       window.LaionFmriHero.init({
+         logoSrc: "_static/laion_fmri_logo_mosaic.png",
+         title: "A deeply-sampled fMRI dataset of <em>human vision</em>",
+         lede: "Five participants. 25,000+ natural images. 165 sessions of 7T BOLD with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.",
+         primaryHref: "quickstart.html",
+         primaryLabel: "Get started",
+         secondaryHref: "https://laion-fmri.hebartlab.com/brain/",
+         secondaryLabel: "Brain viewer",
+         meta: ["5 subjects", "25K+ stimuli", "7T multi-echo", "Open access"]
+       });
+     });
+   </script>
 
 
 .. warning::
@@ -11,34 +40,6 @@
    before the dataset's official release. Please treat all content as
    provisional.
 
-
-**LAION-fMRI** is a deeply-sampled 7T fMRI dataset of brain responses to visual
-images, built to uncover how the human brain sees and understands the world.
-Five participants viewed over 25,000 unique natural images across 165 sessions,
-capturing hundreds of thousands of brain responses at 1.8 mm resolution with an
-ultra-high-field 7T MRI scanner.
-
-The images span everything from everyday photographs - drawn from a 120M
-image-text corpus (Roth & Hebart, 2025) - to abstract shapes and visual
-illusions, ensuring the dataset covers the full breadth of human visual
-experience. Every image was measured multiple times, delivering exceptional
-signal quality and setting new standards for the field.
-
-Beyond functional brain scans, the dataset includes rich complementary data:
-retinotopic mapping, functional localizers, precision diffusion MRI, and
-behavioral responses - making it one of the most deeply characterized
-neuroimaging resources assembled to date.
-
-* **Scale** - thousands of unique images per participant (including ~2,200 shared
-  across subjects), 34 sessions each, up to 12 repeats for shared images
-* **Acquisition** - multi-echo 7T fMRI at 1.8 mm isotropic, 1.9 s TR
-* **Broad sampling** - natural photographs, prior benchmark images (NSD,
-  THINGS), plus out-of-distribution test stimuli
-* **Single-trial betas** - GLMsingle-derived response estimates with strong
-  noise ceilings
-* **Complementary data** - retinotopy, functional localizers, diffusion MRI,
-  behavioral responses
-* **Open** - freely available for research
 
 Getting Started
 ===============

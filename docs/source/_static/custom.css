@@ -13,7 +13,35 @@ body {
 
 /* ---- Color tokens per mode ---- */
 
-/* Dark mode tokens */
+/* Light mode tokens — default, plus explicit light. Furo treats anything
+ * that isn't ``data-theme="light"`` as eligible for dark mode under
+ * ``prefers-color-scheme: dark``, so our selectors must mirror that or
+ * the ``auto`` theme renders Furo dark with our light card surfaces. */
+:root,
+body[data-theme="light"] {
+    --rv-bg: #ffffff;
+    --rv-surface: #f5f7fa;
+    --rv-surface-light: #eef1f6;
+    --rv-slate: #d8dde6;
+    --rv-slate-light: #b8c0d0;
+    --rv-fg: #1a1e2e;
+    --rv-fg-dim: #4a5068;
+    --rv-fg-muted: #8890a8;
+    --rv-cyan: #0090b0;
+    --rv-cyan-dim: #b0dce8;
+    --rv-coral: #e05535;
+    --rv-coral-dim: #fce8e4;
+    --rv-code-bg: #f5f7fa;
+    --rv-code-border: #d8dde6;
+    --rv-inline-code-bg: #eef1f6;
+    --rv-inline-code-fg: #0090b0;
+    --rv-card-shadow-hover: rgba(0, 144, 176, 0.1);
+    --rv-heading-fg: #1a1e2e;
+    --rv-h3-fg: #0090b0;
+    --rv-noise-opacity: 0;
+}
+
+/* Dark mode tokens — explicit dark always, plus auto + system-dark. */
 body[data-theme="dark"] {
     --rv-bg: #0a0e1a;
     --rv-surface: #111729;
@@ -37,28 +65,29 @@ body[data-theme="dark"] {
     --rv-noise-opacity: 0.015;
 }
 
-/* Light mode tokens */
-body:not([data-theme="dark"]) {
-    --rv-bg: #ffffff;
-    --rv-surface: #f5f7fa;
-    --rv-surface-light: #eef1f6;
-    --rv-slate: #d8dde6;
-    --rv-slate-light: #b8c0d0;
-    --rv-fg: #1a1e2e;
-    --rv-fg-dim: #4a5068;
-    --rv-fg-muted: #8890a8;
-    --rv-cyan: #0090b0;
-    --rv-cyan-dim: #b0dce8;
-    --rv-coral: #e05535;
-    --rv-coral-dim: #fce8e4;
-    --rv-code-bg: #f5f7fa;
-    --rv-code-border: #d8dde6;
-    --rv-inline-code-bg: #eef1f6;
-    --rv-inline-code-fg: #0090b0;
-    --rv-card-shadow-hover: rgba(0, 144, 176, 0.1);
-    --rv-heading-fg: #1a1e2e;
-    --rv-h3-fg: #0090b0;
-    --rv-noise-opacity: 0;
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) {
+        --rv-bg: #0a0e1a;
+        --rv-surface: #111729;
+        --rv-surface-light: #1a2140;
+        --rv-slate: #2a3050;
+        --rv-slate-light: #4a5580;
+        --rv-fg: #e8eaf0;
+        --rv-fg-dim: #a0a8c0;
+        --rv-fg-muted: #6a7090;
+        --rv-cyan: #00d4ff;
+        --rv-cyan-dim: #006880;
+        --rv-coral: #ff6b4a;
+        --rv-coral-dim: #803626;
+        --rv-code-bg: #0d1117;
+        --rv-code-border: #2a3050;
+        --rv-inline-code-bg: #1a2140;
+        --rv-inline-code-fg: #00d4ff;
+        --rv-card-shadow-hover: rgba(0, 212, 255, 0.1);
+        --rv-heading-fg: #e8eaf0;
+        --rv-h3-fg: #00d4ff;
+        --rv-noise-opacity: 0.015;
+    }
 }
 
 /* ---- Headings: match re:vision system sans ---- */

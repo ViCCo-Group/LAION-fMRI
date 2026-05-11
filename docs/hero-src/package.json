@@ -1,0 +1,17 @@
+{
+  "name": "laion-fmri-hero",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone hero bundle for the LAION-fMRI Sphinx docs homepage. Built once with esbuild; the dist artifact is committed under docs/source/_static/hero/.",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch"
+  },
+  "dependencies": {
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
