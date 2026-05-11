@@ -493,11 +493,23 @@ export async function init(options = {}) {
       // Tablet portrait (iPad) gets a noticeably larger brain than phone.
       const isTabletPortrait = window.innerWidth >= 600;
       setup.group.position.x = 0;
-      setup.group.scale.setScalar(isTabletPortrait ? 0.92 : 0.62);
-      camera.position.z = isTabletPortrait ? 2.3 : (aspect < 0.7 ? 2.7 : 2.5);
+      // Lift the brain up within its canvas so the bottom of the mesh
+      // clears the text block on short viewports. Scales with how
+      // cramped the viewport is — taller screens need less lift.
+      const vh = window.innerHeight;
+      if (isTabletPortrait) {
+        setup.group.position.y = vh < 900 ? 0.30 : 0.18;
+        setup.group.scale.setScalar(0.92);
+        camera.position.z = 2.3;
+      } else {
+        setup.group.position.y = vh < 700 ? 0.45 : (vh < 850 ? 0.32 : 0.22);
+        setup.group.scale.setScalar(0.62);
+        camera.position.z = aspect < 0.7 ? 2.7 : 2.5;
+      }
     } else {
       const shiftX = Math.max(0.35, Math.min(0.70, 0.40 + (aspect - 1.33) * 0.55));
       setup.group.position.x = shiftX;
+      setup.group.position.y = 0;
       // Narrower landscape (iPad-ish) gets a bigger brain too.
       setup.group.scale.setScalar(aspect < 1.5 ? 0.75 : 0.62);
       camera.position.z = 2.4;

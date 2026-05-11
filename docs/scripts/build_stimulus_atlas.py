@@ -12,7 +12,7 @@ changes.
 Usage:
     uv run python docs/scripts/build_stimulus_atlas.py \
         --stimuli-root ~/Downloads/LAION-fMRI-stimuli \
-        --tile-count 1024 --tile-size 64
+        --tile-count 1024 --tile-size 32
 """
 
 from __future__ import annotations
@@ -97,7 +97,7 @@ def build_atlas(
             log.info("  %d/%d", idx + 1, tile_count)
 
     out_png.parent.mkdir(parents=True, exist_ok=True)
-    atlas.save(out_png, format="JPEG", quality=88, optimize=True, progressive=True)
+    atlas.save(out_png, format="JPEG", quality=80, optimize=True, progressive=True)
     log.info("Wrote atlas: %s (%.1f KB)", out_png, out_png.stat().st_size / 1024)
 
     manifest = {
@@ -123,8 +123,9 @@ def main() -> None:
         help="Number of tiles in the atlas (default: 1024 -> 32x32 grid).",
     )
     ap.add_argument(
-        "--tile-size", type=int, default=64,
-        help="Pixel side length per tile (default: 64).",
+        "--tile-size", type=int, default=32,
+        help="Pixel side length per tile (default: 32). Sprites render at ~25-40px "
+             "on screen, so 32px keeps file size low without visible loss.",
     )
     ap.add_argument(
         "--out-dir", type=Path, default=DEFAULT_OUT_DIR,

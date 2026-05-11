@@ -1,8 +1,8 @@
 {
   "tile_count": 1024,
-  "tile_size": 64,
+  "tile_size": 32,
   "grid": 32,
-  "atlas_size": 2048,
+  "atlas_size": 1024,
   "seed": 20260511,
   "tiles": [
     "unique_LAION_fillup_cluster_1079_i14_p04.jpg",
