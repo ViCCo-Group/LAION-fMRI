@@ -490,13 +490,16 @@ export async function init(options = {}) {
     const aspect = window.innerWidth / Math.max(1, window.innerHeight);
     const isStacked = window.innerWidth <= 820 || aspect < 1;
     if (isStacked) {
+      // Tablet portrait (iPad) gets a noticeably larger brain than phone.
+      const isTabletPortrait = window.innerWidth >= 600;
       setup.group.position.x = 0;
-      setup.group.scale.setScalar(0.62);
-      camera.position.z = aspect < 0.7 ? 2.7 : 2.5;
+      setup.group.scale.setScalar(isTabletPortrait ? 0.92 : 0.62);
+      camera.position.z = isTabletPortrait ? 2.3 : (aspect < 0.7 ? 2.7 : 2.5);
     } else {
       const shiftX = Math.max(0.35, Math.min(0.70, 0.40 + (aspect - 1.33) * 0.55));
       setup.group.position.x = shiftX;
-      setup.group.scale.setScalar(0.62);
+      // Narrower landscape (iPad-ish) gets a bigger brain too.
+      setup.group.scale.setScalar(aspect < 1.5 ? 0.75 : 0.62);
       camera.position.z = 2.4;
     }
     camera.updateProjectionMatrix();
