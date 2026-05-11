@@ -529,3 +529,79 @@ article dd > p {
     text-justify: inter-word;
     hyphens: auto;
 }
+
+/* ---- Funding acknowledgement logos (Furo footer-icons slot) ----
+ * Rendered inline with the copyright line via html_theme_options
+ * ``footer_icons``. Each link gets its logo as a background image so the
+ * URL is resolved relative to this CSS file (consistent across page depths).
+ */
+.bottom-of-page .icons {
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.bottom-of-page .icons::before {
+    content: "Funded by";
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-foreground-muted);
+    margin-right: 0.4rem;
+    align-self: center;
+}
+a.muted-link.funding-link {
+    /* override Furo's default svg-style icon sizing */
+    display: inline-block;
+    height: 36px;
+    padding: 0;
+    border-radius: 3px;
+    background-color: #ffffff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    background-origin: content-box;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    color: transparent;
+    line-height: 1;
+}
+a.muted-link.funding-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+/* Widths chosen so each logo's natural aspect ratio at ~22-24px visual
+ * height fits comfortably with ~6px horizontal breathing room.
+ *   ERC PNG  ≈ 2.32 : 1
+ *   LOEWE    ≈ 3.48 : 1
+ *   MPG full ≈ 6.49 : 1  (Minerva pentagon + wordmark)
+ */
+a.muted-link.funding-erc {
+    background-image: url("funding/erc.png");
+    width: 64px;
+    padding: 3px 4px;
+}
+a.muted-link.funding-loewe {
+    background-image: url("funding/loewe.svg");
+    width: 76px;
+    padding: 9px 8px;
+}
+a.muted-link.funding-mpg {
+    background-image: url("funding/mpg.svg");
+    width: 156px;
+    padding: 6px 6px;
+}
+
+/* Light mode: lose the white plate so the logos sit flat on white bg.
+ * Add a subtle separator color so the link is still distinguishable. */
+body[data-theme="light"] a.muted-link.funding-link {
+    background-color: transparent;
+}
+body[data-theme="light"] a.muted-link.funding-link:hover {
+    box-shadow: none;
+}
+
+@media screen and (max-width: 540px) {
+    .bottom-of-page .icons {
+        justify-content: flex-start;
+    }
+}

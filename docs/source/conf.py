@@ -112,7 +112,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 project = "LAION-fMRI"
-copyright = "2025, ViCCo-Group"
+copyright = "2026, ViCCo-Group"
 author = "ViCCo-Group"
 
 _version = "0.1.0"
@@ -227,6 +227,31 @@ html_theme_options = {
     "source_branch": "main",
     "source_directory": "docs/source/",
     "navigation_with_keys": True,
+    # Funding acknowledgements — rendered in the bottom-of-page right slot
+    # so they sit inline with the copyright line. The empty ``html`` is
+    # intentional: each link is given a background-image via custom.css
+    # (using a class), so paths stay relative to the CSS file and resolve
+    # correctly regardless of page depth.
+    "footer_icons": [
+        {
+            "name": "Funded by the European Research Council (European Union)",
+            "url": "https://erc.europa.eu/",
+            "html": "",
+            "class": "funding-link funding-erc",
+        },
+        {
+            "name": "Funded by the LOEWE programme (State of Hesse)",
+            "url": "https://wissenschaft.hessen.de/forschen/landesprogramm-loewe",
+            "html": "",
+            "class": "funding-link funding-loewe",
+        },
+        {
+            "name": "Funded by the Max Planck Society",
+            "url": "https://www.mpg.de/en",
+            "html": "",
+            "class": "funding-link funding-mpg",
+        },
+    ],
 }
 
 html_title = "LAION-fMRI | Documentation"
