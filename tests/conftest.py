@@ -155,7 +155,7 @@ def _make_events(stim_meta):
             rows.append({
                 "trial_idx": trial_idx,
                 "run": f"run-{(rep % 3) + 1:02d}",
-                "stimulus_id": stim_row["stimulus_id"],
+                "stimulus_id": stim_row["image_name"],
                 "rep_index": rep,
             })
             trial_idx += 1
@@ -163,26 +163,43 @@ def _make_events(stim_meta):
 
 
 def _make_stimulus_metadata():
+    """Mirror the production schema: image_name / dataset / participant /
+    unique_or_shared / n_reps."""
     rows = []
     for i in range(N_STIMULI):
         rows.append({
-            "stimulus_id": f"stim_{i:03d}",
-            "shared": i < N_SHARED,
-            "filename": f"stim_{i:03d}.png",
-            "category": "object",
+            "image_name": f"stim_{i:03d}",
+            "dataset": "synthetic",
+            "participant": "sub-01;sub-03",
+            "unique_or_shared": "shared" if i < N_SHARED else "unique",
+            "n_reps": "12rep" if i < N_SHARED else "1rep",
         })
     return pd.DataFrame(rows)
 
 
-def _save_placeholder_pngs(images_dir, stim_meta):
+def _save_placeholder_stimulus_archive(stimuli_dir, stim_meta):
+    """Write a tiny HDF5 + the metadata CSV mirroring the production layout."""
+    import h5py
     from PIL import Image
+    import io
 
-    images_dir.mkdir(parents=True, exist_ok=True)
+    stimuli_dir.mkdir(parents=True, exist_ok=True)
+    stim_meta.to_csv(
+        stimuli_dir / "task-images_metadata.csv", index=False,
+    )
+
     rng = np.random.default_rng(42)
-    for _, row in stim_meta.iterrows():
-        arr = rng.integers(0, 255, (10, 10, 3), dtype=np.uint8)
-        img = Image.fromarray(arr)
-        img.save(images_dir / row["filename"])
+    h5_path = stimuli_dir / "task-images_stimuli.h5"
+    n = len(stim_meta)
+    with h5py.File(h5_path, "w") as f:
+        ds = f.create_dataset(
+            "images", (n,), dtype=h5py.vlen_dtype(np.uint8),
+        )
+        for i in range(n):
+            arr = rng.integers(0, 255, (10, 10, 3), dtype=np.uint8)
+            buf = io.BytesIO()
+            Image.fromarray(arr).save(buf, format="JPEG")
+            ds[i] = np.frombuffer(buf.getvalue(), dtype=np.uint8)
 
 
 # ── Per-subject builder ─────────────────────────────────────────
@@ -391,16 +408,9 @@ def synthetic_data_dir(tmp_path):
     }))
     (data_dir / "README").write_text("LAION-fMRI synthetic test data\n")
 
-    # Stimuli (forward-compat)
+    # stimuli (HDF5 + metadata CSV, mirroring production)
     stimuli_dir = data_dir / "stimuli"
-    stimuli_dir.mkdir()
-    stim_meta.to_csv(
-        stimuli_dir / "stimuli.tsv", sep="\t", index=False,
-    )
-    (stimuli_dir / "stimuli.json").write_text(
-        json.dumps({"description": "LAION-fMRI stimulus set"}),
-    )
-    _save_placeholder_pngs(stimuli_dir / "images", stim_meta)
+    _save_placeholder_stimulus_archive(stimuli_dir, stim_meta)
 
     # Per-subject derivatives
     for sub_id in ["sub-01", "sub-03"]:

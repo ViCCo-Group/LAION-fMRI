@@ -7,6 +7,7 @@ no averaging, concatenation, or rebinning across sessions.
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from laion_fmri._constants import resolve_subject_id
 from laion_fmri._errors import (
@@ -23,7 +24,7 @@ from laion_fmri._paths import (
     roi_surface_path,
     rois_subject_dir,
     session_noise_ceiling_path,
-    stimuli_dir_path,
+    stimuli_h5_path,
     stimuli_metadata_path,
     subject_noise_ceiling_path,
     trialinfo_path,
@@ -191,18 +192,22 @@ class Subject:
         return deduped
 
     def get_n_stimuli(self, stimuli=None):
-        """Return number of stimuli described in ``stimuli.tsv``.
+        """Return number of stimuli described in the metadata CSV.
 
         Parameters
         ----------
         stimuli : "shared", "unique", or None
         """
         meta = self.get_stimulus_metadata()
+        if stimuli is None:
+            return len(meta)
         if stimuli == "shared":
-            return int(meta["shared"].sum())
+            return int((meta["unique_or_shared"] == "shared").sum())
         if stimuli == "unique":
-            return int((~meta["shared"]).sum())
-        return len(meta)
+            return int((meta["unique_or_shared"] == "unique").sum())
+        raise ValueError(
+            f"stimuli must be 'shared', 'unique', or None; got {stimuli!r}"
+        )
 
     def get_n_voxels(self):
         """Number of voxels in the subject's brain mask."""
@@ -354,8 +359,8 @@ class Subject:
           ``shared_`` or ``unique_``. The prefix is parsed
           directly -- no stimulus-metadata table required.
         * Synthetic / future schema: a ``stimulus_id`` column,
-          joined against ``stimuli/stimuli.tsv``'s ``shared``
-          flag.
+          joined against the stimulus metadata CSV's
+          ``unique_or_shared`` column via ``image_name``.
         """
         if stimuli not in ("shared", "unique"):
             raise ValueError(
@@ -369,7 +374,10 @@ class Subject:
             )
         elif "stimulus_id" in trials.columns:
             meta = self.get_stimulus_metadata()
-            is_shared = dict(zip(meta["stimulus_id"], meta["shared"]))
+            is_shared = dict(zip(
+                meta["image_name"],
+                meta["unique_or_shared"] == "shared",
+            ))
             flags = np.array([
                 bool(is_shared[sid]) for sid in trials["stimulus_id"]
             ])
@@ -607,32 +615,37 @@ class Subject:
     # ── Stimulus images ─────────────────────────────────────────
 
     def get_images(self, stimuli=None, format="pil"):
-        """Load stimulus images (when ``stimuli/`` is populated)."""
-        stim_dir = stimuli_dir_path(self._data_dir)
-        if not stim_dir.is_dir():
-            raise StimuliNotDownloadedError(
-                "Stimulus images not found. Download with "
-                "include_stimuli=True once the bucket has them."
-            )
+        """Load stimulus images (when present on disk).
 
-        from PIL import Image
+        Reads from the HDF5 file populated by
+        :func:`laion_fmri.download.download_stimuli`.
+        """
+        from laion_fmri.stimuli import Stimuli
+
+        if not self.has_stimuli():
+            raise StimuliNotDownloadedError(
+                "stimuli not found on disk. Run "
+                "`laion-fmri download-stimuli` "
+                "(or laion_fmri.download_stimuli())."
+            )
 
         meta = self.get_stimulus_metadata()
         if stimuli is not None:
             if stimuli == "shared":
-                meta = meta[meta["shared"]]
+                meta = meta[meta["unique_or_shared"] == "shared"]
             elif stimuli == "unique":
-                meta = meta[~meta["shared"]]
+                meta = meta[meta["unique_or_shared"] == "unique"]
             else:
                 raise ValueError(
                     f"stimuli must be 'shared' or 'unique', "
                     f"got {stimuli!r}"
                 )
 
-        images = [
-            Image.open(stim_dir / row["filename"])
-            for _, row in meta.iterrows()
-        ]
+        stim = Stimuli(data_dir=self._data_dir)
+        try:
+            images = [stim.image(int(idx)) for idx in meta.index]
+        finally:
+            stim.close()
 
         if format == "pil":
             return images
@@ -654,33 +667,48 @@ class Subject:
 
     def get_image(self, idx):
         """Load a single stimulus image by index."""
-        return self.get_images()[idx]
+        from laion_fmri.stimuli import Stimuli
+
+        if not self.has_stimuli():
+            raise StimuliNotDownloadedError(
+                "stimuli not found on disk. Run "
+                "`laion-fmri download-stimuli`."
+            )
+        stim = Stimuli(data_dir=self._data_dir)
+        try:
+            return stim.image(idx)
+        finally:
+            stim.close()
 
     # ── Stimulus metadata ───────────────────────────────────────
 
     def get_stimulus_metadata(self):
-        """Load the dataset-wide stimulus metadata TSV."""
+        """Load the dataset-wide stimulus metadata CSV.
+
+        Columns: ``image_name``, ``dataset``, ``participant``,
+        ``unique_or_shared``, ``n_reps``. Row ``i`` corresponds to
+        HDF5 index ``i``.
+        """
         path = stimuli_metadata_path(self._data_dir)
         if not path.exists():
             raise StimuliNotDownloadedError(
-                f"Stimulus metadata not found at {path}. Download "
-                "with include_stimuli=True once the bucket has "
-                "stimuli (or check has_stimuli() first)."
+                f"Stimulus metadata not found at {path}. Run "
+                "`laion-fmri download-stimuli` "
+                "(or check has_stimuli() first)."
             )
-        return load_tsv(path)
+        return pd.read_csv(path)
 
     def has_stimuli(self):
-        """Return True if stimulus metadata + images are on disk.
+        """Return True if the stimuli (HDF5 + CSV) is on disk.
 
-        Useful as a guard before calling stimulus-dependent
-        methods (``get_n_stimuli``, ``get_stimulus_metadata``,
-        ``get_images``, ``get_trial_stimulus_indices``,
-        ``to_torch_dataset``) when the bucket's ``stimuli/``
-        prefix is not yet populated.
+        Useful as a guard before calling stimulus-dependent methods
+        (``get_n_stimuli``, ``get_stimulus_metadata``, ``get_images``,
+        ``get_trial_stimulus_indices``, ``to_torch_dataset``) when the
+        archive hasn't been downloaded yet.
         """
         return (
             stimuli_metadata_path(self._data_dir).exists()
-            and stimuli_dir_path(self._data_dir).is_dir()
+            and stimuli_h5_path(self._data_dir).exists()
         )
 
     # ── Trial-to-stimulus mapping ───────────────────────────────
@@ -705,7 +733,7 @@ class Subject:
         trials = self.get_trial_info(session=session)
         meta = self.get_stimulus_metadata()
         idx_map = {
-            sid: i for i, sid in enumerate(meta["stimulus_id"])
+            sid: i for i, sid in enumerate(meta["image_name"])
         }
         # Dual schema: real bucket trial TSVs use ``label``,
         # synthetic / future trials may use ``stimulus_id``.

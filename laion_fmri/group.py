@@ -103,7 +103,7 @@ class Group:
         )
 
     def get_shared_stimulus_metadata(self):
-        """Return the shared subset of the stimulus-metadata TSV."""
+        """Return the shared subset of the stimulus metadata."""
         first_sub = self._subjects[self._ordered_ids[0]]
         meta = first_sub.get_stimulus_metadata()
-        return meta[meta["shared"]].reset_index(drop=True)
+        return meta[meta["unique_or_shared"] == "shared"].reset_index(drop=True)

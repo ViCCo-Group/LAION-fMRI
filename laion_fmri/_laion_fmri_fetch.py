@@ -297,10 +297,13 @@ def fetch_laion_fmri(
     stat=None,
     suffix=None,
     extension=None,
-    include_stimuli=False,
     n_jobs=1,
 ):
-    """Download data for one subject, optionally narrowed by entities.
+    """Download fMRI / derivatives for one subject, optionally narrowed by entities.
+
+    Stimulus images are not fetched here — they're dataset-wide and
+    gated through the access service (see
+    :func:`laion_fmri.download.download_stimuli`).
 
     Parameters
     ----------
@@ -315,8 +318,6 @@ def fetch_laion_fmri(
         BIDS suffix filter (e.g. ``"statmap"``, ``"events"``).
     extension : str or list[str], optional
         File extension filter (e.g. ``"nii.gz"``, ``"tsv"``).
-    include_stimuli : bool
-        Mirror the ``stimuli/`` prefix as well.
     n_jobs : int
         Number of parallel ``aws s3 cp`` workers. ``1`` (default) is
         sequential. Each worker is one subprocess that itself runs
@@ -363,10 +364,6 @@ def fetch_laion_fmri(
         data_dir, roi_filters, n_jobs=n_jobs,
     )
 
-    if include_stimuli:
-        _filtered_download(
-            bucket, "stimuli/", data_dir, filters, n_jobs=n_jobs,
-        )
 
 
 def _ses_filters_specific_sessions(ses):

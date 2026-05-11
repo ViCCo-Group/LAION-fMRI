@@ -3,142 +3,268 @@
 import sys
 
 from laion_fmri._constants import (
+    ACCESS_SERVICE_URL,
     LICENSE_AGREEMENT_TEXT,
-    TERMS_OF_USE_TEXT,
     resolve_subject_id,
 )
 from laion_fmri._errors import LicenseNotAcceptedError
 from laion_fmri._laion_fmri_fetch import fetch_laion_fmri
-from laion_fmri._paths import license_marker_path, tou_marker_path
+from laion_fmri._paths import (
+    license_marker_path,
+    stimuli_h5_path,
+    stimuli_metadata_path,
+)
+from laion_fmri._stimulus_access import (
+    AccessNotFoundError,
+    AccessServiceError,
+    TermsOutdatedError,
+    current_terms_version,
+    download_file,
+    fetch_manifest,
+    load_request_id,
+    refresh_urls,
+    save_request_id,
+    submit_access_request,
+)
 from laion_fmri.config import get_data_dir
 from laion_fmri.discovery import get_subjects
 
 
 def _check_license_accepted(data_dir):
-    """Check whether the dataset license has been accepted.
-
-    Parameters
-    ----------
-    data_dir : str
-        Path to the data directory.
-
-    Returns
-    -------
-    bool
-        True if the license marker file exists.
-    """
+    """Check whether the CC0 dataset license has been accepted locally."""
     return license_marker_path(data_dir).exists()
 
 
 def _write_license_marker(data_dir):
-    """Write the license acceptance marker file.
-
-    Parameters
-    ----------
-    data_dir : str
-        Path to the data directory.
-    """
+    """Write the CC0 dataset-license acceptance marker."""
     marker = license_marker_path(data_dir)
     marker.parent.mkdir(parents=True, exist_ok=True)
     marker.touch()
 
 
 def _prompt_license():
-    """Display the license agreement and prompt the user for acceptance.
-
-    Returns
-    -------
-    bool
-        True if the user typed "I AGREE".
-    """
+    """Show the CC0 dataset license and prompt for acceptance."""
     sys.stdout.write(LICENSE_AGREEMENT_TEXT)
     sys.stdout.flush()
     response = input().strip()
     return response == "I AGREE"
 
 
-def _check_tou_accepted(data_dir):
-    """Check whether the terms of use have been accepted.
+def accept_license():
+    """Walk through the CC0 dataset-license acceptance without downloading.
 
-    Parameters
-    ----------
-    data_dir : str
-        Path to the data directory.
-
-    Returns
-    -------
-    bool
-        True if the ToU marker file exists.
+    Stimulus terms are no longer accepted locally — they're handled by the
+    access service. Use ``request_stimulus_access()`` (or
+    ``laion-fmri request-access``) when you need stimulus images.
     """
-    return tou_marker_path(data_dir).exists()
+    data_dir = get_data_dir()
+    if _check_license_accepted(data_dir):
+        return
+    if not _prompt_license():
+        raise LicenseNotAcceptedError(
+            "Dataset license must be accepted before downloading."
+        )
+    _write_license_marker(data_dir)
 
 
-def _write_tou_marker(data_dir):
-    """Write the terms-of-use acceptance marker file.
-
-    Parameters
-    ----------
-    data_dir : str
-        Path to the data directory.
-    """
-    marker = tou_marker_path(data_dir)
-    marker.parent.mkdir(parents=True, exist_ok=True)
-    marker.touch()
-
-
-def _prompt_tou():
-    """Display the terms of use and prompt the user for acceptance.
-
-    Returns
-    -------
-    bool
-        True if the user typed "I AGREE".
-    """
-    sys.stdout.write(TERMS_OF_USE_TEXT)
-    sys.stdout.flush()
-    response = input().strip()
-    return response == "I AGREE"
-
-
+# Backwards-compat alias — old callers that imported the previous
+# ``accept_licenses(include_stimuli=...)`` keep working with the
+# ``include_stimuli`` flag now ignored (stimuli are gated via the access
+# service rather than a local marker).
 def accept_licenses(include_stimuli=False):
-    """Walk through the license-acceptance flow without downloading.
+    """Deprecated. Use :func:`accept_license` or
+    :func:`request_stimulus_access` instead.
+    """
+    accept_license()
+    if include_stimuli:
+        sys.stderr.write(
+            "[laion-fmri] Note: stimulus access is now obtained via the "
+            "access service. Run `laion-fmri request-access` (or pass "
+            "include_stimuli=True to download() for an interactive prompt).\n"
+        )
 
-    Same prompts ``download()`` triggers internally on first use:
 
-    * The dataset license (CC0 1.0) is always presented.
-    * The stimulus license is presented when ``include_stimuli``
-      is True.
+# ── Stimulus access via the access service ──────────────────────
 
-    On acceptance the marker files are written so subsequent
-    ``download(...)`` calls won't prompt again.
+
+def _prompt_stimulus_form(server_url=ACCESS_SERVICE_URL):
+    """Interactive CLI form for /api/v1/access/request."""
+    terms_version = current_terms_version(server_url)
+
+    print("=" * 64)
+    print("LAION-fMRI stimulus access request")
+    print("=" * 64)
+    print(
+        "\nThe stimulus images are gated by a Data Use Agreement.\n"
+        f"Read the full terms:  {server_url}/terms\n"
+        f"Privacy notice:       {server_url}/privacy\n"
+        f"Takedown contact:     {server_url}/takedown\n"
+    )
+
+    name = input("Full name: ").strip()
+    email = input("Institutional email: ").strip()
+    institution = input("Institution / affiliation: ").strip()
+    pi = input("PI / supervisor (optional, Enter to skip): ").strip()
+    print(
+        "\nResearch purpose — briefly describe how you plan to use the\n"
+        "stimulus images. Do NOT include patient names or special-category\n"
+        "data about third parties. (minimum 20 characters)"
+    )
+    purpose = input("> ").strip()
+    print()
+    answer = input(
+        f"I accept the LAION-fMRI Terms of Use (v{terms_version}). "
+        "Type 'yes' to submit: "
+    ).strip().lower()
+    if answer != "yes":
+        raise AccessServiceError("Access request cancelled by user.")
+
+    return {
+        "name": name,
+        "email": email,
+        "institution": institution,
+        "pi_or_supervisor": pi or None,
+        "research_purpose": purpose,
+        "accepted_terms": True,
+        "terms_version": terms_version,
+        "source": "cli",
+    }, email
+
+
+def request_stimulus_access(server_url=ACCESS_SERVICE_URL):
+    """Walk the user through the form and persist the returned request_id.
+
+    Returns the response dict (request_id, expires_at, files).
+    """
+    payload, email = _prompt_stimulus_form(server_url)
+    response = submit_access_request(payload, server_url=server_url)
+    saved_path = save_request_id(
+        response["request_id"], email=email, server_url=server_url,
+    )
+    print(
+        f"\n✓ Access granted. request_id saved to {saved_path}\n"
+        f"  You can now run `laion-fmri download --include-stimuli`.\n"
+    )
+    return response
+
+
+def _resolve_stimulus_access(server_url=ACCESS_SERVICE_URL):
+    """Return a fresh download payload, prompting for the form if needed.
+
+    Side-effect: if no cached request_id is present, walks the user
+    through the form and persists the new id.
+    """
+    request_id = load_request_id()
+    if request_id is None:
+        response = request_stimulus_access(server_url=server_url)
+        # request_stimulus_access already created the row + URLs.
+        return response
+
+    try:
+        return refresh_urls(request_id, server_url=server_url)
+    except AccessNotFoundError:
+        sys.stderr.write(
+            "[laion-fmri] Your cached request_id is unknown to the server "
+            "(maybe revoked, anonymised after inactivity, or you switched "
+            "servers). Running the access form now.\n"
+        )
+        return request_stimulus_access(server_url=server_url)
+
+
+def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
+    """Download the stimuli (HDF5 + metadata CSV).
+
+    The stimuli is a single HDF5 covering all subjects — it is
+    dataset-wide, not per-subject — so this function takes no subject
+    argument.
+
+    Network behaviour:
+
+    * Always starts with the **public** manifest endpoint to find out
+      what the current files are and their sha256s. No authentication
+      involved.
+    * If the local files already match the manifest, the function
+      returns immediately. **No access-service call, no auth state
+      needed.** This is why a cluster job can just rsync the data dir
+      from your laptop and call ``download_stimuli()`` without ever
+      copying ``auth.json`` — the package sees the files are correct
+      and short-circuits.
+    * Only when at least one file is missing or has the wrong sha256
+      does the function reach for the access service: if no cached
+      ``request_id`` is present, it walks the user through the Data
+      Use Agreement form; otherwise it re-mints URLs via
+      ``/api/v1/refresh`` and downloads what's missing.
 
     Parameters
     ----------
-    include_stimuli : bool
-        If True, also prompt for the stimulus license.
+    data_dir : str or Path, optional
+        Override the configured data directory.
+    server_url : str
+        Override the access service URL (default: production).
+
+    Returns
+    -------
+    dict
+        Mapping of file name to local :class:`pathlib.Path` for the
+        downloaded files.
 
     Raises
     ------
-    LicenseNotAcceptedError
-        If the dataset license is declined.
-    RuntimeError
-        If the stimulus license is declined when requested.
+    AccessServiceError
+        If the access service rejects the request or a download fails.
+    TermsOutdatedError
+        If the cached request_id needs to re-accept an updated ToU.
     """
-    data_dir = get_data_dir()
+    if data_dir is None:
+        data_dir = get_data_dir()
 
-    if not _check_license_accepted(data_dir):
-        if not _prompt_license():
-            raise LicenseNotAcceptedError(
-                "Dataset license must be accepted before downloading."
-            )
-        _write_license_marker(data_dir)
+    manifest = fetch_manifest(server_url=server_url)
+    file_specs = {f["name"]: f for f in manifest["files"]}
+    expected = {
+        "task-images_stimuli.h5": stimuli_h5_path(data_dir),
+        "task-images_metadata.csv": stimuli_metadata_path(data_dir),
+    }
 
-    if include_stimuli and not _check_tou_accepted(data_dir):
-        if not _prompt_tou():
-            raise RuntimeError(
-                "Terms of use must be accepted to download stimuli."
+    # What's missing or stale?
+    needs_download = []
+    for name, dest in expected.items():
+        spec = file_specs.get(name)
+        if spec is None:
+            raise AccessServiceError(
+                f"Public manifest is missing {name!r}; aborting."
             )
-        _write_tou_marker(data_dir)
+        if dest.exists() and dest.stat().st_size == spec["size"]:
+            from laion_fmri._stimulus_access import _sha256_of
+            if _sha256_of(dest) == spec["sha256"]:
+                continue
+        needs_download.append((name, dest, spec))
+
+    if not needs_download:
+        print("[laion-fmri] stimuli already up to date.")
+        return expected
+
+    # Something to fetch → now we need auth + signed URLs.
+    payload = _resolve_stimulus_access(server_url=server_url)
+    by_name = {f["name"]: f for f in payload["files"]}
+    print(
+        f"\n[laion-fmri] Downloading {len(needs_download)} stimulus file(s) "
+        f"(links valid until {payload['expires_at']}):"
+    )
+    for name, dest, spec in needs_download:
+        info = by_name.get(name)
+        if info is None:
+            raise AccessServiceError(
+                f"Server didn't return expected file {name!r}."
+            )
+        download_file(
+            info["url"], dest,
+            expected_size=info["size"],
+            expected_sha256=info["sha256"],
+        )
+    return expected
+
+
+# ── Public entry point ──────────────────────────────────────────
 
 
 def download(
@@ -153,16 +279,23 @@ def download(
     include_stimuli=False,
     n_jobs=1,
 ):
-    """Download dataset files for a subject, narrowed by BIDS entities.
+    """Download fMRI dataset files for a subject, narrowed by BIDS entities.
 
     The download is **idempotent**: a file whose local size already
-    matches the S3 size is skipped, so re-running after an
-    interrupted transfer only fetches what's missing.
+    matches the S3 size is skipped, so re-running after an interrupted
+    transfer only fetches what's missing.
+
+    The stimuli is dataset-wide (one HDF5 for all subjects), so
+    it is not subject-keyed. For stimulus-only downloads use the
+    standalone :func:`download_stimuli` function. The
+    ``include_stimuli=True`` flag here is a convenience that calls
+    :func:`download_stimuli` after the fMRI fetch completes.
 
     Parameters
     ----------
-    subject : int, str, or "all"
-        Subject identifier (BIDS ID, integer index, or "all").
+    subject : str or "all"
+        Subject identifier (BIDS ID, e.g. ``"sub-01"`` / ``"01"``,
+        or ``"all"`` to iterate every subject).
     ses, task, space, desc, stat : str or list[str], optional
         BIDS-entity filters. Each accepts a bare value
         (``ses="04"``) or the full BIDS token (``ses="ses-04"``).
@@ -174,39 +307,35 @@ def download(
     extension : str or list[str], optional
         File extension filter (``"nii.gz"``, ``"tsv"``, ...).
     include_stimuli : bool
-        Whether to include stimulus images (requires ToU
-        acceptance).
+        After the fMRI fetch, also call :func:`download_stimuli` to
+        pull the dataset-wide stimuli. Useful when you want
+        both in a single call. Use :func:`download_stimuli` directly
+        if you only need the stimuli.
     n_jobs : int
-        Number of parallel download workers (``aws s3 cp``
-        subprocesses). ``1`` (default) is sequential.
+        Number of parallel download workers for fMRI data
+        (``aws s3 cp`` subprocesses). ``1`` (default) is sequential.
+        Does not affect stimulus downloads.
 
     Raises
     ------
     SubjectNotFoundError
         If the subject identifier is invalid.
     LicenseNotAcceptedError
-        If the dataset license is declined.
+        If the CC0 dataset license is declined.
+    AccessServiceError
+        If ``include_stimuli=True`` and the stimulus access service
+        rejects the request or a download fails.
+    TermsOutdatedError
+        If ``include_stimuli=True`` and the server's current Terms of
+        Use version differs from the version on the cached
+        ``request_id``.
     """
     data_dir = get_data_dir()
 
     if subject != "all":
         resolve_subject_id(subject)
 
-    if not _check_license_accepted(data_dir):
-        accepted = _prompt_license()
-        if not accepted:
-            raise LicenseNotAcceptedError(
-                "Dataset license must be accepted before downloading."
-            )
-        _write_license_marker(data_dir)
-
-    if include_stimuli and not _check_tou_accepted(data_dir):
-        accepted = _prompt_tou()
-        if not accepted:
-            raise RuntimeError(
-                "Terms of use must be accepted to download stimuli."
-            )
-        _write_tou_marker(data_dir)
+    accept_license()
 
     if subject == "all":
         subjects = get_subjects()
@@ -224,6 +353,8 @@ def download(
             stat=stat,
             suffix=suffix,
             extension=extension,
-            include_stimuli=include_stimuli,
             n_jobs=n_jobs,
         )
+
+    if include_stimuli:
+        download_stimuli(data_dir=data_dir)

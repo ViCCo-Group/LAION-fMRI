@@ -1,17 +1,13 @@
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 
-from laion_fmri._constants import (
-    LICENSE_AGREEMENT_TEXT,
-    TERMS_OF_USE_TEXT,
-)
+from laion_fmri._constants import LICENSE_AGREEMENT_TEXT
 from laion_fmri._errors import LicenseNotAcceptedError, SubjectNotFoundError
 from laion_fmri.download import (
     _check_license_accepted,
-    _check_tou_accepted,
     _write_license_marker,
-    _write_tou_marker,
+    accept_license,
     accept_licenses,
     download,
 )
@@ -19,11 +15,7 @@ from laion_fmri.download import (
 
 @pytest.fixture
 def configured_env(tmp_path, monkeypatch):
-    """Set up a configured data dir for download tests.
-
-    Pre-accepts the dataset license so tests not focused on
-    the license flow are not blocked by the license prompt.
-    """
+    """A configured data dir with the CC0 license pre-accepted."""
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     meta_dir = data_dir / ".laion_fmri"
@@ -41,7 +33,7 @@ def configured_env(tmp_path, monkeypatch):
 
 @pytest.fixture
 def configured_env_no_license(tmp_path, monkeypatch):
-    """Set up a configured data dir WITHOUT license acceptance."""
+    """A configured data dir WITHOUT license acceptance."""
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     (data_dir / ".laion_fmri").mkdir()
@@ -55,8 +47,10 @@ def configured_env_no_license(tmp_path, monkeypatch):
     return data_dir
 
 
+# ── subject argument handling ──────────────────────────────────
+
+
 def test_download_rejects_non_string_subject(configured_env):
-    """Integer indices are no longer accepted; BIDS-form strings only."""
     with pytest.raises(TypeError):
         download(subject=1)
 
@@ -66,81 +60,47 @@ def test_download_rejects_empty_subject(configured_env):
         download(subject="")
 
 
+# fetch_laion_fmri no longer accepts an ``include_stimuli`` flag —
+# stimuli are downloaded via the access service in a separate call.
 DEFAULT_FETCH_KWARGS = dict(
     ses=None, task=None, space=None, desc=None, stat=None,
-    suffix=None, extension=None, include_stimuli=False, n_jobs=1,
+    suffix=None, extension=None, n_jobs=1,
 )
 
 
-def test_download_dispatches_to_laion_fmri_for_string_subject(
-    configured_env,
-):
-    with patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ) as mock_fetch:
+def test_download_dispatches_to_laion_fmri_for_string_subject(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
         download(subject="sub-01")
-
     mock_fetch.assert_called_once_with(
-        str(configured_env), subject="sub-01",
-        **DEFAULT_FETCH_KWARGS,
+        str(configured_env), subject="sub-01", **DEFAULT_FETCH_KWARGS,
     )
 
 
 def test_download_dispatches_for_bare_value_subject(configured_env):
-    """``subject="01"`` is normalized to ``"sub-01"``."""
-    with patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ) as mock_fetch:
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
         download(subject="01")
-
     mock_fetch.assert_called_once_with(
-        str(configured_env), subject="sub-01",
-        **DEFAULT_FETCH_KWARGS,
+        str(configured_env), subject="sub-01", **DEFAULT_FETCH_KWARGS,
     )
 
 
-def test_download_dispatches_to_laion_fmri_for_all_subjects(
-    configured_env,
-):
-    """``subject="all"`` expands via the S3-backed get_subjects."""
-    with patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ) as mock_fetch, patch(
-        "laion_fmri.download.get_subjects",
-        return_value=["sub-01", "sub-03"],
+def test_download_dispatches_for_all_subjects(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch, patch(
+        "laion_fmri.download.get_subjects", return_value=["sub-01", "sub-03"],
     ):
         download(subject="all")
-
-    expected_calls = [
-        call(
-            str(configured_env), subject=sub_id,
-            **DEFAULT_FETCH_KWARGS,
-        )
-        for sub_id in ("sub-01", "sub-03")
-    ]
-    mock_fetch.assert_has_calls(expected_calls, any_order=False)
+    mock_fetch.assert_has_calls(
+        [
+            call(str(configured_env), subject=sub_id, **DEFAULT_FETCH_KWARGS)
+            for sub_id in ("sub-01", "sub-03")
+        ],
+        any_order=False,
+    )
     assert mock_fetch.call_count == 2
 
 
-def test_download_passes_include_stimuli_flag(configured_env):
-    # Pre-accept ToU so prompt does not block
-    (configured_env / ".laion_fmri" / "stimuli_terms_accepted").touch()
-    with patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ) as mock_fetch:
-        download(subject="sub-01", include_stimuli=True)
-
-    expected = {**DEFAULT_FETCH_KWARGS, "include_stimuli": True}
-    mock_fetch.assert_called_once_with(
-        str(configured_env), subject="sub-01", **expected,
-    )
-
-
 def test_download_passes_bids_entity_filters(configured_env):
-    """``ses``, ``desc``, etc. flow through to fetch_laion_fmri."""
-    with patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ) as mock_fetch:
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
         download(
             subject="sub-01",
             ses="04",
@@ -149,7 +109,6 @@ def test_download_passes_bids_entity_filters(configured_env):
             stat="effect",
             extension="nii.gz",
         )
-
     kwargs = mock_fetch.call_args.kwargs
     assert kwargs["ses"] == "04"
     assert kwargs["task"] == "images"
@@ -158,38 +117,32 @@ def test_download_passes_bids_entity_filters(configured_env):
     assert kwargs["extension"] == "nii.gz"
 
 
-def test_check_tou_accepted_false_when_no_marker(tmp_path):
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-    (data_dir / ".laion_fmri").mkdir()
-    assert _check_tou_accepted(str(data_dir)) is False
+# ── include_stimuli routes through the access service ─────────
 
 
-def test_check_tou_accepted_true_when_marker_exists(tmp_path):
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-    meta_dir = data_dir / ".laion_fmri"
-    meta_dir.mkdir()
-    (meta_dir / "stimuli_terms_accepted").touch()
-    assert _check_tou_accepted(str(data_dir)) is True
+def test_download_include_stimuli_calls_access_service(configured_env):
+    """``include_stimuli=True`` triggers ``download_stimuli`` after the
+    fMRI fetch. ``fetch_laion_fmri`` itself no longer knows about
+    ``include_stimuli``."""
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch, patch(
+        "laion_fmri.download.download_stimuli"
+    ) as mock_stim:
+        download(subject="sub-01", include_stimuli=True)
+
+    mock_fetch.assert_called_once()
+    assert "include_stimuli" not in mock_fetch.call_args.kwargs
+    mock_stim.assert_called_once_with(data_dir=str(configured_env))
 
 
-def test_write_tou_marker_creates_file(tmp_path):
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-    (data_dir / ".laion_fmri").mkdir()
-    _write_tou_marker(str(data_dir))
-    assert (
-        data_dir / ".laion_fmri" / "stimuli_terms_accepted"
-    ).exists()
+def test_download_without_stimuli_does_not_call_access_service(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri"), patch(
+        "laion_fmri.download.download_stimuli"
+    ) as mock_stim:
+        download(subject="sub-01")
+    mock_stim.assert_not_called()
 
 
-def test_tou_prompt_text_is_defined():
-    assert isinstance(TERMS_OF_USE_TEXT, str)
-    assert len(TERMS_OF_USE_TEXT) > 0
-
-
-# --- License agreement tests ---
+# ── CC0 license prompt ────────────────────────────────────────
 
 
 def test_license_agreement_text_is_defined():
@@ -228,143 +181,122 @@ def test_write_license_marker_creates_parent_dirs(tmp_path):
     assert (data_dir / ".laion_fmri" / "license_accepted").exists()
 
 
-def test_download_prompts_license_on_first_download(
-    configured_env_no_license,
-):
-    """First download without license marker prompts the user."""
+def test_download_prompts_license_on_first_download(configured_env_no_license):
     with patch(
         "laion_fmri.download._prompt_license", return_value=True
-    ) as mock_prompt, patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ):
+    ) as mock_prompt, patch("laion_fmri.download.fetch_laion_fmri"):
         download(subject="sub-01")
-
     mock_prompt.assert_called_once()
     assert (
         configured_env_no_license / ".laion_fmri" / "license_accepted"
     ).exists()
 
 
-def test_download_raises_when_license_declined(
-    configured_env_no_license,
-):
-    """Declining the license raises LicenseNotAcceptedError."""
-    with patch(
-        "laion_fmri.download._prompt_license", return_value=False
-    ):
-        with pytest.raises(
-            LicenseNotAcceptedError,
-            match="license must be accepted",
-        ):
+def test_download_raises_when_license_declined(configured_env_no_license):
+    with patch("laion_fmri.download._prompt_license", return_value=False):
+        with pytest.raises(LicenseNotAcceptedError, match="license"):
             download(subject="sub-01")
 
 
-def test_download_skips_license_prompt_when_already_accepted(
-    configured_env,
-):
-    """Second download with marker file skips the license prompt."""
+def test_download_skips_license_prompt_when_already_accepted(configured_env):
     with patch(
         "laion_fmri.download._prompt_license"
-    ) as mock_prompt, patch(
-        "laion_fmri.download.fetch_laion_fmri"
-    ):
+    ) as mock_prompt, patch("laion_fmri.download.fetch_laion_fmri"):
         download(subject="sub-01")
-
     mock_prompt.assert_not_called()
 
 
-def test_download_license_check_happens_before_tou(
-    configured_env_no_license,
-):
-    """License check runs before stimulus ToU check."""
-    with patch(
-        "laion_fmri.download._prompt_license", return_value=False
-    ):
-        with pytest.raises(LicenseNotAcceptedError):
-            download(subject="sub-01", include_stimuli=True)
-    # ToU marker should NOT exist since we never got past license
-    assert not (
-        configured_env_no_license
-        / ".laion_fmri"
-        / "stimuli_terms_accepted"
-    ).exists()
+# ── accept_license / accept_licenses helpers ──────────────────
 
 
-# ── accept_licenses (standalone helper) ─────────────────────────
-
-
-def test_accept_licenses_prompts_dataset_only_by_default(
-    configured_env_no_license,
-):
-    """Without ``include_stimuli`` only the dataset license is asked."""
+def test_accept_license_prompts_when_needed(configured_env_no_license):
     with patch(
         "laion_fmri.download._prompt_license", return_value=True
-    ) as mock_lic, patch(
-        "laion_fmri.download._prompt_tou"
-    ) as mock_tou:
-        accept_licenses()
-
+    ) as mock_lic:
+        accept_license()
     mock_lic.assert_called_once()
-    mock_tou.assert_not_called()
     assert (
         configured_env_no_license / ".laion_fmri" / "license_accepted"
     ).exists()
 
 
-def test_accept_licenses_with_stimuli_prompts_both(
-    configured_env_no_license,
-):
-    with patch(
-        "laion_fmri.download._prompt_license", return_value=True
-    ) as mock_lic, patch(
-        "laion_fmri.download._prompt_tou", return_value=True
-    ) as mock_tou:
-        accept_licenses(include_stimuli=True)
-
-    mock_lic.assert_called_once()
-    mock_tou.assert_called_once()
-    meta = configured_env_no_license / ".laion_fmri"
-    assert (meta / "license_accepted").exists()
-    assert (meta / "stimuli_terms_accepted").exists()
-
-
-def test_accept_licenses_skips_when_already_accepted(configured_env):
-    """Markers already on disk -> no prompts."""
-    (
-        configured_env / ".laion_fmri" / "stimuli_terms_accepted"
-    ).touch()
-    with patch(
-        "laion_fmri.download._prompt_license"
-    ) as mock_lic, patch(
-        "laion_fmri.download._prompt_tou"
-    ) as mock_tou:
-        accept_licenses(include_stimuli=True)
-
+def test_accept_license_skips_when_already_accepted(configured_env):
+    with patch("laion_fmri.download._prompt_license") as mock_lic:
+        accept_license()
     mock_lic.assert_not_called()
-    mock_tou.assert_not_called()
 
 
-def test_accept_licenses_raises_when_dataset_declined(
+def test_accept_license_raises_when_declined(configured_env_no_license):
+    with patch("laion_fmri.download._prompt_license", return_value=False):
+        with pytest.raises(LicenseNotAcceptedError, match="license"):
+            accept_license()
+
+
+def test_accept_licenses_deprecated_alias_still_works(
     configured_env_no_license,
 ):
-    with patch(
-        "laion_fmri.download._prompt_license", return_value=False
-    ):
-        with pytest.raises(
-            LicenseNotAcceptedError, match="license must be accepted",
-        ):
-            accept_licenses()
-
-
-def test_accept_licenses_raises_when_stimuli_declined(
-    configured_env_no_license,
-):
+    """``accept_licenses`` is a back-compat wrapper around
+    ``accept_license``; it should still prompt for the CC0 license."""
     with patch(
         "laion_fmri.download._prompt_license", return_value=True
-    ), patch(
-        "laion_fmri.download._prompt_tou", return_value=False
-    ):
-        with pytest.raises(
-            RuntimeError, match="Terms of use",
-        ):
-            accept_licenses(include_stimuli=True)
+    ) as mock_lic:
+        accept_licenses()
+    mock_lic.assert_called_once()
+
+
+def test_accept_licenses_with_include_stimuli_is_no_op_for_stimuli(
+    configured_env_no_license, capsys,
+):
+    """The ``include_stimuli=True`` flag on the deprecated alias just
+    prints a hint pointing the user at the access service. It does NOT
+    write any stimulus marker (those are gone)."""
+    with patch("laion_fmri.download._prompt_license", return_value=True):
+        accept_licenses(include_stimuli=True)
+    captured = capsys.readouterr()
+    assert "access service" in captured.err
+    assert not (
+        configured_env_no_license / ".laion_fmri" / "stimuli_terms_accepted"
+    ).exists()
+
+
+def test_download_stimuli_skips_auth_when_local_files_match(configured_env):
+    """If local stimuli match the public manifest, the loader must NOT
+    contact the access service. This is what lets a cluster job just
+    rsync the data dir and call ``download_stimuli()`` without copying
+    any auth state."""
+    import hashlib
+    from laion_fmri.download import download_stimuli
+
+    stim_dir = configured_env / "stimuli"
+    stim_dir.mkdir(exist_ok=True)
+    h5_bytes = b"FAKEH5"
+    csv_bytes = b"image_name\nx\n"
+    (stim_dir / "task-images_stimuli.h5").write_bytes(h5_bytes)
+    (stim_dir / "task-images_metadata.csv").write_bytes(csv_bytes)
+
+    fake_manifest = {
+        "dataset": "laion-fmri",
+        "current_terms_version": "2026-05-11",
+        "versions": ["v1"],
+        "files": [
+            {"name": "task-images_stimuli.h5",
+             "size": len(h5_bytes),
+             "sha256": hashlib.sha256(h5_bytes).hexdigest()},
+            {"name": "task-images_metadata.csv",
+             "size": len(csv_bytes),
+             "sha256": hashlib.sha256(csv_bytes).hexdigest()},
+        ],
+    }
+
+    with patch(
+        "laion_fmri.download.fetch_manifest", return_value=fake_manifest,
+    ) as mock_manifest, patch(
+        "laion_fmri.download._resolve_stimulus_access"
+    ) as mock_resolve, patch(
+        "laion_fmri.download.download_file"
+    ) as mock_download:
+        download_stimuli()
+
+    mock_manifest.assert_called_once()
+    mock_resolve.assert_not_called()
+    mock_download.assert_not_called()

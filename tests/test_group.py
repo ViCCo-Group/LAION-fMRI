@@ -114,4 +114,4 @@ def test_get_shared_stimulus_metadata(configured_group):
     meta = configured_group.get_shared_stimulus_metadata()
     assert isinstance(meta, pd.DataFrame)
     assert len(meta) == N_SHARED
-    assert all(meta["shared"])
+    assert all(meta["unique_or_shared"] == "shared")

@@ -54,17 +54,18 @@ The cards below walk through each step in detail.
       +++
       ``dataset_initialize`` · ``get_data_dir``
 
-   .. grid-item-card:: Licenses
-      :link: license
+   .. grid-item-card:: Licenses & access
+      :link: access
       :link-type: doc
       :class-card: sd-border-0
       :shadow: sm
 
-      Review and accept the dataset and stimulus licenses up
-      front, or let ``download(...)`` prompt on first use.
+      CC0 for the fMRI side, a short Data Use Agreement form for
+      the stimulus images. The package handles both.
 
       +++
-      ``accept_licenses``
+      ``accept_license`` · ``download_stimuli`` ·
+      ``request_stimulus_access``
 
    .. grid-item-card:: Discover
       :link: discover
@@ -126,7 +127,7 @@ The cards below walk through each step in detail.
 
       +++
       ``brain`` · ``config`` · ``discovery`` · ``download`` ·
-      ``group`` · ``io`` · ``subject`` · ``torch_data``
+      ``group`` · ``io`` · ``stimuli`` · ``subject`` · ``torch_data``
 
 
 .. toctree::
@@ -134,7 +135,7 @@ The cards below walk through each step in detail.
    :hidden:
 
    initialize
-   license
+   access
    discover
    download
    load

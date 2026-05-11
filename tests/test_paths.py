@@ -15,9 +15,9 @@ from laion_fmri._paths import (
     session_func_dir,
     session_noise_ceiling_path,
     stimuli_dir_path,
+    stimuli_h5_path,
     stimuli_metadata_path,
     subject_noise_ceiling_path,
-    tou_marker_path,
     trialinfo_path,
 )
 
@@ -168,12 +168,18 @@ def test_roi_freesurfer_label_path_unknown_raises(tmp_path):
 
 
 def test_stimuli_dir_path():
-    assert stimuli_dir_path("/data") == Path("/data/stimuli/images")
+    assert stimuli_dir_path("/data") == Path("/data/stimuli")
+
+
+def test_stimuli_h5_path():
+    assert stimuli_h5_path("/data") == Path(
+        "/data/stimuli/task-images_stimuli.h5"
+    )
 
 
 def test_stimuli_metadata_path():
     assert stimuli_metadata_path("/data") == Path(
-        "/data/stimuli/stimuli.tsv"
+        "/data/stimuli/task-images_metadata.csv"
     )
 
 
@@ -186,10 +192,4 @@ def test_participants_tsv_path():
 def test_license_marker_path():
     assert license_marker_path("/data") == Path(
         "/data/.laion_fmri/license_accepted"
-    )
-
-
-def test_tou_marker_path():
-    assert tou_marker_path("/data") == Path(
-        "/data/.laion_fmri/stimuli_terms_accepted"
     )

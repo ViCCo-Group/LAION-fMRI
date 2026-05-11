@@ -1,13 +1,10 @@
 import pytest
 
 from laion_fmri._constants import (
+    ACCESS_SERVICE_URL,
     LICENSE_AGREEMENT_BODY,
     LICENSE_AGREEMENT_PROMPT,
     LICENSE_AGREEMENT_TEXT,
-    STIMULI_LICENSE_BODY,
-    STIMULI_LICENSE_PROMPT,
-    STIMULI_LICENSE_TEXT,
-    TERMS_OF_USE_TEXT,
     resolve_subject_id,
 )
 from laion_fmri._errors import SubjectNotFoundError
@@ -56,13 +53,7 @@ def test_resolve_subject_id_rejects_bare_prefix():
         resolve_subject_id("sub-")
 
 
-# ── License texts ───────────────────────────────────────────────
-
-
-def test_terms_of_use_text_is_nonempty():
-    assert isinstance(TERMS_OF_USE_TEXT, str)
-    assert len(TERMS_OF_USE_TEXT) > 0
-    assert "I AGREE" in TERMS_OF_USE_TEXT
+# ── CC0 license text (stimulus terms moved to the access service) ─
 
 
 def test_license_agreement_text_is_nonempty():
@@ -72,27 +63,8 @@ def test_license_agreement_text_is_nonempty():
     assert "CC0" in LICENSE_AGREEMENT_TEXT
 
 
-def test_stimuli_license_text_is_nonempty():
-    assert isinstance(STIMULI_LICENSE_TEXT, str)
-    assert len(STIMULI_LICENSE_TEXT) > 0
-    assert "I AGREE" in STIMULI_LICENSE_TEXT
-    assert "non-commercial" in STIMULI_LICENSE_TEXT
-
-
-def test_terms_of_use_is_stimuli_license():
-    assert TERMS_OF_USE_TEXT is STIMULI_LICENSE_TEXT
-
-
-def test_dataset_and_stimuli_licenses_are_distinct():
-    assert LICENSE_AGREEMENT_TEXT != STIMULI_LICENSE_TEXT
-
-
 def test_license_body_does_not_contain_prompt():
-    """``BODY`` is display-only; the input-prompt suffix lives
-    separately so callers that just print the license don't
-    create the illusion of an awaiting prompt."""
     assert "I AGREE" not in LICENSE_AGREEMENT_BODY
-    assert "I AGREE" not in STIMULI_LICENSE_BODY
 
 
 def test_full_text_is_body_plus_prompt():
@@ -100,7 +72,22 @@ def test_full_text_is_body_plus_prompt():
         LICENSE_AGREEMENT_TEXT
         == LICENSE_AGREEMENT_BODY + LICENSE_AGREEMENT_PROMPT
     )
-    assert (
-        STIMULI_LICENSE_TEXT
-        == STIMULI_LICENSE_BODY + STIMULI_LICENSE_PROMPT
-    )
+
+
+# ── Access service URL ─────────────────────────────────────────
+
+
+def test_access_service_url_default():
+    assert ACCESS_SERVICE_URL == "https://laion-fmri.hebartlab.com"
+
+
+def test_access_service_url_overridable(monkeypatch):
+    monkeypatch.setenv("LAION_FMRI_ACCESS_URL", "https://staging.example.com/")
+    import importlib
+    import laion_fmri._constants as c
+    importlib.reload(c)
+    try:
+        assert c.ACCESS_SERVICE_URL == "https://staging.example.com"
+    finally:
+        monkeypatch.delenv("LAION_FMRI_ACCESS_URL", raising=False)
+        importlib.reload(c)

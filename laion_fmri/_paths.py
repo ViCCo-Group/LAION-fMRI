@@ -193,16 +193,22 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
     return matches[0]
 
 
-# ── Stimuli (forward-compat) ────────────────────────────────────
+# ── Stimuli ─────────────────────────────────────────────────────
+
 
 def stimuli_dir_path(data_dir):
-    """Path to the stimulus images directory."""
-    return Path(data_dir) / "stimuli" / "images"
+    """Directory holding the stimuli on disk."""
+    return Path(data_dir) / "stimuli"
+
+
+def stimuli_h5_path(data_dir):
+    """HDF5 file of all stimulus images, indexed 0..N-1 by row."""
+    return stimuli_dir_path(data_dir) / "task-images_stimuli.h5"
 
 
 def stimuli_metadata_path(data_dir):
-    """Path to the stimulus metadata TSV."""
-    return Path(data_dir) / "stimuli" / "stimuli.tsv"
+    """Stimulus metadata CSV. Row ``i`` matches HDF5 index ``i``."""
+    return stimuli_dir_path(data_dir) / "task-images_metadata.csv"
 
 
 # ── Dataset-level files ─────────────────────────────────────────
@@ -215,10 +221,9 @@ def participants_tsv_path(data_dir):
 # ── Markers ─────────────────────────────────────────────────────
 
 def license_marker_path(data_dir):
-    """Marker for accepted dataset license."""
+    """Marker for accepted dataset (CC0) license.
+
+    Stimulus terms are governed by the access service and no longer
+    tracked as a local marker.
+    """
     return Path(data_dir) / ".laion_fmri" / "license_accepted"
-
-
-def tou_marker_path(data_dir):
-    """Marker for accepted stimuli terms-of-use."""
-    return Path(data_dir) / ".laion_fmri" / "stimuli_terms_accepted"
