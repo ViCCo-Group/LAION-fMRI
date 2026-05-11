@@ -48,17 +48,18 @@ Filters on ``get_betas``
   ceiling exceeds the threshold.
 * ``stimuli="shared"`` / ``"unique"`` -- restrict to trials
   whose stimulus is in the shared/unique subset.
-* ``streaming=False`` (default) loads the betas NIfTI in one
-  pass and masks per volume -- the right choice for the
-  bucket's compressed ``.nii.gz`` files because the gzip
-  stream only needs to be decompressed once. Peak memory is
-  the full 4-D file (~12 GB for a real session) plus the
-  masked output. Set ``streaming=True`` only for raw
-  uncompressed ``.nii``: nibabel can seek into uncompressed
-  files cheaply, so per-volume streaming keeps peak memory at
-  one volume plus the masked output. On ``.nii.gz`` the same
-  flag is a slow path (re-decompresses up to the offset on
-  every slice).
+* ``streaming=False`` (default) materializes the full 4-D
+  NIfTI in RAM and then masks it. One-shot decompression of
+  the ``.nii.gz``, fastest when memory is plentiful, but peak
+  RAM is the full file plus the masked output -- roughly
+  12 GB for a real session.
+* ``streaming=True`` reads the file volume-by-volume and
+  applies the combined brain + ROI + NC mask inline. Peak
+  RAM stays at one volume (~10-50 MB) plus the masked output.
+  Use this on memory-constrained machines like Colab. Works
+  on both ``.nii`` and ``.nii.gz``; the compressed path uses
+  a custom gzip pipeline that streams without re-decompressing
+  on each slice.
 
 ROI queries
 ===========
