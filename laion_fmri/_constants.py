@@ -1,6 +1,14 @@
 """Constants for the laion_fmri package."""
 
+import os
+
 from laion_fmri._errors import SubjectNotFoundError
+
+# Base URL of the LAION-fMRI access service. Overridable via env for staging.
+ACCESS_SERVICE_URL = os.environ.get(
+    "LAION_FMRI_ACCESS_URL", "https://laion-fmri.hebartlab.com"
+).rstrip("/")
+
 
 LICENSE_AGREEMENT_BODY = """\
 === LAION-fMRI Dataset License (CC0 1.0) ===
@@ -12,9 +20,10 @@ data for any purpose, including commercial, without asking permission.
 
 Full license text: https://creativecommons.org/publicdomain/zero/1.0/
 
-NOTE: Stimulus images are NOT covered by CC0. They are subject to a
-separate, restrictive license. You will be prompted to accept it if
-you choose to download stimuli.
+NOTE: Stimulus images are NOT covered by CC0. They are gated by a
+separate Data Use Agreement enforced by the access service at
+https://laion-fmri.hebartlab.com/terms — see
+``laion-fmri request-access`` to obtain a download.
 """
 
 LICENSE_AGREEMENT_PROMPT = (
@@ -22,32 +31,6 @@ LICENSE_AGREEMENT_PROMPT = (
 )
 
 LICENSE_AGREEMENT_TEXT = LICENSE_AGREEMENT_BODY + LICENSE_AGREEMENT_PROMPT
-
-
-STIMULI_LICENSE_BODY = """\
-=== LAION-fMRI Stimulus License ===
-
-The LAION-fMRI stimulus images are provided under a closed license.
-All rights are reserved by the original copyright holders.
-
-You may ONLY use these images for non-commercial academic research.
-All other uses are strictly prohibited. In particular, you may NOT:
-
-  1. Share, redistribute, or make the images available to others.
-  2. Use the images for any commercial purpose.
-  3. Use the images to train, fine-tune, or evaluate commercial
-     AI/ML models or services.
-  4. Create derivative works from the images for any purpose
-     other than non-commercial academic research.
-
-Full terms: https://laion-fmri.hebartlab.com/terms
-"""
-
-STIMULI_LICENSE_PROMPT = 'Type "I AGREE" to accept: '
-
-STIMULI_LICENSE_TEXT = STIMULI_LICENSE_BODY + STIMULI_LICENSE_PROMPT
-
-TERMS_OF_USE_TEXT = STIMULI_LICENSE_TEXT
 
 
 def resolve_subject_id(subject):

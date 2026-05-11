@@ -363,10 +363,11 @@ def fetch_laion_fmri(
         data_dir, roi_filters, n_jobs=n_jobs,
     )
 
-    if include_stimuli:
-        _filtered_download(
-            bucket, "stimuli/", data_dir, filters, n_jobs=n_jobs,
-        )
+    # Note: stimulus images are no longer mirrored via the public bucket.
+    # The ``include_stimuli`` flag is handled by ``laion_fmri.download``
+    # via the access service. We accept the flag here for API stability
+    # but do nothing with it.
+    del include_stimuli
 
 
 def _ses_filters_specific_sessions(ses):

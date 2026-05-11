@@ -193,16 +193,41 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
     return matches[0]
 
 
-# ── Stimuli (forward-compat) ────────────────────────────────────
+# ── Stimuli ─────────────────────────────────────────────────────
+
+# The package has two stimulus on-disk schemas living side-by-side:
+#
+# 1. The legacy per-PNG schema (``stimuli/images/*.png`` + ``stimuli/stimuli.tsv``)
+#    that :class:`laion_fmri.subject.Subject` consumes. Test fixtures
+#    populate this layout.
+#
+# 2. The HDF5 archive shipped by the access service
+#    (``stimuli/task-images_stimuli.h5`` + ``stimuli/task-images_metadata.csv``)
+#    that :class:`laion_fmri.stimuli.Stimuli` consumes. ``download(...,
+#    include_stimuli=True)`` writes this layout.
+#
+# Migrating ``Subject`` to the HDF5 schema is a separate task — both
+# helpers are kept for now.
+
 
 def stimuli_dir_path(data_dir):
-    """Path to the stimulus images directory."""
+    """Path to the per-PNG stimulus images directory (legacy schema)."""
     return Path(data_dir) / "stimuli" / "images"
 
 
 def stimuli_metadata_path(data_dir):
-    """Path to the stimulus metadata TSV."""
+    """Path to the stimulus metadata TSV (legacy schema)."""
     return Path(data_dir) / "stimuli" / "stimuli.tsv"
+
+
+def stimuli_h5_path(data_dir):
+    """Path to the HDF5 archive of stimulus images (access-service schema)."""
+    return Path(data_dir) / "stimuli" / "task-images_stimuli.h5"
+
+
+def stimuli_metadata_csv_path(data_dir):
+    """Path to the stimulus metadata CSV (access-service schema)."""
+    return Path(data_dir) / "stimuli" / "task-images_metadata.csv"
 
 
 # ── Dataset-level files ─────────────────────────────────────────
@@ -215,10 +240,9 @@ def participants_tsv_path(data_dir):
 # ── Markers ─────────────────────────────────────────────────────
 
 def license_marker_path(data_dir):
-    """Marker for accepted dataset license."""
+    """Marker for accepted dataset (CC0) license.
+
+    Stimulus terms are governed by the access service and no longer
+    tracked as a local marker.
+    """
     return Path(data_dir) / ".laion_fmri" / "license_accepted"
-
-
-def tou_marker_path(data_dir):
-    """Marker for accepted stimuli terms-of-use."""
-    return Path(data_dir) / ".laion_fmri" / "stimuli_terms_accepted"

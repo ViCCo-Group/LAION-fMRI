@@ -49,7 +49,11 @@ def main(argv=None):
     )
     download_parser.add_argument(
         "--include-stimuli", action="store_true",
-        help="Include stimulus images (requires ToU acceptance)",
+        help=(
+            "Include the gated stimulus archive. First call walks "
+            "through a Data Use Agreement form; subsequent calls "
+            "reuse the cached request_id."
+        ),
     )
 
     info_parser = subparsers.add_parser(
@@ -58,6 +62,38 @@ def main(argv=None):
     info_parser.add_argument(
         "--subject", default=None,
         help="Show info for a specific subject",
+    )
+
+    subparsers.add_parser(
+        "download-stimuli",
+        help=(
+            "Download just the gated stimulus archive (HDF5 + metadata "
+            "CSV); no fMRI data is fetched. First call walks through "
+            "the Data Use Agreement; subsequent calls reuse the cached "
+            "request_id."
+        ),
+    )
+
+    subparsers.add_parser(
+        "request-access",
+        help=(
+            "Walk through the LAION-fMRI Data Use Agreement form and "
+            "cache the resulting request_id. Run once per machine."
+        ),
+    )
+
+    login_parser = subparsers.add_parser(
+        "login",
+        help="Cache an existing request_id (e.g. obtained from the web form).",
+    )
+    login_parser.add_argument(
+        "--request-id", required=True,
+        help="Raw request_id (the lfm_… string shown by the web form).",
+    )
+
+    subparsers.add_parser(
+        "logout",
+        help="Remove the cached request_id from this machine.",
     )
 
     args = parser.parse_args(argv)
@@ -72,6 +108,14 @@ def main(argv=None):
         _handle_download(args)
     elif args.command == "info":
         _handle_info(args)
+    elif args.command == "download-stimuli":
+        _handle_download_stimuli(args)
+    elif args.command == "request-access":
+        _handle_request_access(args)
+    elif args.command == "login":
+        _handle_login(args)
+    elif args.command == "logout":
+        _handle_logout(args)
 
 
 def _handle_config(args):
@@ -102,6 +146,50 @@ def _handle_info(args):
     """Handle the info subcommand."""
     from laion_fmri.discovery import describe
     describe()
+
+
+def _handle_download_stimuli(args):
+    """Handle the download-stimuli subcommand (stimuli only, no fMRI)."""
+    from laion_fmri.download import download_stimuli
+    download_stimuli()
+
+
+def _handle_request_access(args):
+    """Walk the user through the Data Use Agreement form."""
+    from laion_fmri.download import request_stimulus_access
+    request_stimulus_access()
+
+
+def _handle_login(args):
+    """Cache an existing request_id."""
+    from laion_fmri._stimulus_access import (
+        ACCESS_SERVICE_URL,
+        AccessNotFoundError,
+        AccessServiceError,
+        refresh_urls,
+        save_request_id,
+    )
+    raw = args.request_id.strip()
+    # Sanity-check by hitting /refresh; if it works the id is valid.
+    try:
+        refresh_urls(raw)
+    except AccessNotFoundError:
+        print(f"Server doesn't know that request_id. Did you mistype it?", file=sys.stderr)
+        sys.exit(1)
+    except AccessServiceError as exc:
+        print(f"Could not validate request_id: {exc}", file=sys.stderr)
+        sys.exit(1)
+    saved_path = save_request_id(raw, server_url=ACCESS_SERVICE_URL)
+    print(f"✓ request_id saved to {saved_path}")
+
+
+def _handle_logout(args):
+    """Clear the cached request_id."""
+    from laion_fmri._stimulus_access import clear_request_id
+    if clear_request_id():
+        print("✓ cached request_id removed.")
+    else:
+        print("No cached request_id to remove.")
 
 
 if __name__ == "__main__":
