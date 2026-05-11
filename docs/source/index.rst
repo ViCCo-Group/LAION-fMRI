@@ -114,10 +114,10 @@ Getting Started
         :class-card: sd-border-0
         :shadow: sm
 
-        Interactive 3D voxel explorer
+        Interactive 3D brain explorer
 
         +++
-        Browse responses and concept maps in-browser
+        Browse responses in-browser
 
 
 .. toctree::
