@@ -481,16 +481,21 @@ export async function init(options = {}) {
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
 
-    // Mobile (matches CSS @media max-width 820px): brain occupies a
-    // top-half band, so center it and slightly shrink. Desktop: shift the
-    // brain to the right so the text column on the left has room.
-    const isMobile = window.innerWidth <= 820;
-    if (isMobile) {
+    // Stack triggers in CSS (max-width 820px OR portrait orientation) —
+    // mirror that here so the brain sits centered above the text on
+    // phones AND iPad portrait. In landscape, shift the brain to the
+    // right; the shift scales with aspect so iPad landscape (1.33)
+    // doesn't push the brain off-screen the way wide desktop (1.78+)
+    // can absorb.
+    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    const isStacked = window.innerWidth <= 820 || aspect < 1;
+    if (isStacked) {
       setup.group.position.x = 0;
       setup.group.scale.setScalar(0.62);
-      camera.position.z = 2.6;
+      camera.position.z = aspect < 0.7 ? 2.7 : 2.5;
     } else {
-      setup.group.position.x = 0.65;
+      const shiftX = Math.max(0.35, Math.min(0.70, 0.40 + (aspect - 1.33) * 0.55));
+      setup.group.position.x = shiftX;
       setup.group.scale.setScalar(0.62);
       camera.position.z = 2.4;
     }
