@@ -178,6 +178,6 @@ Support
 For data access issues or questions:
 
 * `Open an issue on GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
-* For stimulus access / takedown:
-  ``martin.hebart@psychiat.med.uni-giessen.de``
+* For stimulus access / takedown, see the contact at
+  https://laion-fmri.hebartlab.com/takedown
 * Check the :doc:`faq` for common questions

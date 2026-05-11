@@ -226,7 +226,7 @@ function mirrors :func:`load_subject`:
 
 The HDF5 + metadata CSV are downloaded via the gated access service —
 run :func:`laion_fmri.download_stimuli` (or
-``laion-fmri download-stimuli``) first. See :doc:`stimulus_access` for
+``laion-fmri download-stimuli``) first. See :doc:`access` for
 the full flow.
 
 The metadata CSV columns are ``image_name``, ``dataset``,

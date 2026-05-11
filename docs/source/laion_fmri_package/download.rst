@@ -32,7 +32,7 @@ Arguments
   archive after the fMRI download. Stimuli are dataset-wide (a
   single HDF5 covering all subjects), so this just calls
   :func:`download_stimuli` after the per-subject fetch. See
-  :doc:`stimulus_access`.
+  :doc:`access`.
 
 Filter semantics
 ================
@@ -106,7 +106,7 @@ subject-independent function:
 
 The first call walks through the Data Use Agreement form;
 subsequent calls re-use the cached access state silently. See
-:doc:`stimulus_access` for the full flow.
+:doc:`access` for the full flow.
 
 Command-line interface
 ======================

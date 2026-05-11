@@ -54,30 +54,18 @@ The cards below walk through each step in detail.
       +++
       ``dataset_initialize`` · ``get_data_dir``
 
-   .. grid-item-card:: License
-      :link: license
+   .. grid-item-card:: Licenses & access
+      :link: access
       :link-type: doc
       :class-card: sd-border-0
       :shadow: sm
 
-      Review and accept the CC0 dataset license up front, or
-      let ``download(...)`` prompt on first use.
+      CC0 for the fMRI side, a short Data Use Agreement form for
+      the stimulus images. The package handles both.
 
       +++
-      ``accept_license``
-
-   .. grid-item-card:: Stimulus access
-      :link: stimulus_access
-      :link-type: doc
-      :class-card: sd-border-0
-      :shadow: sm
-
-      Submit the Data Use Agreement form once, then ``laion_fmri``
-      caches a ``request_id`` and re-mints presigned download URLs
-      for every subsequent stimulus fetch.
-
-      +++
-      ``download_stimuli`` · ``request_stimulus_access``
+      ``accept_license`` · ``download_stimuli`` ·
+      ``request_stimulus_access``
 
    .. grid-item-card:: Discover
       :link: discover
@@ -139,7 +127,7 @@ The cards below walk through each step in detail.
 
       +++
       ``brain`` · ``config`` · ``discovery`` · ``download`` ·
-      ``group`` · ``io`` · ``subject`` · ``torch_data``
+      ``group`` · ``io`` · ``stimuli`` · ``subject`` · ``torch_data``
 
 
 .. toctree::
@@ -147,8 +135,7 @@ The cards below walk through each step in detail.
    :hidden:
 
    initialize
-   license
-   stimulus_access
+   access
    discover
    download
    load
