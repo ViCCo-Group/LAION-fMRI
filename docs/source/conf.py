@@ -254,7 +254,7 @@ html_theme_options = {
     ],
 }
 
-html_title = "LAION-fMRI | Documentation"
+html_title = "LAION-fMRI"
 html_short_title = "LAION-fMRI"
 
 html_static_path = ["_static"]
