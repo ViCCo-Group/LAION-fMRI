@@ -41,6 +41,35 @@
    provisional.
 
 
+**LAION-fMRI** is a deeply-sampled 7T fMRI dataset of brain responses to visual
+images, built to uncover how the human brain sees and understands the world.
+Five participants viewed over 25,000 unique natural images across 165 sessions,
+capturing hundreds of thousands of brain responses at 1.8 mm resolution with an
+ultra-high-field 7T MRI scanner.
+
+The images span everything from everyday photographs - drawn from a 120M
+image-text corpus (Roth & Hebart, 2025) - to abstract shapes and visual
+illusions, ensuring the dataset covers the full breadth of human visual
+experience. Every image was measured multiple times, delivering exceptional
+signal quality and setting new standards for the field.
+
+Beyond functional brain scans, the dataset includes rich complementary data:
+retinotopic mapping, functional localizers, precision diffusion MRI, and
+behavioral responses - making it one of the most deeply characterized
+neuroimaging resources assembled to date.
+
+* **Scale** - thousands of unique images per participant (including ~2,200 shared
+  across subjects), 34 sessions each, up to 12 repeats for shared images
+* **Acquisition** - multi-echo 7T fMRI at 1.8 mm isotropic, 1.9 s TR
+* **Broad sampling** - natural photographs, prior benchmark images (NSD,
+  THINGS), plus out-of-distribution test stimuli
+* **Single-trial betas** - GLMsingle-derived response estimates with strong
+  noise ceilings
+* **Complementary data** - retinotopy, functional localizers, diffusion MRI,
+  behavioral responses
+* **Open** - freely available for research
+
+
 Getting Started
 ===============
 
