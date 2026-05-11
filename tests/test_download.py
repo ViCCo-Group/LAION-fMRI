@@ -257,3 +257,46 @@ def test_accept_licenses_with_include_stimuli_is_no_op_for_stimuli(
     assert not (
         configured_env_no_license / ".laion_fmri" / "stimuli_terms_accepted"
     ).exists()
+
+
+def test_download_stimuli_skips_auth_when_local_files_match(configured_env):
+    """If local stimuli match the public manifest, the loader must NOT
+    contact the access service. This is what lets a cluster job just
+    rsync the data dir and call ``download_stimuli()`` without copying
+    any auth state."""
+    import hashlib
+    from laion_fmri.download import download_stimuli
+
+    stim_dir = configured_env / "stimuli"
+    stim_dir.mkdir(exist_ok=True)
+    h5_bytes = b"FAKEH5"
+    csv_bytes = b"image_name\nx\n"
+    (stim_dir / "task-images_stimuli.h5").write_bytes(h5_bytes)
+    (stim_dir / "task-images_metadata.csv").write_bytes(csv_bytes)
+
+    fake_manifest = {
+        "dataset": "laion-fmri",
+        "current_terms_version": "2026-05-11",
+        "versions": ["v1"],
+        "files": [
+            {"name": "task-images_stimuli.h5",
+             "size": len(h5_bytes),
+             "sha256": hashlib.sha256(h5_bytes).hexdigest()},
+            {"name": "task-images_metadata.csv",
+             "size": len(csv_bytes),
+             "sha256": hashlib.sha256(csv_bytes).hexdigest()},
+        ],
+    }
+
+    with patch(
+        "laion_fmri.download.fetch_manifest", return_value=fake_manifest,
+    ) as mock_manifest, patch(
+        "laion_fmri.download._resolve_stimulus_access"
+    ) as mock_resolve, patch(
+        "laion_fmri.download.download_file"
+    ) as mock_download:
+        download_stimuli()
+
+    mock_manifest.assert_called_once()
+    mock_resolve.assert_not_called()
+    mock_download.assert_not_called()

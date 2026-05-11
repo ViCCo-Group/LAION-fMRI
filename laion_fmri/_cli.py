@@ -50,7 +50,7 @@ def main(argv=None):
     download_parser.add_argument(
         "--include-stimuli", action="store_true",
         help=(
-            "Include the gated stimulus archive. First call walks "
+            "Include the stimuli. First call walks "
             "through a Data Use Agreement form; subsequent calls "
             "reuse the cached request_id."
         ),
@@ -67,7 +67,7 @@ def main(argv=None):
     subparsers.add_parser(
         "download-stimuli",
         help=(
-            "Download the gated stimulus archive (dataset-wide, "
+            "Download the stimuli (dataset-wide, "
             "subject-independent). First call walks through the Data "
             "Use Agreement; subsequent calls reuse the cached "
             "request_id."

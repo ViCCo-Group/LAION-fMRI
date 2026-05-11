@@ -615,16 +615,16 @@ class Subject:
     # ── Stimulus images ─────────────────────────────────────────
 
     def get_images(self, stimuli=None, format="pil"):
-        """Load stimulus images (when the archive is on disk).
+        """Load stimulus images (when present on disk).
 
-        Reads from the HDF5 archive populated by
+        Reads from the HDF5 file populated by
         :func:`laion_fmri.download.download_stimuli`.
         """
         from laion_fmri.stimuli import Stimuli
 
         if not self.has_stimuli():
             raise StimuliNotDownloadedError(
-                "Stimulus archive not found. Run "
+                "stimuli not found on disk. Run "
                 "`laion-fmri download-stimuli` "
                 "(or laion_fmri.download_stimuli())."
             )
@@ -671,7 +671,7 @@ class Subject:
 
         if not self.has_stimuli():
             raise StimuliNotDownloadedError(
-                "Stimulus archive not found. Run "
+                "stimuli not found on disk. Run "
                 "`laion-fmri download-stimuli`."
             )
         stim = Stimuli(data_dir=self._data_dir)
@@ -699,7 +699,7 @@ class Subject:
         return pd.read_csv(path)
 
     def has_stimuli(self):
-        """Return True if the stimulus archive (HDF5 + CSV) is on disk.
+        """Return True if the stimuli (HDF5 + CSV) is on disk.
 
         Useful as a guard before calling stimulus-dependent methods
         (``get_n_stimuli``, ``get_stimulus_metadata``, ``get_images``,

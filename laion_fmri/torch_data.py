@@ -92,7 +92,7 @@ class LaionFMRIDataset:
         )
         self._rep_indices = _resolve_rep_indices(self._trial_info)
 
-        # Stimulus images come from the HDF5 archive (lazy reads).
+        # Stimulus images come from the HDF5 file (lazy reads).
         from laion_fmri.stimuli import Stimuli
         self._stimuli = Stimuli(data_dir=subject._data_dir)
 

@@ -99,7 +99,7 @@ Together with fMRI in one call
 ------------------------------
 
 Pass ``include_stimuli=True`` to the regular ``download()`` — the fMRI
-part runs first, the stimulus archive after:
+part runs first, the stimuli after:
 
 .. code-block:: python
 
@@ -117,14 +117,22 @@ with ``curl`` or click in your browser.
 On a cluster
 ------------
 
-After downloading once on your laptop, copy the package's local cache
-file to the cluster:
+Easiest path: download once on your laptop, then just rsync the data
+to the cluster:
 
 .. code-block:: bash
 
-   rsync ~/.cache/laion-fmri/auth.json cluster:~/.cache/laion-fmri/
+   rsync -av ~/path/to/laion-fmri-data/stimuli/ cluster:~/path/to/laion-fmri-data/stimuli/
 
-Then run the package on the cluster as usual — no form re-fill.
+That's it. On the cluster, ``load_stimuli()`` reads the local files
+without ever calling the access service, and ``download_stimuli()``
+notices the files already match and returns immediately.
+
+You only need access state on the cluster if you also want to
+*re-download* there (e.g. after a dataset release update). In that
+case set the ``LAION_FMRI_REQUEST_ID`` environment variable to the
+value you can find in ``~/.cache/laion-fmri/auth.json`` on your
+laptop — but most workflows don't need this.
 
 If something goes wrong
 -----------------------

@@ -42,7 +42,7 @@ Discovery
 Stimulus Access
 ---------------
 
-Gated stimulus archive (HDF5 + metadata CSV). Acceptance and download
+Gated stimuli (HDF5 + metadata CSV). Acceptance and download
 go through the access service at
 `laion-fmri.hebartlab.com <https://laion-fmri.hebartlab.com>`__.
 

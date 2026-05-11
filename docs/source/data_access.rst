@@ -34,7 +34,7 @@ The stimulus images are subject to a Data Use Agreement that prohibits
 redistribution, commercial use, and use for training general-purpose AI
 models. You accept it by submitting a short form (terminal or web), at
 which point the service issues a ``request_id`` and signs short-lived
-S3 URLs for the stimulus archive on demand.
+S3 URLs for the stimuli on demand.
 
 * Read the full terms: https://laion-fmri.hebartlab.com/terms
 * Privacy notice: https://laion-fmri.hebartlab.com/privacy
@@ -75,7 +75,7 @@ Common operations:
    # all subjects (whole-dataset mirror)
    download(subject="all")
 
-   # gated stimulus archive — dataset-wide, subject-independent
+   # stimuli — dataset-wide, subject-independent
    download_stimuli()
 
    # both at once
@@ -109,7 +109,7 @@ the bucket is public and read-accessible without credentials:
 This skips the package's BIDS-entity filtering and idempotency checks,
 but is useful if you want raw control over what's transferred.
 
-The gated stimulus archive is **not** accessible this way — anonymous
+The stimuli is **not** accessible this way — anonymous
 ``GET`` on ``s3://laion-fmri/stimuli/*`` returns 403. Use the package
 or the web form.
 
@@ -139,7 +139,7 @@ Dataset Size
    - Size of major components (raw, derivatives, stimuli)
    - Storage recommendations
 
-For now: the stimulus archive is one HDF5 of ~3.2 GB plus a ~1.6 MB
+For now: the stimuli are one HDF5 of ~3.2 GB plus a ~1.6 MB
 metadata CSV.
 
 
@@ -148,7 +148,7 @@ Data Verification
 
 * **fMRI data**: the package checks each file's local size against the
   S3 size before re-fetching; ``download(...)`` is idempotent.
-* **Stimulus archive**: download is verified against a published
+* **stimuli**: download is verified against a published
   ``sha256`` for both files (the manifest is served at
   https://laion-fmri.hebartlab.com/api/v1/manifest). On mismatch the
   ``.part`` file is removed and an error is raised.

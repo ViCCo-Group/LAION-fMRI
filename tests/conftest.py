@@ -408,7 +408,7 @@ def synthetic_data_dir(tmp_path):
     }))
     (data_dir / "README").write_text("LAION-fMRI synthetic test data\n")
 
-    # Stimulus archive (HDF5 + metadata CSV, mirroring production)
+    # stimuli (HDF5 + metadata CSV, mirroring production)
     stimuli_dir = data_dir / "stimuli"
     _save_placeholder_stimulus_archive(stimuli_dir, stim_meta)
 

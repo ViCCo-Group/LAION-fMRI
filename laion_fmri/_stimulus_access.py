@@ -199,7 +199,7 @@ def refresh_urls(
 _CHUNK = 1024 * 1024  # 1 MB
 
 
-def _sha256_of(path: Path) -> str:
+def _sha256_of(path: "Path") -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(_CHUNK), b""):

@@ -20,6 +20,7 @@ from laion_fmri._stimulus_access import (
     TermsOutdatedError,
     current_terms_version,
     download_file,
+    fetch_manifest,
     load_request_id,
     refresh_urls,
     save_request_id,
@@ -171,13 +172,28 @@ def _resolve_stimulus_access(server_url=ACCESS_SERVICE_URL):
 
 
 def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
-    """Download the gated stimulus archive (HDF5 + metadata CSV).
+    """Download the stimuli (HDF5 + metadata CSV).
 
-    The stimulus archive is a single HDF5 covering all subjects — it is
+    The stimuli is a single HDF5 covering all subjects — it is
     dataset-wide, not per-subject — so this function takes no subject
-    argument. If no cached ``request_id`` is present, walks the user
-    through the Data Use Agreement form interactively. Otherwise
-    re-mints URLs via ``/api/v1/refresh`` and downloads silently.
+    argument.
+
+    Network behaviour:
+
+    * Always starts with the **public** manifest endpoint to find out
+      what the current files are and their sha256s. No authentication
+      involved.
+    * If the local files already match the manifest, the function
+      returns immediately. **No access-service call, no auth state
+      needed.** This is why a cluster job can just rsync the data dir
+      from your laptop and call ``download_stimuli()`` without ever
+      copying ``auth.json`` — the package sees the files are correct
+      and short-circuits.
+    * Only when at least one file is missing or has the wrong sha256
+      does the function reach for the access service: if no cached
+      ``request_id`` is present, it walks the user through the Data
+      Use Agreement form; otherwise it re-mints URLs via
+      ``/api/v1/refresh`` and downloads what's missing.
 
     Parameters
     ----------
@@ -202,23 +218,44 @@ def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
     if data_dir is None:
         data_dir = get_data_dir()
 
-    payload = _resolve_stimulus_access(server_url=server_url)
+    manifest = fetch_manifest(server_url=server_url)
+    file_specs = {f["name"]: f for f in manifest["files"]}
     expected = {
         "task-images_stimuli.h5": stimuli_h5_path(data_dir),
         "task-images_metadata.csv": stimuli_metadata_path(data_dir),
     }
+
+    # What's missing or stale?
+    needs_download = []
+    for name, dest in expected.items():
+        spec = file_specs.get(name)
+        if spec is None:
+            raise AccessServiceError(
+                f"Public manifest is missing {name!r}; aborting."
+            )
+        if dest.exists() and dest.stat().st_size == spec["size"]:
+            from laion_fmri._stimulus_access import _sha256_of
+            if _sha256_of(dest) == spec["sha256"]:
+                continue
+        needs_download.append((name, dest, spec))
+
+    if not needs_download:
+        print("[laion-fmri] stimuli already up to date.")
+        return expected
+
+    # Something to fetch → now we need auth + signed URLs.
+    payload = _resolve_stimulus_access(server_url=server_url)
     by_name = {f["name"]: f for f in payload["files"]}
-    missing = set(expected) - set(by_name)
-    if missing:
-        raise AccessServiceError(
-            f"Server didn't return expected files: {sorted(missing)}."
-        )
     print(
-        f"\n[laion-fmri] Downloading stimuli "
+        f"\n[laion-fmri] Downloading {len(needs_download)} stimulus file(s) "
         f"(links valid until {payload['expires_at']}):"
     )
-    for name, dest in expected.items():
-        info = by_name[name]
+    for name, dest, spec in needs_download:
+        info = by_name.get(name)
+        if info is None:
+            raise AccessServiceError(
+                f"Server didn't return expected file {name!r}."
+            )
         download_file(
             info["url"], dest,
             expected_size=info["size"],
@@ -248,7 +285,7 @@ def download(
     matches the S3 size is skipped, so re-running after an interrupted
     transfer only fetches what's missing.
 
-    The stimulus archive is dataset-wide (one HDF5 for all subjects), so
+    The stimuli is dataset-wide (one HDF5 for all subjects), so
     it is not subject-keyed. For stimulus-only downloads use the
     standalone :func:`download_stimuli` function. The
     ``include_stimuli=True`` flag here is a convenience that calls
@@ -271,7 +308,7 @@ def download(
         File extension filter (``"nii.gz"``, ``"tsv"``, ...).
     include_stimuli : bool
         After the fMRI fetch, also call :func:`download_stimuli` to
-        pull the dataset-wide stimulus archive. Useful when you want
+        pull the dataset-wide stimuli. Useful when you want
         both in a single call. Use :func:`download_stimuli` directly
         if you only need the stimuli.
     n_jobs : int

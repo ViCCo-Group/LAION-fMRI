@@ -1,10 +1,10 @@
 """Access the LAION-fMRI stimulus images from local cache.
 
-Use after the stimulus archive has been downloaded via
+Use after the stimuli has been downloaded via
 :func:`laion_fmri.download.download_stimuli` (or
 ``laion-fmri download-stimuli``).
 
-The archive on disk is one HDF5 file with a 1-D ``images`` dataset of
+The stimuli on disk are one HDF5 file with a 1-D ``images`` dataset of
 variable-length byte strings (raw JPEG bytes), aligned by index to the
 metadata CSV. The :class:`Stimuli` class lazily memory-maps the HDF5
 and exposes name-keyed access plus optional PIL decoding.
@@ -36,7 +36,7 @@ from laion_fmri.config import get_data_dir
 
 
 class Stimuli:
-    """Lazy reader for the local stimulus archive.
+    """Lazy reader for the local stimuli.
 
     Opens the HDF5 file once on first access and keeps the handle open
     for the lifetime of the instance. Use as a context manager to
@@ -58,7 +58,7 @@ class Stimuli:
         self._csv_path = stimuli_metadata_path(self.data_dir)
         if not self._h5_path.exists() or not self._csv_path.exists():
             raise FileNotFoundError(
-                f"Stimulus archive not found under {self.data_dir / 'stimuli'}. "
+                f"stimuli not found on disk under {self.data_dir / 'stimuli'}. "
                 "Run `laion-fmri download --include-stimuli` first "
                 "(see https://laion-fmri.hebartlab.com/request)."
             )
@@ -180,7 +180,7 @@ class Stimuli:
 
 
 def load_stimuli(data_dir: str | Path | None = None) -> Stimuli:
-    """Return a :class:`Stimuli` handle to the local stimulus archive.
+    """Return a :class:`Stimuli` handle to the local stimuli.
 
     The naming mirrors :func:`laion_fmri.subject.load_subject` — the
     package-level convention is ``load_X(...)`` returning a handle
@@ -199,7 +199,7 @@ def load_stimuli(data_dir: str | Path | None = None) -> Stimuli:
     Raises
     ------
     FileNotFoundError
-        If the archive has not been downloaded yet. Run
+        If the stimuli haven't been downloaded yet. Run
         :func:`laion_fmri.download.download_stimuli` first.
     """
     return Stimuli(data_dir=data_dir)

@@ -197,12 +197,12 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
 
 
 def stimuli_dir_path(data_dir):
-    """Directory holding the stimulus archive on disk."""
+    """Directory holding the stimuli on disk."""
     return Path(data_dir) / "stimuli"
 
 
 def stimuli_h5_path(data_dir):
-    """HDF5 archive of all stimulus images, indexed 0..N-1 by row."""
+    """HDF5 file of all stimulus images, indexed 0..N-1 by row."""
     return stimuli_dir_path(data_dir) / "task-images_stimuli.h5"
 
 

@@ -201,7 +201,7 @@ proportional to batch size rather than the dataset.
 Stimulus images
 ===============
 
-Stimulus images live in a single HDF5 archive that's dataset-wide (one
+Stimulus images live in a single HDF5 file that covers the whole dataset (one
 file for all subjects, indexed by ``image_name``). The package's loader
 function mirrors :func:`load_subject`:
 
