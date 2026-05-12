@@ -104,14 +104,26 @@ def main() -> None:
         "Stimulus set in CLIP feature space (t-SNE)",
         fontsize=13, pad=10,
     )
-    ax.legend(
-        loc="lower right", frameon=False, fontsize=10,
-        markerscale=2.5, handletextpad=0.5,
+    # Legend below the plot so it cannot overlap any data points (the OOD
+    # cluster in the lower-right corner is the worst offender when the
+    # legend lives inside the axes).
+    legend = ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.02),
+        ncol=5,
+        frameon=False,
+        fontsize=10,
+        markerscale=2.5,
+        handletextpad=0.4,
+        columnspacing=1.5,
     )
 
-    fig.tight_layout()
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT_PATH, dpi=160, bbox_inches="tight")
+    fig.savefig(
+        OUT_PATH, dpi=160,
+        bbox_inches="tight",
+        bbox_extra_artists=(legend,),
+    )
     print(f"Wrote {OUT_PATH}")
 
 
