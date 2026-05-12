@@ -197,13 +197,15 @@ responses during ISI were still counted as belonging to the previous trial
 image. Top button pressing indicated a new image and second button just
 below indicated an old image.
 
-.. figure:: _static/placeholder_trial_structure.png
+.. figure:: _static/mock_session_thingsplus_ood.gif
    :align: center
-   :width: 70%
-   :alt: Trial structure timeline
+   :width: 90%
+   :alt: Animated example of trial sequence with image and blank trials
 
-   Trial structure for the main experiment. *(placeholder — replace with
-   actual figure)*
+   Example trial sequence from the main experiment, showing image trials
+   (2.5 s stimulus + 0.5 s ISI) interleaved with blank trials. The red
+   fixation dot remains on screen throughout, including during the ISI and
+   blank trials.
 
 Stimulus Presentation
 ---------------------
