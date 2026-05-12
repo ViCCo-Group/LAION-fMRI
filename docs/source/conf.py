@@ -274,6 +274,30 @@ html_show_sourcelink = True
 html_show_sphinx = False
 htmlhelp_basename = "laion-fmri"
 
+# Google requires a >=48x48 favicon to surface it in search results. Our
+# favicon.ico already contains 48/96/192px variants, but explicitly
+# declaring a 192px PNG (and apple-touch-icon) gives Googlebot and iOS
+# the unambiguous high-res icon they prefer.
+def _inject_extra_icons(app, pagename, templatename, context, doctree):
+    extra = (
+        '\n<link rel="icon" type="image/png" sizes="192x192" '
+        'href="{prefix}_static/favicon-192.png">'
+        '\n<link rel="apple-touch-icon" sizes="192x192" '
+        'href="{prefix}_static/favicon-192.png">'
+    )
+    # context["pathto"] resolves relative paths correctly from any depth.
+    pathto = context.get("pathto")
+    if pathto:
+        href = pathto("_static/favicon-192.png", 1)
+        prefix = href.rsplit("_static/", 1)[0]
+    else:
+        prefix = ""
+    context["metatags"] = context.get("metatags", "") + extra.format(prefix=prefix)
+
+
+def setup(app):
+    app.connect("html-page-context", _inject_extra_icons)
+
 # Anything under html_extra_path is copied verbatim to the build root —
 # we use it to ship robots.txt so search engines can discover sitemap.xml.
 html_extra_path = ["_extra"]
