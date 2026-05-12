@@ -86,27 +86,82 @@ detected, warn, and fall back to a working value.
 ``n_jobs`` does not affect the stimuli — it's a single
 HDF5 streamed sequentially.
 
-Stimulus-only downloads
+Stimulus-side downloads
 =======================
 
-Stimuli are dataset-wide (one HDF5 for all subjects), so when you
-want only the stimuli — no fMRI files — use the
-subject-independent function:
+Everything attached to the stimulus images -- the JPEGs themselves,
+the pretrained embeddings, the object-segmentation masks, and the
+captions -- is dataset-wide (one set of files for all subjects), so
+each comes with its own subject-independent download function.
+
+.. list-table::
+   :widths: 25 15 12 48
+   :header-rows: 1
+
+   * - Function
+     - CLI
+     - Gated?
+     - What it pulls
+   * - :func:`download_stimuli`
+     - ``download-stimuli``
+     - **Yes** (DUA)
+     - The stimulus HDF5 + metadata CSV. First call walks the
+       Data Use Agreement form; subsequent calls re-use the
+       cached request_id. See :doc:`access`.
+   * - :func:`download_embeddings`
+     - ``download-embeddings``
+     - No (CC0)
+     - One HDF5 per pretrained model -- CLIP, DINOv2, PEcore,
+       SigLIP2 (~50 MB each, ~210 MB total).
+   * - :func:`download_segmentations`
+     - ``download-segmentations``
+     - No (CC0)
+     - One HDF5 (~68 MB) + sidecar CSV with object-level
+       segmentation masks for the shared stimulus set.
+   * - :func:`download_captions`
+     - ``download-captions``
+     - No (CC0)
+     - One CSV with human + AI captions per stimulus.
+
+All four are independent -- you only need ``download_stimuli`` first
+if you want to load images themselves. The public auxiliaries
+(``download_embeddings``, ``download_segmentations``,
+``download_captions``) need no DUA and pull anonymously over public
+S3.
+
+Python:
 
 .. code-block:: python
 
-   from laion_fmri.download import download_stimuli
+   from laion_fmri.download import (
+       download_stimuli,
+       download_embeddings,
+       download_segmentations,
+       download_captions,
+   )
+
+   # Gated (Data Use Agreement on first call):
    download_stimuli()
 
-…or from the shell:
+   # Public, no DUA:
+   download_embeddings()                      # all four models
+   download_embeddings(models=["CLIP"])       # one model
+   download_segmentations()                   # ~68 MB
+   download_captions()                        # ~few MB
+
+CLI:
 
 .. code-block:: bash
 
-   laion-fmri download-stimuli
+   laion-fmri download-stimuli                # gated
+   laion-fmri download-embeddings             # all four models
+   laion-fmri download-embeddings --model CLIP DINOv2
+   laion-fmri download-segmentations
+   laion-fmri download-captions
 
-The first call walks through the Data Use Agreement form;
-subsequent calls re-use the cached access state silently. See
-:doc:`access` for the full flow.
+All download functions are **idempotent**: files whose local size
+matches the S3 size are skipped, so re-running an interrupted
+transfer only fetches what's missing.
 
 Command-line interface
 ======================
@@ -122,6 +177,9 @@ console script (installed by ``pip``/``uv``):
    laion-fmri download --subject sub-03 --include-stimuli
    laion-fmri download --subject all
    laion-fmri download-stimuli
+   laion-fmri download-embeddings
+   laion-fmri download-segmentations
+   laion-fmri download-captions
    laion-fmri request-access          # standalone DUA form, no download
    laion-fmri login --request-id lfm_...
    laion-fmri logout
