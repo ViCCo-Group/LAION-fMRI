@@ -240,6 +240,47 @@ HDF5 index.
    (``stimuli/images/*.png`` + ``stimuli/stimuli.tsv``). For the
    access-service HDF5 schema, prefer ``load_stimuli()`` above.
 
+Stimulus embeddings
+===================
+
+Four pretrained image embeddings — OpenCLIP H/14, DINOv2 L/14, PE Core
+L/14 336, and SigLIP2 SO400M Patch14 384 — are shipped as one HDF5 file
+per model, sitting next to the stimulus images. The loader follows the
+same ``load_X(...)`` shape:
+
+.. code-block:: python
+
+   import laion_fmri
+
+   # Single model (only that file is opened)
+   emb = laion_fmri.load_embeddings("CLIP")
+   emb["CLIP"].shape                # (25052, 1024)
+   emb.image_ids[:3]                # array of image filenames
+   emb.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")  # (1024,)
+
+   # All four models (handles opened lazily on first access)
+   all_emb = laion_fmri.load_embeddings()           # == "all"
+   all_emb["SigLIP2"].shape                          # (25052, 1152)
+
+   # Subject-ordered slice (joined against the stimulus metadata)
+   sub01_clip = emb.for_subject("sub-01", "CLIP")
+
+Unlike the stimulus images, the embedding files are **public on the
+S3 bucket** (CC0, no Data Use Agreement). Pull them with
+:func:`laion_fmri.download_embeddings` (or
+``laion-fmri download-embeddings``):
+
+.. code-block:: python
+
+   laion_fmri.download_embeddings()                    # all four
+   laion_fmri.download_embeddings(models="CLIP")       # one
+   laion_fmri.download_embeddings(models=["CLIP", "DINOv2"])
+
+You can also chain it onto a regular subject download with
+``download(..., include_embeddings=True)`` (or pass a list to narrow
+the models). See :doc:`/stimulus_data` for the full per-model details
+(feature dimensions, normalisation, exact model identifiers).
+
 Common workflow: per-session z-scoring + train/test split
 =========================================================
 
