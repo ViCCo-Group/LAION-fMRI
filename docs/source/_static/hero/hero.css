@@ -53,7 +53,7 @@
 .lf-hero__logo {
     height: 56px;
     width: auto;
-    align-self: flex-start;
+    align-self: center;
     opacity: 0.95;
 }
 
