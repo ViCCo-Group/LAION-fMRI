@@ -39,8 +39,7 @@
        </p>
        <p style="text-align:center;">
          A deeply-sampled 7T fMRI dataset of human vision.
-         <a href="quickstart.html">Get started</a> &middot;
-         <a href="https://laion-fmri.hebartlab.com/brain/">Brain viewer</a>
+         <a href="quickstart.html">Get started</a>
        </p>
      </noscript>
    </div>
@@ -54,8 +53,6 @@
          lede: "Five participants. 25,000+ natural images. 165 sessions of 7T BOLD with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.",
          primaryHref: "quickstart.html",
          primaryLabel: "Get started",
-         secondaryHref: "https://laion-fmri.hebartlab.com/brain/",
-         secondaryLabel: "Brain viewer",
          meta: ["5 subjects", "25K+ stimuli", "7T multi-echo", "Open access"]
        });
      });

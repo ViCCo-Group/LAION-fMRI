@@ -210,6 +210,7 @@ function buildHeroDom(opts) {
               <path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </a>
+          ${opts.secondaryHref && opts.secondaryLabel ? `
           <a class="lf-hero__btn lf-hero__btn--ghost" href="${opts.secondaryHref}" ${opts.secondaryExternal ? 'target="_blank" rel="noopener"' : ""}>
             ${opts.secondaryLabel}
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -217,7 +218,7 @@ function buildHeroDom(opts) {
                 ? '<path d="M14 5h5v5M19 5l-9 9M5 9v10h10" stroke-linecap="round" stroke-linejoin="round"/>'
                 : '<path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>'}
             </svg>
-          </a>
+          </a>` : ""}
         </div>
         <div class="lf-hero__meta">
           ${opts.meta.map((s) => `<span>${s}</span>`).join("")}
@@ -406,9 +407,9 @@ export async function init(options = {}) {
         "Preprocessed BOLD, GLMsingle betas, and ready-to-use splits.",
     primaryHref: options.primaryHref || "quickstart.html",
     primaryLabel: options.primaryLabel || "Quickstart",
-    secondaryHref:
-      options.secondaryHref || "https://laion-fmri.hebartlab.com/brain/",
-    secondaryLabel: options.secondaryLabel || "Brain viewer",
+    // Secondary button is opt-in: leave both unset to render only the primary CTA.
+    secondaryHref: options.secondaryHref || null,
+    secondaryLabel: options.secondaryLabel || null,
     secondaryExternal: options.secondaryExternal !== false,
     meta:
       options.meta || [
