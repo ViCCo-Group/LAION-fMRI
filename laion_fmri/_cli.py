@@ -98,6 +98,14 @@ def main(argv=None):
     )
 
     subparsers.add_parser(
+        "download-segmentations",
+        help=(
+            "Download per-stimulus object-segmentation masks "
+            "(public, no DUA, ~68 MB)."
+        ),
+    )
+
+    subparsers.add_parser(
         "request-access",
         help=(
             "Walk through the LAION-fMRI Data Use Agreement form and "
@@ -135,6 +143,8 @@ def main(argv=None):
         _handle_download_stimuli(args)
     elif args.command == "download-embeddings":
         _handle_download_embeddings(args)
+    elif args.command == "download-segmentations":
+        _handle_download_segmentations(args)
     elif args.command == "request-access":
         _handle_request_access(args)
     elif args.command == "login":
@@ -191,6 +201,12 @@ def _handle_download_embeddings(args):
     from laion_fmri.download import download_embeddings
     models = args.model if args.model else "all"
     download_embeddings(models=models, n_jobs=args.n_jobs)
+
+
+def _handle_download_segmentations(args):
+    """Handle the download-segmentations subcommand."""
+    from laion_fmri.download import download_segmentations
+    download_segmentations()
 
 
 def _handle_request_access(args):

@@ -1,10 +1,10 @@
 """Subject class for accessing per-subject data files.
 
-Every accessor maps to exactly one file in the bucket layout:
-no averaging, concatenation, or rebinning across sessions.
+Every accessor maps to exactly one file in the bucket layout: no
+averaging, concatenation, or rebinning across sessions, with one
+exception -- :attr:`Subject.metadata` aggregates the per-session trial
+TSVs into one trial table for convenience.
 """
-
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -93,6 +93,14 @@ class Subject:
     def __init__(self, subject_id, data_dir):
         self._subject_id = subject_id
         self._data_dir = data_dir
+        # Lazily-built handles / caches.
+        self._stim_handle = None
+        self._stim_metadata_cache = None
+        self._trial_table_cache = None
+        # Proxy namespaces (instantiated eagerly; their work is lazy).
+        self._images_ns = _SubjectImages(self)
+        self._embeddings_ns = _SubjectEmbeddings(self)
+        self._segmentations_ns = _SubjectSegmentations(self)
 
     @property
     def subject_id(self):
@@ -198,7 +206,7 @@ class Subject:
         ----------
         stimuli : "shared", "unique", or None
         """
-        meta = self.get_stimulus_metadata()
+        meta = self._stim_metadata()
         if stimuli is None:
             return len(meta)
         if stimuli == "shared":
@@ -373,7 +381,7 @@ class Subject:
                 trials["label"].str.startswith("shared_").to_numpy()
             )
         elif "stimulus_id" in trials.columns:
-            meta = self.get_stimulus_metadata()
+            meta = self._stim_metadata()
             is_shared = dict(zip(
                 meta["image_name"],
                 meta["unique_or_shared"] == "shared",
@@ -612,98 +620,14 @@ class Subject:
             ),
         )
 
-    # ── Stimulus images ─────────────────────────────────────────
-
-    def get_images(self, stimuli=None, format="pil"):
-        """Load stimulus images (when present on disk).
-
-        Reads from the HDF5 file populated by
-        :func:`laion_fmri.download.download_stimuli`.
-        """
-        from laion_fmri.stimuli import Stimuli
-
-        if not self.has_stimuli():
-            raise StimuliNotDownloadedError(
-                "stimuli not found on disk. Run "
-                "`laion-fmri download-stimuli` "
-                "(or laion_fmri.download_stimuli())."
-            )
-
-        meta = self.get_stimulus_metadata()
-        if stimuli is not None:
-            if stimuli == "shared":
-                meta = meta[meta["unique_or_shared"] == "shared"]
-            elif stimuli == "unique":
-                meta = meta[meta["unique_or_shared"] == "unique"]
-            else:
-                raise ValueError(
-                    f"stimuli must be 'shared' or 'unique', "
-                    f"got {stimuli!r}"
-                )
-
-        stim = Stimuli(data_dir=self._data_dir)
-        try:
-            images = [stim.image(int(idx)) for idx in meta.index]
-        finally:
-            stim.close()
-
-        if format == "pil":
-            return images
-        if format == "numpy":
-            return np.stack(
-                [np.array(img) for img in images],
-            ).astype(np.uint8)
-        if format == "torch":
-            warnings.warn(
-                "torch format yields a CHW float32 array. Use "
-                "to_torch_dataset() for full torchvision support.",
-                stacklevel=2,
-            )
-            arr = np.stack(
-                [np.array(img) for img in images],
-            ).astype(np.float32) / 255.0
-            return arr.transpose(0, 3, 1, 2)
-        raise ValueError(f"Unknown format: {format!r}")
-
-    def get_image(self, idx):
-        """Load a single stimulus image by index."""
-        from laion_fmri.stimuli import Stimuli
-
-        if not self.has_stimuli():
-            raise StimuliNotDownloadedError(
-                "stimuli not found on disk. Run "
-                "`laion-fmri download-stimuli`."
-            )
-        stim = Stimuli(data_dir=self._data_dir)
-        try:
-            return stim.image(idx)
-        finally:
-            stim.close()
-
-    # ── Stimulus metadata ───────────────────────────────────────
-
-    def get_stimulus_metadata(self):
-        """Load the dataset-wide stimulus metadata CSV.
-
-        Columns: ``image_name``, ``dataset``, ``participant``,
-        ``unique_or_shared``, ``n_reps``. Row ``i`` corresponds to
-        HDF5 index ``i``.
-        """
-        path = stimuli_metadata_path(self._data_dir)
-        if not path.exists():
-            raise StimuliNotDownloadedError(
-                f"Stimulus metadata not found at {path}. Run "
-                "`laion-fmri download-stimuli` "
-                "(or check has_stimuli() first)."
-            )
-        return pd.read_csv(path)
+    # ── Stimulus-side data: images, embeddings, segmentations ──
 
     def has_stimuli(self):
-        """Return True if the stimuli (HDF5 + CSV) is on disk.
+        """Return True if the stimuli (HDF5 + CSV) are on disk.
 
-        Useful as a guard before calling stimulus-dependent methods
-        (``get_n_stimuli``, ``get_stimulus_metadata``, ``get_images``,
-        ``get_trial_stimulus_indices``, ``to_torch_dataset``) when the
+        Useful as a guard before touching stimulus-side data
+        (:attr:`metadata`, :attr:`images`, :attr:`embeddings`,
+        :attr:`segmentations`, :meth:`to_torch_dataset`) when the
         archive hasn't been downloaded yet.
         """
         return (
@@ -711,42 +635,107 @@ class Subject:
             and stimuli_h5_path(self._data_dir).exists()
         )
 
-    # ── Trial-to-stimulus mapping ───────────────────────────────
+    @property
+    def metadata(self):
+        """Trial table for this subject, concatenated across all sessions.
 
-    def get_trial_stimulus_indices(self, session):
-        """Map each trial to its stimulus-metadata row index.
-
-        Parameters
-        ----------
-        session : str or list of str
-            A list returns a dict keyed by session ID.
+        One row per single-trial beta. Columns include everything from
+        the per-session events TSV plus the derived columns
+        ``session``, ``session_trial``, ``image_name``, ``stim_idx``,
+        ``unique_or_shared``, and ``dataset``.
 
         Returns
         -------
-        np.ndarray or dict[str, np.ndarray]
+        pandas.DataFrame
+            Indexed 0..n_total_trials-1. Each row's index is the
+            "global trial index" used by :attr:`images`,
+            :attr:`embeddings`, and :attr:`segmentations`.
         """
-        if isinstance(session, (list, tuple)):
-            return {
-                s: self.get_trial_stimulus_indices(session=s)
-                for s in session
-            }
-        trials = self.get_trial_info(session=session)
-        meta = self.get_stimulus_metadata()
-        idx_map = {
-            sid: i for i, sid in enumerate(meta["image_name"])
+        if self._trial_table_cache is None:
+            self._trial_table_cache = self._build_trial_table()
+        return self._trial_table_cache
+
+    @property
+    def images(self):
+        """Per-trial stimulus images (PIL + raw bytes)."""
+        return self._images_ns
+
+    @property
+    def embeddings(self):
+        """Per-trial pretrained embeddings (CLIP, DINOv2, ...)."""
+        return self._embeddings_ns
+
+    @property
+    def segmentations(self):
+        """Per-trial object-segmentation masks (shared images only)."""
+        return self._segmentations_ns
+
+    # ── Stimulus-side internals ─────────────────────────────────
+
+    def _stim(self):
+        """Cached :class:`Stimuli` handle.
+
+        Built on first access; reused for all stimulus-side reads.
+        """
+        if self._stim_handle is None:
+            from laion_fmri.stimuli import Stimuli
+            self._stim_handle = Stimuli(data_dir=self._data_dir)
+        return self._stim_handle
+
+    def _stim_metadata(self):
+        """Dataset-wide stimulus metadata CSV (cached)."""
+        if self._stim_metadata_cache is None:
+            path = stimuli_metadata_path(self._data_dir)
+            if not path.exists():
+                raise StimuliNotDownloadedError(
+                    f"Stimulus metadata not found at {path}. Run "
+                    "`laion-fmri download-stimuli` "
+                    "(or check has_stimuli() first)."
+                )
+            self._stim_metadata_cache = pd.read_csv(path)
+        return self._stim_metadata_cache
+
+    def _build_trial_table(self):
+        """Concatenate every session's events TSV into one trial table."""
+        stim_meta = self._stim_metadata()
+        name_to_stim_idx = {
+            n: i for i, n in enumerate(stim_meta["image_name"])
         }
-        # Dual schema: real bucket trial TSVs use ``label``,
-        # synthetic / future trials may use ``stimulus_id``.
-        if "label" in trials.columns:
-            ids = trials["label"]
-        elif "stimulus_id" in trials.columns:
-            ids = trials["stimulus_id"]
-        else:
-            raise ValueError(
-                "Trial info has neither 'label' nor 'stimulus_id' "
-                "column; cannot map trials to stimuli."
+        name_to_us = dict(zip(
+            stim_meta["image_name"], stim_meta["unique_or_shared"],
+        ))
+        name_to_dataset = dict(zip(
+            stim_meta["image_name"], stim_meta["dataset"],
+        ))
+
+        parts = []
+        for ses in self.get_sessions():
+            trials = self.get_trial_info(session=ses).copy()
+            if "label" in trials.columns:
+                names = trials["label"].astype(str)
+            elif "stimulus_id" in trials.columns:
+                names = trials["stimulus_id"].astype(str)
+            else:
+                raise ValueError(
+                    f"Trial info for {ses} has neither 'label' nor "
+                    "'stimulus_id'; cannot map trials to stimuli."
+                )
+            trials["session"] = ses
+            trials["session_trial"] = np.arange(len(trials))
+            trials["image_name"] = names.values
+            trials["stim_idx"] = names.map(name_to_stim_idx).values
+            trials["unique_or_shared"] = names.map(name_to_us).values
+            trials["dataset"] = names.map(name_to_dataset).values
+            parts.append(trials)
+
+        if not parts:
+            return pd.DataFrame(
+                columns=[
+                    "session", "session_trial", "image_name", "stim_idx",
+                    "unique_or_shared", "dataset",
+                ]
             )
-        return np.array([idx_map[sid] for sid in ids])
+        return pd.concat(parts, ignore_index=True)
 
     # ── Brain space ─────────────────────────────────────────────
 
@@ -797,3 +786,132 @@ class Subject:
         """Wrap this subject as a ``torch.utils.data.Dataset``."""
         from laion_fmri.torch_data import LaionFMRIDataset
         return LaionFMRIDataset(self, **kwargs)
+
+
+# ── Per-trial namespace proxies on Subject ───────────────────────
+
+
+def _filter_metadata(meta, session):
+    """Filter the trial table by session, preserving the global index."""
+    if session is None:
+        return meta
+    return meta[meta["session"] == session]
+
+
+class _SubjectImages:
+    """``sub.images`` namespace: per-trial image access.
+
+    Trial indices are global (rows of :attr:`Subject.metadata`).
+    """
+
+    def __init__(self, subject):
+        self._subject = subject
+
+    def __len__(self):
+        return len(self._subject.metadata)
+
+    def __getitem__(self, trial_idx):
+        """Raw JPEG bytes for the image shown on trial ``trial_idx``."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().images[name]
+
+    def get(self, trial_idx):
+        """Decoded :class:`PIL.Image.Image` for trial ``trial_idx``."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().images.get(name)
+
+    def all(self, session=None):
+        """Iterator yielding PIL images in trial order.
+
+        Parameters
+        ----------
+        session : str, optional
+            Restrict to one session ID (e.g. ``"ses-01"``).
+        """
+        meta = _filter_metadata(self._subject.metadata, session)
+        stim_images = self._subject._stim().images
+        for name in meta["image_name"]:
+            yield stim_images.get(name)
+
+    def array(self, session=None):
+        """``(n_trials, H, W, 3)`` uint8 stack of images in trial order."""
+        return np.stack(
+            [np.array(img) for img in self.all(session=session)],
+        ).astype(np.uint8)
+
+
+class _SubjectEmbeddings:
+    """``sub.embeddings`` namespace: per-trial pretrained features."""
+
+    def __init__(self, subject):
+        self._subject = subject
+
+    @property
+    def models(self):
+        """Models available on disk for this subject's data dir."""
+        return self._subject._stim().embeddings.models
+
+    def get(self, model, trial_idx):
+        """Embedding row ``(D,)`` for one trial."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().embeddings.get(model, name)
+
+    def all(self, model, session=None):
+        """``(n_trials, D)`` array in trial order.
+
+        Parameters
+        ----------
+        model : str
+            One of :data:`laion_fmri.embeddings.AVAILABLE_MODELS`.
+        session : str, optional
+            Restrict to one session ID.
+        """
+        meta = _filter_metadata(self._subject.metadata, session)
+        names = meta["image_name"].tolist()
+        return self._subject._stim().embeddings.get(model, names)
+
+
+class _SubjectSegmentations:
+    """``sub.segmentations`` namespace: per-trial object masks.
+
+    Note that masks ship only for the **shared** stimulus set; for
+    unique-image trials all methods behave as if no masks exist
+    (``nouns`` returns ``[]``, ``has_image`` returns ``False``, ``get``
+    raises :class:`KeyError`).
+    """
+
+    def __init__(self, subject):
+        self._subject = subject
+
+    def has_image(self, trial_idx):
+        """True if the image shown on this trial has any masks."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().segmentations.has_image(name)
+
+    def nouns(self, trial_idx, localized_only=True):
+        """Nouns present in the image shown on this trial.
+
+        Returns ``[]`` (not an error) when the trial showed a
+        subject-unique image, since masks ship only for the shared set.
+        """
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().segmentations.nouns(
+            name, localized_only=localized_only,
+        )
+
+    def for_image(self, trial_idx):
+        """Metadata slice for the image shown on this trial (may be empty)."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().segmentations.for_image(name)
+
+    def get(self, trial_idx, noun, instance=0):
+        """Mask for ``(this trial's image, noun, instance)``.
+
+        Raises
+        ------
+        KeyError
+            If the trial's image is uncovered (unique stimulus) or the
+            requested ``(noun, instance)`` doesn't exist.
+        """
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().segmentations.get(name, noun, instance)

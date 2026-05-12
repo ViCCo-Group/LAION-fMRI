@@ -588,37 +588,31 @@ def test_get_trial_info_list_of_sessions_returns_dict(
         assert all(df["session"] == ses)
 
 
-# ── Stimulus images ────────────────────────────────────────────
+# ── Stimulus images via sub.images namespace ───────────────────
 
 
-def test_get_images_pil(configured_subject):
+def test_sub_images_get_returns_pil(configured_subject):
     from PIL import Image
 
-    images = configured_subject.get_images()
-    assert len(images) == N_STIMULI
-    assert isinstance(images[0], Image.Image)
+    img = configured_subject.images.get(0)
+    assert isinstance(img, Image.Image)
 
 
-def test_get_images_shared(configured_subject):
-    images = configured_subject.get_images(stimuli="shared")
-    assert len(images) == N_SHARED
+def test_sub_images_array(configured_subject):
+    arr = configured_subject.images.array()
+    n_total = N_SESSIONS * N_TRIALS_PER_SESSION
+    assert arr.shape[0] == n_total
+    assert arr.shape[3] == 3
+    assert arr.dtype == np.uint8
 
 
-def test_get_images_numpy(configured_subject):
-    images = configured_subject.get_images(format="numpy")
-    assert images.shape[0] == N_STIMULI
-    assert images.shape[3] == 3
-    assert images.dtype == np.uint8
+def test_sub_images_all_session_filter(configured_subject):
+    images = list(configured_subject.images.all(session="ses-01"))
+    assert len(images) == N_TRIALS_PER_SESSION
 
 
-def test_get_image_single(configured_subject):
-    from PIL import Image
-
-    assert isinstance(configured_subject.get_image(0), Image.Image)
-
-
-def test_get_images_not_downloaded_raises(tmp_path, monkeypatch):
-    """Subject without stimuli directory raises error."""
+def test_sub_images_not_downloaded_raises(tmp_path, monkeypatch):
+    """Subject without stimuli directory raises error on access."""
     data_dir = tmp_path / "no_stim"
     data_dir.mkdir()
     (data_dir / ".laion_fmri").mkdir()
@@ -639,23 +633,28 @@ def test_get_images_not_downloaded_raises(tmp_path, monkeypatch):
 
     sub = Subject("sub-01", str(data_dir))
     with pytest.raises(StimuliNotDownloadedError):
-        sub.get_images()
+        _ = sub.metadata
 
 
-# ── Stimulus metadata ──────────────────────────────────────────
+# ── sub.metadata: aggregated trial table ───────────────────────
 
 
-def test_get_stimulus_metadata(configured_subject):
-    df = configured_subject.get_stimulus_metadata()
-    assert "image_name" in df.columns
-    assert "unique_or_shared" in df.columns
-    assert len(df) == N_STIMULI
+def test_sub_metadata_columns_and_size(configured_subject):
+    df = configured_subject.metadata
+    n_total = N_SESSIONS * N_TRIALS_PER_SESSION
+    assert len(df) == n_total
+    for col in (
+        "session", "session_trial", "image_name",
+        "stim_idx", "unique_or_shared", "dataset",
+    ):
+        assert col in df.columns
+    assert df["session"].nunique() == N_SESSIONS
 
 
-def test_get_stimulus_metadata_raises_when_tsv_missing(
+def test_sub_metadata_raises_when_stim_csv_missing(
     tmp_path, monkeypatch,
 ):
-    """No stimuli/stimuli.tsv -> StimuliNotDownloadedError, not pd error."""
+    """No stimuli metadata CSV -> StimuliNotDownloadedError."""
     data_dir = tmp_path / "no_stim_meta"
     data_dir.mkdir()
     (data_dir / ".laion_fmri").mkdir()
@@ -672,7 +671,7 @@ def test_get_stimulus_metadata_raises_when_tsv_missing(
 
     sub = Subject("sub-01", str(data_dir))
     with pytest.raises(StimuliNotDownloadedError):
-        sub.get_stimulus_metadata()
+        _ = sub.metadata
 
 
 def test_has_stimuli_false_when_missing(tmp_path, monkeypatch):
@@ -698,70 +697,21 @@ def test_has_stimuli_true_when_present(configured_subject):
     assert configured_subject.has_stimuli() is True
 
 
-# ── Trial-to-stimulus mapping ──────────────────────────────────
+# ── Trial-to-stimulus mapping via sub.metadata.stim_idx ────────
 
 
-def test_get_trial_stimulus_indices_per_session(configured_subject):
-    indices = configured_subject.get_trial_stimulus_indices(
-        session="ses-01",
-    )
+def test_sub_metadata_stim_idx_range(configured_subject):
+    df = configured_subject.metadata
+    indices = df.query("session == 'ses-01'")["stim_idx"].to_numpy()
     assert isinstance(indices, np.ndarray)
     assert len(indices) == N_TRIALS_PER_SESSION
     assert indices.min() >= 0
     assert indices.max() < N_STIMULI
 
 
-def test_get_trial_stimulus_indices_list_returns_dict(
-    configured_subject,
-):
-    result = configured_subject.get_trial_stimulus_indices(
-        session=["ses-01", "ses-02"],
-    )
-    assert isinstance(result, dict)
-    assert set(result) == {"ses-01", "ses-02"}
-    for arr in result.values():
-        assert isinstance(arr, np.ndarray)
-        assert len(arr) == N_TRIALS_PER_SESSION
-
-
-def test_get_trial_stimulus_indices_uses_label_column(
-    configured_subject, monkeypatch,
-):
-    """Real-bucket schema: trials carry a ``label`` column whose
-    values are the same identifiers stored in the metadata table's
-    ``stimulus_id`` column. ``get_trial_stimulus_indices`` must
-    map from one to the other; today it assumes ``stimulus_id``
-    on the trials side and raises ``KeyError`` against real data.
-    """
-    real_meta = pd.DataFrame({
-        "image_name": [
-            "shared_12rep_LAION_cluster_1_i0.jpg",
-            "unique_LAION_initial_cluster_2_i1.jpg",
-        ],
-        "unique_or_shared": ["shared", "unique"],
-    })
-    label_trials = pd.DataFrame({
-        "session": ["ses-01"] * 4,
-        "run": [1] * 4,
-        "beta_index": list(range(4)),
-        "label": [
-            "shared_12rep_LAION_cluster_1_i0.jpg",
-            "unique_LAION_initial_cluster_2_i1.jpg",
-            "unique_LAION_initial_cluster_2_i1.jpg",
-            "shared_12rep_LAION_cluster_1_i0.jpg",
-        ],
-    })
-    monkeypatch.setattr(
-        configured_subject, "get_trial_info",
-        lambda session=None: label_trials,
-    )
-    monkeypatch.setattr(
-        configured_subject, "get_stimulus_metadata",
-        lambda: real_meta,
-    )
-
-    indices = configured_subject.get_trial_stimulus_indices(
-        session="ses-01",
-    )
-    assert isinstance(indices, np.ndarray)
-    assert indices.tolist() == [0, 1, 1, 0]
+def test_sub_metadata_per_session_breakdown(configured_subject):
+    df = configured_subject.metadata
+    by_session = df.groupby("session").size().to_dict()
+    assert set(by_session) == {"ses-01", "ses-02"}
+    for n in by_session.values():
+        assert n == N_TRIALS_PER_SESSION

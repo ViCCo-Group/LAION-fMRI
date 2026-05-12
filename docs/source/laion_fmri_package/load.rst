@@ -171,8 +171,8 @@ Memory & shape considerations
 =============================
 
 Every accessor returns a fresh ndarray; nothing is cached.
-That keeps the loader predictable, but means **you control
-how much you pull into RAM**. A few rules of thumb:
+**You control how much data you pull into RAM.** A few rules
+of thumb:
 
 * **One whole-brain session of betas** is ``n_trials × n_voxels``
   ``float32``. With ~1000 trials and ~270k brain-mask voxels,
@@ -198,96 +198,81 @@ PyTorch users: ``to_torch_dataset(...)`` exposes the same
 accessors lazily per ``__getitem__`` call, so total RAM stays
 proportional to batch size rather than the dataset.
 
-Stimulus images
-===============
+Stimuli: images, embeddings, segmentations
+==========================================
 
-Stimulus images live in a single HDF5 file that covers the whole dataset (one
-file for all subjects, indexed by ``image_name``). The package's loader
-function mirrors :func:`load_subject`:
+Everything attached *per stimulus image* lives behind a single hub,
+:func:`load_stimuli`. The hub exposes three namespaces -- ``images``,
+``embeddings``, ``segmentations`` -- each with a uniform ``get()``
+shape and modality-specific helpers.
 
 .. code-block:: python
 
    import laion_fmri
 
-   stim = laion_fmri.load_stimuli()           # mirrors load_subject(...)
-   stim.metadata.head()                        # pandas DataFrame
-   len(stim)                                   # 25052
+   stim = laion_fmri.load_stimuli()
+   stim.metadata.head()                       # pandas DataFrame, 25052 rows
 
-   # Two equivalent lookups: by integer index or by image_name
-   jpeg_bytes = stim[0]
-   jpeg_bytes = stim["shared_12rep_LAION_cluster_1003_i0.jpg"]
-
-   # Decoded PIL.Image (requires Pillow)
-   img = stim.image(0)
-
-   # Iterate (name, bytes) in metadata order
-   for name, jpeg in stim:
+   # ── Stimulus images ─────────────────────────────────────────
+   img = stim.images.get("shared_12rep_LAION_cluster_1003_i0.jpg")  # PIL
+   jpeg = stim.images["shared_12rep_LAION_cluster_1003_i0.jpg"]      # raw bytes
+   stim.images.names()[:3]
+   for name, raw in stim.images:
        ...
 
-The HDF5 + metadata CSV are downloaded via the gated access service —
-run :func:`laion_fmri.download_stimuli` (or
-``laion-fmri download-stimuli``) first. See :doc:`access` for
-the full flow.
+   # ── Embeddings (CLIP, DINOv2, PEcore, SigLIP2) ──────────────
+   stim.embeddings.models                     # ['CLIP', 'DINOv2', 'PEcore', 'SigLIP2']
+   stim.embeddings["CLIP"].shape              # (25052, 1024) float16
+   stim.embeddings.get(
+       "CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                          # (1024,) vector
 
-The metadata CSV columns are ``image_name``, ``dataset``,
-``participant``, ``unique_or_shared``, ``n_reps``; row order matches the
-HDF5 index.
+   # ── Object-segmentation masks (shared images only) ──────────
+   stim.segmentations.nouns(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                          # ['fingers', 'hand', ...]
+   stim.segmentations.get(
+       "shared_12rep_LAION_cluster_1003_i0.jpg", "fingers",
+   )                                          # (1000, 1000) uint8
+
+Files are opened lazily: touching ``stim.embeddings`` does not open
+the embedding HDF5 until you actually look up a vector. The
+modality-specific HDF5 files are independent downloads:
+
+.. code-block:: python
+
+   # Stimulus images (gated; Data Use Agreement on first call):
+   laion_fmri.download_stimuli()
+
+   # Embeddings (public, CC0):
+   laion_fmri.download_embeddings()
+   laion_fmri.download_embeddings(models=["CLIP", "DINOv2"])
+
+   # Object segmentations (public, CC0, ~68 MB):
+   laion_fmri.download_segmentations()
+
+CLI equivalents: ``laion-fmri download-stimuli``,
+``laion-fmri download-embeddings``, ``laion-fmri download-segmentations``.
 
 .. note::
 
-   :class:`Subject` has older stimulus methods (``get_images``,
-   ``get_image``, ``get_stimulus_metadata``) that expect a per-PNG layout
-   (``stimuli/images/*.png`` + ``stimuli/stimuli.tsv``). For the
-   access-service HDF5 schema, prefer ``load_stimuli()`` above.
+   Segmentations cover the **shared** stimulus set only (1,492 images
+   viewed by every subject); subject-unique images carry no masks.
+   The listing methods (``nouns``, ``for_image``, ``has_image``)
+   return empty results -- not errors -- for uncovered images, so
+   loops across all trials need no special-casing.
 
-Stimulus embeddings
-===================
-
-Four pretrained image embeddings — OpenCLIP H/14, DINOv2 L/14, PE Core
-L/14 336, and SigLIP2 SO400M Patch14 384 — are shipped as one HDF5 file
-per model, sitting next to the stimulus images. The loader follows the
-same ``load_X(...)`` shape:
-
-.. code-block:: python
-
-   import laion_fmri
-
-   # Single model (only that file is opened)
-   emb = laion_fmri.load_embeddings("CLIP")
-   emb["CLIP"].shape                # (25052, 1024)
-   emb.image_ids[:3]                # array of image filenames
-   emb.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")  # (1024,)
-
-   # All four models (handles opened lazily on first access)
-   all_emb = laion_fmri.load_embeddings()           # == "all"
-   all_emb["SigLIP2"].shape                          # (25052, 1152)
-
-   # Subject-ordered slice (joined against the stimulus metadata)
-   sub01_clip = emb.for_subject("sub-01", "CLIP")
-
-Unlike the stimulus images, the embedding files are **public on the
-S3 bucket** (CC0, no Data Use Agreement). Pull them with
-:func:`laion_fmri.download_embeddings` (or
-``laion-fmri download-embeddings``):
-
-.. code-block:: python
-
-   laion_fmri.download_embeddings()                    # all four
-   laion_fmri.download_embeddings(models="CLIP")       # one
-   laion_fmri.download_embeddings(models=["CLIP", "DINOv2"])
-
-You can also chain it onto a regular subject download with
-``download(..., include_embeddings=True)`` (or pass a list to narrow
-the models). See :doc:`/stimulus_data` for the full per-model details
-(feature dimensions, normalisation, exact model identifiers).
+See :doc:`/stimulus_data` for the per-model embedding details
+(feature dimensions, normalisation, exact model identifiers) and a
+deeper tour of the segmentation file layout.
 
 Common workflow: per-session z-scoring + train/test split
 =========================================================
 
-A frequent recipe -- load every session for one subject,
-z-score betas within each session, then split shared vs.
-unique stimuli into test vs. train -- composes from the
-existing accessors:
+A frequent recipe is to load every session for one subject,
+z-score betas within each session, then split shared vs. unique
+stimuli into test vs. train. This composes from the existing
+accessors:
 
 .. code-block:: python
 
@@ -372,9 +357,10 @@ The package raises a small, named exception hierarchy from
    right ``ses``/``desc``/``stat`` filters.
 
 ``StimuliNotDownloadedError`` (subclass of ``FileNotFoundError``)
-   Raised by ``get_images`` / ``get_image`` /
-   ``get_stimulus_metadata`` when the stimuli directory has
-   not been mirrored yet. Re-run ``download(...,
+   Raised by stimulus-side accessors (``Subject.metadata``,
+   ``Subject.images``/``embeddings``/``segmentations``,
+   ``Subject.to_torch_dataset``, ``load_stimuli``) when the stimuli
+   directory has not been mirrored yet. Re-run ``download(...,
    include_stimuli=True)``.
 
 ``SubjectNotFoundError`` (subclass of ``ValueError``)

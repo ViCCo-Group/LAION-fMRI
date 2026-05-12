@@ -85,16 +85,16 @@ class LaionFMRIDataset:
             mask=mask,
             nc_threshold=nc_threshold,
         )
-        self._stim_meta = subject.get_stimulus_metadata()
-        self._trial_info = subject.get_trial_info(session=session)
-        self._stim_indices = subject.get_trial_stimulus_indices(
-            session=session,
+        # Slice the subject's global trial table down to this session,
+        # preserving global trial indices.
+        trial_table = subject.metadata
+        self._session_rows = trial_table[
+            trial_table["session"] == session
+        ].reset_index(drop=False).rename(columns={"index": "global_trial"})
+        self._rep_indices = _resolve_rep_indices(
+            subject.get_trial_info(session=session),
         )
-        self._rep_indices = _resolve_rep_indices(self._trial_info)
-
-        # Stimulus images come from the HDF5 file (lazy reads).
-        from laion_fmri.stimuli import Stimuli
-        self._stimuli = Stimuli(data_dir=subject._data_dir)
+        self._subject = subject
 
     def __len__(self):
         return len(self._betas)
@@ -104,8 +104,8 @@ class LaionFMRIDataset:
             self._betas[idx], dtype=self._torch.float32,
         )
 
-        stim_idx = int(self._stim_indices[idx])
-        img = self._stimuli.image(stim_idx).convert("RGB")
+        global_trial = int(self._session_rows.iloc[idx]["global_trial"])
+        img = self._subject.images.get(global_trial).convert("RGB")
         img_array = np.array(img, dtype=np.float32) / 255.0
         img_tensor = self._torch.tensor(
             img_array.transpose(2, 0, 1),
@@ -117,9 +117,7 @@ class LaionFMRIDataset:
         return {
             "betas": betas_tensor,
             "image": img_tensor,
-            "image_name": self._stim_meta.iloc[stim_idx][
-                "image_name"
-            ],
+            "image_name": self._session_rows.iloc[idx]["image_name"],
             "session": self._session,
             "rep_index": int(self._rep_indices[idx]),
         }

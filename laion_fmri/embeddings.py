@@ -22,20 +22,23 @@ Each file has three datasets of length 25,052: ``embedding`` (the
 and ``valid`` (per-row validity flag). All four files share the same
 ``image_ids`` order.
 
-Quick start
------------
+You normally do not construct :class:`Embeddings` directly. Reach it
+through the :class:`~laion_fmri.Stimuli` hub:
 
 >>> import laion_fmri
->>> emb = laion_fmri.load_embeddings("CLIP")
->>> emb["CLIP"].shape                 # (25052, 1024)
->>> emb.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")
->>> sub01_clip = emb.for_subject("sub-01", "CLIP")
+>>> stim = laion_fmri.load_stimuli()
+>>> stim.embeddings["CLIP"].shape          # (25052, 1024)
+>>> stim.embeddings.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")
+
+For subject-aligned arrays, use the Subject namespace:
+
+>>> sub = laion_fmri.load_subject(1)
+>>> features = sub.embeddings.all("CLIP")  # (n_trials, D)
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable
 
 import h5py
 import numpy as np
@@ -57,8 +60,8 @@ class Embeddings:
     for the lifetime of the instance. Use as a context manager to
     explicitly release the handles::
 
-        with load_embeddings("CLIP") as emb:
-            v = emb.get("CLIP", "img.jpg")
+        with Stimuli() as stim:
+            v = stim.embeddings.get("CLIP", "img.jpg")
 
     Parameters
     ----------
@@ -181,29 +184,6 @@ class Embeddings:
         inverse[order] = np.arange(len(order))
         return sorted_rows[inverse]
 
-    def for_subject(self, subject: str, model: str) -> np.ndarray:
-        """Embedding rows for one subject's full stimulus set.
-
-        Joins the embedding file against the stimulus metadata
-        (``task-images_metadata.csv``) and returns rows in the
-        metadata's row order — the canonical per-subject stimulus
-        order.
-
-        Parameters
-        ----------
-        subject : str
-            BIDS subject ID (e.g. ``"sub-01"``).
-        model : str
-            One of :data:`AVAILABLE_MODELS`.
-        """
-        self._require_model(model)
-        meta = self._metadata()
-        mask = (meta["participant"] == subject) | (
-            meta["unique_or_shared"] == "shared"
-        )
-        names = meta.loc[mask, "image_name"].tolist()
-        return self.get(model, names)
-
     # ── internals ─────────────────────────────────────────────
 
     def _handle(self, model: str) -> h5py.File:
@@ -237,45 +217,3 @@ class Embeddings:
                 )
             self._meta = pd.read_csv(csv_path)
         return self._meta
-
-
-# ── module-level loader (mirrors load_stimuli / load_subject) ──
-
-
-def load_embeddings(
-    models: str | Iterable[str] = "all",
-    data_dir: str | Path | None = None,
-) -> Embeddings:
-    """Return an :class:`Embeddings` handle for one or more models.
-
-    Files are opened lazily on first access per model, so passing
-    ``"all"`` doesn't pay the file-open cost until a given model is
-    touched.
-
-    Parameters
-    ----------
-    models : str or iterable of str
-        Either a single model label (``"CLIP"``), an iterable of
-        labels (``["CLIP", "DINOv2"]``), or ``"all"`` (default) for
-        every model in :data:`AVAILABLE_MODELS`.
-    data_dir : str or Path, optional
-        Override the configured data directory.
-
-    Returns
-    -------
-    Embeddings
-
-    Raises
-    ------
-    FileNotFoundError
-        If any requested model's HDF5 is missing on disk.
-    ValueError
-        If ``models`` contains an unknown label.
-    """
-    if isinstance(models, str):
-        selected = (
-            tuple(AVAILABLE_MODELS) if models == "all" else (models,)
-        )
-    else:
-        selected = tuple(models)
-    return Embeddings(selected, data_dir=data_dir)

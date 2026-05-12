@@ -301,8 +301,13 @@ print(f"Trials in {session}: {len(trial_info)}")
 print(trial_info.head())
 
 if sub.has_stimuli():
-    stim_meta = sub.get_stimulus_metadata()
-    print(f"Stimulus metadata rows: {len(stim_meta)}")
+    # The subject's full trial table -- one row per trial across all
+    # sessions, with the image_name already joined in.
+    trials = sub.metadata
+    print(f"Trial table rows: {len(trials)} (across all sessions)")
+    print(trials[
+        ["session", "session_trial", "image_name", "unique_or_shared"]
+    ].head())
 else:
     print("Stimulus metadata not yet uploaded to the bucket.")
 
@@ -310,15 +315,19 @@ else:
 # Stimulus images
 # ----------------
 #
+# Subjects expose images on a per-trial basis via the ``sub.images``
+# namespace. The trial index is global (rows of ``sub.metadata``).
 # Skipped automatically when the bucket's ``stimuli/`` prefix is
 # not yet populated.
 
 if sub.has_stimuli():
-    images = sub.get_images()
-    print(f"Images:          {len(images)} PIL items")
+    # Iterate one session's images:
+    n_session = (sub.metadata["session"] == session).sum()
+    print(f"{session} has {n_session} trial-image pairs")
 
-    single_img = sub.get_image(idx=0)
-    print(f"First image:     {single_img.size}")
+    # Single image for the first trial:
+    single_img = sub.images.get(0)
+    print(f"First trial image: {single_img.size}")
 else:
     print("No stimulus images on disk yet.")
 

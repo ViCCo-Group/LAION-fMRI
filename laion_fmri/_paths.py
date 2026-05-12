@@ -220,6 +220,20 @@ def embeddings_h5_path(data_dir, model):
     return stimuli_dir_path(data_dir) / f"task-images_desc-{model}_embeddings.h5"
 
 
+def segmentations_h5_path(data_dir):
+    """HDF5 file of per-stimulus object-segmentation masks.
+
+    Stacked ``(N, H, W)`` uint8 dataset of binary masks; row alignment
+    is described by the sibling metadata CSV.
+    """
+    return stimuli_dir_path(data_dir) / "task-images_desc-segmentations.h5"
+
+
+def segmentations_metadata_path(data_dir):
+    """Sidecar CSV mapping each segmentation row to its source image and noun."""
+    return stimuli_dir_path(data_dir) / "task-images_desc-segmentations_metadata.csv"
+
+
 # ── Dataset-level files ─────────────────────────────────────────
 
 def participants_tsv_path(data_dir):

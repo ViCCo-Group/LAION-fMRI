@@ -143,16 +143,81 @@ Loading them with the package:
 
    import laion_fmri
 
-   emb = laion_fmri.load_embeddings("CLIP")
-   emb.image_ids           # (25052,) array of image filenames
-   emb["CLIP"]             # (25052, 1024) float16 array
-   emb.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")  # one vector
+   stim = laion_fmri.load_stimuli()
+   stim.embeddings.models                    # ['CLIP', 'DINOv2', 'PEcore', 'SigLIP2']
+   stim.embeddings["CLIP"]                   # (25052, 1024) float16 array
+   stim.embeddings.get(
+       "CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                         # one vector
 
-   # All four at once (lazily opened):
-   all_emb = laion_fmri.load_embeddings()
+   # Trial-aligned access from the subject side:
+   sub = laion_fmri.load_subject(1)
+   sub01_clip = sub.embeddings.all("CLIP")   # (n_trials, 1024)
 
-   # Subject-ordered slice (joined against the stimulus metadata):
-   sub01_clip = emb.for_subject("sub-01", "CLIP")
+Object Segmentations
+====================
+
+Every **shared** stimulus image carries object-level segmentation
+masks: for each noun the detector found in the image, one binary
+mask per detected instance (e.g. four ``hand`` masks for an image
+with four visible hands). These are useful for asking questions
+like "did the subject see a face on this trial?" or for spatially
+restricting analyses to image regions.
+
+.. note::
+
+   Segmentations are provided **for the shared stimulus set only**
+   (1,492 images viewed by every subject). Subject-unique images do
+   not carry masks. The listing methods (``nouns``, ``for_image``)
+   return empty results -- not errors -- for uncovered images.
+
+Files on disk:
+
+.. code-block:: text
+
+   stimuli/
+   ├── task-images_desc-segmentations.h5            # (24011, 1000, 1000) uint8
+   └── task-images_desc-segmentations_metadata.csv  # one row per mask
+
+The HDF5 holds a single ``masks`` dataset, gzip-compressed with the
+byte-shuffle filter so the file ships at ~68 MB despite 24,000+
+masks. The sidecar CSV maps each ``mask_row`` to an
+``(image_name, noun, instance_id)`` triple, with detection score,
+bounding box, and a ``localized`` flag that is ``0`` when the
+detector flagged a concept but couldn't bound it spatially
+(rare; safe to filter out with ``localized == 1``).
+
+Download and load:
+
+.. code-block:: python
+
+   import laion_fmri
+
+   laion_fmri.download_segmentations()       # ~68 MB, public, no DUA
+
+   stim = laion_fmri.load_stimuli()
+
+   # What nouns are present in this image?
+   stim.segmentations.nouns(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                         # ['fingers', 'hand', ...]
+
+   # Fetch one mask:
+   mask = stim.segmentations.get(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+       "fingers",
+       instance=0,
+   )                                         # (1000, 1000) uint8
+
+Subject-level trial access works the same way, with the trial index
+in place of the image name:
+
+.. code-block:: python
+
+   sub = laion_fmri.load_subject(1)
+   sub.segmentations.nouns(42)               # nouns shown on trial 42
+   sub.segmentations.has_image(42)           # False for unique-image trials
+   sub.segmentations.get(42, "fingers")      # mask for trial 42
 
 Distribution of Stimuli
 =======================

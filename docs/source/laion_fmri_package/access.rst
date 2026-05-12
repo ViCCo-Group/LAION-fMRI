@@ -56,8 +56,8 @@ The DUA flow (stimulus images)
 The stimulus images come from third-party web sources — we don't own
 them. To give them to you we ask you to accept a short Data Use
 Agreement first. There's no login, no password, no email
-verification. You fill in a short form once. From then on, the
-``laion_fmri`` package quietly handles the rest.
+verification. You fill in a short form once; the ``laion_fmri``
+package then signs S3 URLs for you on demand.
 
 How to download
 ---------------
@@ -92,8 +92,8 @@ For the full API see :doc:`load`. The short version:
 
    import laion_fmri
    stim = laion_fmri.load_stimuli()
-   stim["shared_12rep_LAION_cluster_1003_i0.jpg"]
-   stim.image(0)
+   stim.images["shared_12rep_LAION_cluster_1003_i0.jpg"]   # raw JPEG bytes
+   stim.images.get(0)                                      # PIL.Image
 
 Together with fMRI in one call
 ------------------------------
@@ -124,9 +124,9 @@ to the cluster:
 
    rsync -av ~/path/to/laion-fmri-data/stimuli/ cluster:~/path/to/laion-fmri-data/stimuli/
 
-That's it. On the cluster, ``load_stimuli()`` reads the local files
-without ever calling the access service, and ``download_stimuli()``
-notices the files already match and returns immediately.
+On the cluster, ``load_stimuli()`` reads the local files without ever
+calling the access service, and ``download_stimuli()`` notices the files
+already match and returns immediately.
 
 You only need access state on the cluster if you also want to
 *re-download* there (e.g. after a dataset release update). In that

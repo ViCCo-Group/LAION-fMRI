@@ -96,14 +96,33 @@ class Group:
         return result
 
     def get_shared_images(self, format="pil"):
-        """Load shared stimulus images from the first subject."""
-        first_sub = self._subjects[self._ordered_ids[0]]
-        return first_sub.get_images(
-            stimuli="shared", format=format,
-        )
+        """Load shared stimulus images from disk.
+
+        Parameters
+        ----------
+        format : ``"pil"`` or ``"numpy"``
+            Output container -- a list of :class:`PIL.Image.Image`
+            or a stacked ``(N, H, W, 3)`` uint8 array.
+        """
+        from laion_fmri.stimuli import Stimuli
+        meta = self.get_shared_stimulus_metadata()
+        with Stimuli(data_dir=self._data_dir()) as stim:
+            images = [stim.images.get(name) for name in meta["image_name"]]
+        if format == "pil":
+            return images
+        if format == "numpy":
+            import numpy as np
+            return np.stack([np.array(img) for img in images]).astype(np.uint8)
+        raise ValueError(f"Unknown format: {format!r}")
 
     def get_shared_stimulus_metadata(self):
         """Return the shared subset of the stimulus metadata."""
-        first_sub = self._subjects[self._ordered_ids[0]]
-        meta = first_sub.get_stimulus_metadata()
+        import pandas as pd
+        from laion_fmri._paths import stimuli_metadata_path
+        path = stimuli_metadata_path(self._data_dir())
+        meta = pd.read_csv(path)
         return meta[meta["unique_or_shared"] == "shared"].reset_index(drop=True)
+
+    def _data_dir(self):
+        """All subjects share the same data dir; return it via the first."""
+        return self._subjects[self._ordered_ids[0]]._data_dir

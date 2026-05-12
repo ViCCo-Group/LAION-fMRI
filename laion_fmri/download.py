@@ -13,6 +13,8 @@ from laion_fmri._laion_fmri_fetch import _clamp_n_jobs, fetch_laion_fmri
 from laion_fmri._paths import (
     embeddings_h5_path,
     license_marker_path,
+    segmentations_h5_path,
+    segmentations_metadata_path,
     stimuli_h5_path,
     stimuli_metadata_path,
 )
@@ -363,6 +365,75 @@ def download_embeddings(models="all", data_dir=None, n_jobs=1):
     else:
         with ThreadPoolExecutor(max_workers=n_jobs) as pool:
             list(pool.map(_fetch, todo))
+
+    return paths
+
+
+def download_segmentations(data_dir=None):
+    """Download the per-stimulus segmentation masks from the public S3 bucket.
+
+    Pulls two sibling files into ``<data_dir>/stimuli/``:
+
+    * ``task-images_desc-segmentations.h5`` — stacked ``(N, H, W)`` uint8 masks
+    * ``task-images_desc-segmentations_metadata.csv`` — one row per mask
+
+    These are dataset-wide derivatives (one set of files for all
+    subjects), shipped under the same CC0 license as the rest of the
+    fMRI data — no Data Use Agreement, no signed URLs.
+
+    The download is **idempotent**: files whose local size matches the
+    S3 size are skipped, so re-running an interrupted transfer only
+    fetches what's missing.
+
+    Parameters
+    ----------
+    data_dir : str or Path, optional
+        Override the configured data directory.
+
+    Returns
+    -------
+    dict[str, pathlib.Path]
+        Mapping of ``{"h5": ..., "metadata": ...}`` to local file paths.
+    """
+    if data_dir is None:
+        data_dir = get_data_dir()
+
+    accept_license()
+
+    bucket_objects = list_prefix_objects(LAION_FMRI_BUCKET, "stimuli/")
+    sizes = {o["Key"]: o["Size"] for o in bucket_objects}
+
+    targets = {
+        "h5": (
+            "stimuli/task-images_desc-segmentations.h5",
+            segmentations_h5_path(data_dir),
+        ),
+        "metadata": (
+            "stimuli/task-images_desc-segmentations_metadata.csv",
+            segmentations_metadata_path(data_dir),
+        ),
+    }
+    paths = {label: local for label, (_, local) in targets.items()}
+
+    todo = []
+    for label, (key, local) in targets.items():
+        expected_size = sizes.get(key)
+        if expected_size is None:
+            raise RuntimeError(
+                f"Segmentation file {key!r} not found on "
+                f"s3://{LAION_FMRI_BUCKET}/. Has it been uploaded yet?"
+            )
+        if local.exists() and local.stat().st_size == expected_size:
+            continue
+        todo.append((key, local))
+
+    if not todo:
+        print("[laion-fmri] segmentations already up to date.")
+        return paths
+
+    print(f"[laion-fmri] Downloading {len(todo)} segmentation file(s):")
+    for key, local in todo:
+        download_key(LAION_FMRI_BUCKET, key, local)
 
     return paths
 

@@ -328,5 +328,5 @@ plt.show()
 # call below will raise ``StimuliNotDownloadedError`` -- that's
 # the intended signal.
 
-# images = sub.get_images()
-# print(f"Images: {len(images)}")
+# img = sub.images.get(0)         # PIL image for the first trial
+# print(f"First trial image: {img.size}")

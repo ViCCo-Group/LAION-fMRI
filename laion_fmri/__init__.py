@@ -10,24 +10,30 @@ For downloading and access-service helpers, import from
 :mod:`laion_fmri.download` directly.
 """
 
-from laion_fmri.embeddings import Embeddings, load_embeddings
+from laion_fmri.embeddings import Embeddings
+from laion_fmri.segmentations import Segmentations
 from laion_fmri.stimuli import Stimuli, load_stimuli
+from laion_fmri.subject import Subject, load_subject
 
 # These don't collide with a module name (the module is `download`, not
 # `download_stimuli` / `request_stimulus_access`), so re-exporting at the
 # top level is safe.
 from laion_fmri.download import (  # noqa: E402
     download_embeddings,
+    download_segmentations,
     download_stimuli,
     request_stimulus_access,
 )
 
 __all__ = [
     "Embeddings",
+    "Segmentations",
     "Stimuli",
+    "Subject",
     "download_embeddings",
+    "download_segmentations",
     "download_stimuli",
-    "load_embeddings",
     "load_stimuli",
+    "load_subject",
     "request_stimulus_access",
 ]

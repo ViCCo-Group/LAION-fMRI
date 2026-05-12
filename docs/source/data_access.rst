@@ -14,7 +14,7 @@ program. The dataset has two release tracks with different licensing:
 
 The :doc:`laion_fmri_package/index` Python package handles both
 download paths transparently. For a quick orientation see
-:doc:`quickstart`; this page is the comprehensive reference.
+:doc:`quickstart`; this page is the full reference.
 
 
 Access Requirements
@@ -139,8 +139,15 @@ Dataset Size
    - Size of major components (raw, derivatives, stimuli)
    - Storage recommendations
 
-For now: the stimuli are one HDF5 of ~3.2 GB plus a ~1.6 MB
-metadata CSV.
+For now, sizes of the stimulus-side files:
+
+- Stimulus images: one HDF5 of ~3.2 GB plus a ~1.6 MB metadata CSV
+  (gated, fetched via ``download_stimuli`` / ``laion-fmri
+  download-stimuli`` after the Data Use Agreement)
+- Pretrained embeddings: four HDF5 files at ~50 MB each
+  (public, ``download_embeddings``)
+- Object segmentation masks: one HDF5 of ~68 MB plus a ~3.3 MB
+  metadata CSV (public, ``download_segmentations``)
 
 
 Data Verification
