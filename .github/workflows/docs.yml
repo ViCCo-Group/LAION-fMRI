@@ -23,6 +23,7 @@ jobs:
             /opt/venvs/laion-fmri/bin/pip install --quiet --upgrade \
               'sphinx>=4.0' 'sphinx-rtd-theme>=1.0' 'docutils>=0.21,<0.23' \
               myst-parser sphinx-copybutton sphinx-design sphinx-tabs \
-              numpydoc sphinx-gallery matplotlib furo
+              numpydoc sphinx-gallery matplotlib furo \
+              sphinx-sitemap sphinxext-opengraph
             . /opt/venvs/laion-fmri/bin/activate
             make -C docs clean html
