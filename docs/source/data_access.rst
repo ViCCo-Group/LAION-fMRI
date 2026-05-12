@@ -41,9 +41,10 @@ S3 URLs for the stimuli on demand.
 * Takedown policy: https://laion-fmri.hebartlab.com/takedown
 
 The form asks for your name, institutional email, institution, optional
-PI/supervisor, and a short research-purpose description. No password,
-no email verification, no admin queue — approval is automatic on
-submission. Audit metadata is anonymised after one year of inactivity.
+PI/supervisor, a short research-purpose description, Terms acceptance,
+and Privacy-notice acknowledgement. No password, no email verification,
+no admin queue — approval is automatic on submission. Audit metadata is
+anonymised after one year of inactivity.
 Full architectural detail is in :doc:`laion_fmri_package/stimulus_access`.
 
 

@@ -77,8 +77,9 @@ From a Python session:
 
 The first time, you'll be prompted in the terminal for your name,
 institutional email, institution, optional PI/supervisor, and a brief
-description of your research purpose. Type ``yes`` to accept the DUA
-and the download starts (~3 GB).
+description of your research purpose. The prompt links to both the
+Terms of Use and Privacy notice; type ``yes`` to accept the Terms and
+acknowledge the Privacy notice, and the download starts (~3 GB).
 
 Running the command again later just re-downloads what's missing — no
 form to re-fill.

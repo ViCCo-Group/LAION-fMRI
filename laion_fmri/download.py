@@ -121,7 +121,8 @@ def _prompt_stimulus_form(server_url=ACCESS_SERVICE_URL):
     purpose = input("> ").strip()
     print()
     answer = input(
-        f"I accept the LAION-fMRI Terms of Use (v{terms_version}). "
+        f"I have read and accept the LAION-fMRI Terms of Use "
+        f"(v{terms_version}) and I have read the Privacy notice. "
         "Type 'yes' to submit: "
     ).strip().lower()
     if answer != "yes":
@@ -134,6 +135,7 @@ def _prompt_stimulus_form(server_url=ACCESS_SERVICE_URL):
         "pi_or_supervisor": pi or None,
         "research_purpose": purpose,
         "accepted_terms": True,
+        "acknowledged_privacy": True,
         "terms_version": terms_version,
         "source": "cli",
     }, email
