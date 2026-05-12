@@ -24,13 +24,14 @@ BRAND = ROOT / "_brand"
 
 W, H = 1200, 630
 
-# Palette from conf.py dark theme.
-BG = (10, 14, 26)
-BG_GRADIENT = (17, 23, 41)
-CYAN = (0, 212, 255)
+# Palette from conf.py light theme, tuned for OG-card legibility.
+BG = (255, 255, 255)
+BG_GRADIENT = (243, 246, 250)
+CYAN = (90, 130, 150)      # muted slate-teal; brand-cyan was too harsh on white
 CORAL = (255, 107, 74)
-FG = (232, 234, 240)
-FG_MUTED = (160, 168, 192)
+FG = (26, 30, 46)          # color-foreground-primary
+FG_MUTED = (120, 130, 152) # color-foreground-muted (slightly darkened for contrast)
+BORDER = (216, 221, 230)   # color-foreground-border
 
 
 def _find_font(candidates: list[str], size: int) -> ImageFont.FreeTypeFont:
@@ -96,13 +97,15 @@ def main() -> int:
     out = STATIC / "og-image.png"
 
     img = _vertical_gradient((W, H), BG, BG_GRADIENT).convert("RGBA")
-    img.alpha_composite(_radial_glow((W, H), center=(W - 180, 160), radius=420, color=CYAN, alpha=80))
-    img.alpha_composite(_radial_glow((W, H), center=(180, H - 140), radius=420, color=CORAL, alpha=50))
+    # Light-mode design: minimal glows, no harsh accent bar. Subtle warm
+    # bottom-left tint to add a bit of life without competing with text.
+    img.alpha_composite(_radial_glow((W, H), center=(140, H - 120), radius=380, color=CORAL, alpha=22))
+    img.alpha_composite(_radial_glow((W, H), center=(W - 200, 180), radius=420, color=CYAN, alpha=18))
 
     draw = ImageDraw.Draw(img)
 
-    # Top accent bar.
-    draw.rectangle([0, 0, W, 4], fill=CYAN)
+    # Hairline divider at top instead of a solid bar.
+    draw.rectangle([0, 0, W, 1], fill=BORDER)
 
     # Fonts.
     f_brand = _find_font([
@@ -190,12 +193,12 @@ def main() -> int:
     draw.rounded_rectangle(
         [pill_left, pill_top, pill_right, pill_bottom],
         radius=radius,
-        fill=CYAN,
+        fill=CORAL,
     )
 
     cursor_x = pill_left + pad_x
     text_y = pill_top + (pill_h - text_h) // 2 - left_bbox[1]
-    label_color = (10, 14, 26)  # navy text on cyan pill for contrast
+    label_color = (255, 255, 255)  # white on coral pill
     draw.text((cursor_x, text_y), cta_left, font=f_cta, fill=label_color)
     cursor_x += left_w + gap_arrow
 
