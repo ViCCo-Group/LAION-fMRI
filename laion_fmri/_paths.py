@@ -211,6 +211,15 @@ def stimuli_metadata_path(data_dir):
     return stimuli_dir_path(data_dir) / "task-images_metadata.csv"
 
 
+def embeddings_h5_path(data_dir, model):
+    """HDF5 file of pretrained image embeddings for ``model``.
+
+    Sits next to the stimulus images and shares the BIDS ``desc-``
+    convention -- e.g. ``task-images_desc-CLIP_embeddings.h5``.
+    """
+    return stimuli_dir_path(data_dir) / f"task-images_desc-{model}_embeddings.h5"
+
+
 # ── Dataset-level files ─────────────────────────────────────────
 
 def participants_tsv_path(data_dir):

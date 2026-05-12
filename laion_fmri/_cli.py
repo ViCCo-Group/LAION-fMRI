@@ -55,6 +55,13 @@ def main(argv=None):
             "reuse the cached request_id."
         ),
     )
+    download_parser.add_argument(
+        "--include-embeddings", nargs="*", default=None, metavar="MODEL",
+        help=(
+            "Include stimulus embeddings. Pass with no value for "
+            "all models, or one or more labels (e.g. CLIP DINOv2)."
+        ),
+    )
 
     info_parser = subparsers.add_parser(
         "info", help="Show dataset information"
@@ -72,6 +79,22 @@ def main(argv=None):
             "Use Agreement; subsequent calls reuse the cached "
             "request_id."
         ),
+    )
+
+    embeddings_parser = subparsers.add_parser(
+        "download-embeddings",
+        help=(
+            "Download stimulus embeddings (public, no DUA). "
+            "Default downloads all four model files."
+        ),
+    )
+    embeddings_parser.add_argument(
+        "--model", nargs="+", default=None, metavar="MODEL",
+        help="Subset of models to fetch (e.g. CLIP DINOv2).",
+    )
+    embeddings_parser.add_argument(
+        "--n-jobs", type=int, default=1,
+        help="Number of parallel `aws s3 cp` workers (default: 1).",
     )
 
     subparsers.add_parser(
@@ -110,6 +133,8 @@ def main(argv=None):
         _handle_info(args)
     elif args.command == "download-stimuli":
         _handle_download_stimuli(args)
+    elif args.command == "download-embeddings":
+        _handle_download_embeddings(args)
     elif args.command == "request-access":
         _handle_request_access(args)
     elif args.command == "login":
@@ -128,6 +153,12 @@ def _handle_config(args):
 def _handle_download(args):
     """Handle the download subcommand."""
     from laion_fmri.download import download
+    if args.include_embeddings is None:
+        include_embeddings = False
+    elif args.include_embeddings == []:
+        include_embeddings = True
+    else:
+        include_embeddings = args.include_embeddings
     download(
         subject=args.subject,
         ses=args.ses,
@@ -139,6 +170,7 @@ def _handle_download(args):
         extension=args.extension,
         n_jobs=args.n_jobs,
         include_stimuli=args.include_stimuli,
+        include_embeddings=include_embeddings,
     )
 
 
@@ -152,6 +184,13 @@ def _handle_download_stimuli(args):
     """Handle the download-stimuli subcommand (stimuli only, no fMRI)."""
     from laion_fmri.download import download_stimuli
     download_stimuli()
+
+
+def _handle_download_embeddings(args):
+    """Handle the download-embeddings subcommand."""
+    from laion_fmri.download import download_embeddings
+    models = args.model if args.model else "all"
+    download_embeddings(models=models, n_jobs=args.n_jobs)
 
 
 def _handle_request_access(args):

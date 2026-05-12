@@ -1,6 +1,7 @@
 """Download logic for the LAION-fMRI dataset."""
 
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 from laion_fmri._constants import (
     ACCESS_SERVICE_URL,
@@ -8,12 +9,15 @@ from laion_fmri._constants import (
     resolve_subject_id,
 )
 from laion_fmri._errors import LicenseNotAcceptedError
-from laion_fmri._laion_fmri_fetch import fetch_laion_fmri
+from laion_fmri._laion_fmri_fetch import _clamp_n_jobs, fetch_laion_fmri
 from laion_fmri._paths import (
+    embeddings_h5_path,
     license_marker_path,
     stimuli_h5_path,
     stimuli_metadata_path,
 )
+from laion_fmri._s3_engine import download_key, list_prefix_objects
+from laion_fmri._sources import LAION_FMRI_BUCKET
 from laion_fmri._stimulus_access import (
     AccessNotFoundError,
     AccessServiceError,
@@ -28,6 +32,7 @@ from laion_fmri._stimulus_access import (
 )
 from laion_fmri.config import get_data_dir
 from laion_fmri.discovery import get_subjects
+from laion_fmri.embeddings import AVAILABLE_MODELS
 
 
 def _check_license_accepted(data_dir):
@@ -264,6 +269,104 @@ def download_stimuli(data_dir=None, server_url=ACCESS_SERVICE_URL):
     return expected
 
 
+# ── Stimulus embeddings (public S3, CC0) ────────────────────────
+
+
+def _resolve_embedding_models(models):
+    """Normalise the ``models`` argument to a list of valid labels."""
+    if isinstance(models, str):
+        selected = (
+            list(AVAILABLE_MODELS) if models == "all" else [models]
+        )
+    else:
+        selected = list(models)
+    unknown = [m for m in selected if m not in AVAILABLE_MODELS]
+    if unknown:
+        raise ValueError(
+            f"Unknown embedding model(s) {unknown}. "
+            f"Available: {list(AVAILABLE_MODELS)}."
+        )
+    return selected
+
+
+def download_embeddings(models="all", data_dir=None, n_jobs=1):
+    """Download stimulus embedding HDF5 files from the public S3 bucket.
+
+    The embeddings are dataset-wide derivatives (one set of files for
+    all subjects), shipped under the same CC0 license as the rest of
+    the fMRI data — no Data Use Agreement, no signed URLs.
+
+    The download is **idempotent**: files whose local size matches the
+    S3 size are skipped, so re-running an interrupted transfer only
+    fetches what's missing.
+
+    Parameters
+    ----------
+    models : str or list[str]
+        One of:
+
+        * ``"all"`` (default) — download every model in
+          :data:`laion_fmri.embeddings.AVAILABLE_MODELS`.
+        * a single label, e.g. ``"CLIP"``.
+        * a list of labels, e.g. ``["CLIP", "DINOv2"]``.
+    data_dir : str or Path, optional
+        Override the configured data directory.
+    n_jobs : int
+        Number of parallel ``aws s3 cp`` workers. ``1`` (default) is
+        sequential.
+
+    Returns
+    -------
+    dict[str, pathlib.Path]
+        Mapping of model label to local file path for each requested
+        model.
+    """
+    if data_dir is None:
+        data_dir = get_data_dir()
+
+    selected = _resolve_embedding_models(models)
+    accept_license()
+    n_jobs = _clamp_n_jobs(n_jobs)
+
+    bucket_objects = list_prefix_objects(LAION_FMRI_BUCKET, "stimuli/")
+    sizes = {o["Key"]: o["Size"] for o in bucket_objects}
+
+    todo = []
+    paths = {}
+    for m in selected:
+        key = f"stimuli/task-images_desc-{m}_embeddings.h5"
+        local = embeddings_h5_path(data_dir, m)
+        paths[m] = local
+        expected_size = sizes.get(key)
+        if expected_size is None:
+            raise RuntimeError(
+                f"Embedding file {key!r} not found on "
+                f"s3://{LAION_FMRI_BUCKET}/. Has it been uploaded yet?"
+            )
+        if local.exists() and local.stat().st_size == expected_size:
+            continue
+        todo.append((key, local))
+
+    if not todo:
+        print("[laion-fmri] embeddings already up to date.")
+        return paths
+
+    print(f"[laion-fmri] Downloading {len(todo)} embedding file(s):")
+
+    def _fetch(item):
+        key, local = item
+        download_key(LAION_FMRI_BUCKET, key, local)
+
+    if n_jobs <= 1:
+        for it in todo:
+            _fetch(it)
+    else:
+        with ThreadPoolExecutor(max_workers=n_jobs) as pool:
+            list(pool.map(_fetch, todo))
+
+    return paths
+
+
 # ── Public entry point ──────────────────────────────────────────
 
 
@@ -277,6 +380,7 @@ def download(
     suffix=None,
     extension=None,
     include_stimuli=False,
+    include_embeddings=False,
     n_jobs=1,
 ):
     """Download fMRI dataset files for a subject, narrowed by BIDS entities.
@@ -311,6 +415,10 @@ def download(
         pull the dataset-wide stimuli. Useful when you want
         both in a single call. Use :func:`download_stimuli` directly
         if you only need the stimuli.
+    include_embeddings : bool or str or list[str]
+        After the fMRI fetch, also call :func:`download_embeddings`.
+        Pass ``True`` for all four models, or a model label / list of
+        labels to narrow. ``False`` (default) skips the embeddings.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (``aws s3 cp`` subprocesses). ``1`` (default) is sequential.
@@ -358,3 +466,11 @@ def download(
 
     if include_stimuli:
         download_stimuli(data_dir=data_dir)
+
+    if include_embeddings:
+        models = (
+            "all" if include_embeddings is True else include_embeddings
+        )
+        download_embeddings(
+            models=models, data_dir=data_dir, n_jobs=n_jobs,
+        )

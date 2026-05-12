@@ -77,37 +77,82 @@ semantic annotations, model-derived features), see
    - Document the companion ``stimuli.json`` sidecar if one exists
 
 Stimulus Embeddings
-  ===================
+===================
 
-  A packed HDF5 file of pretrained image embeddings is provided for the stimulus
-  set. The file is deduplicated across participants: each row corresponds to one
-  unique stimulus image ID, and all model embeddings share the same row order.
+For every stimulus image in the dataset (25,052 in total, including the
+OOD set), pretrained image embeddings from four widely used vision models
+are provided as a convenience for downstream analyses. The embeddings are
+stored as four HDF5 files, one per model, sitting next to the stimulus
+images themselves:
 
-  The file contains four global image embedding spaces:
+.. code-block:: text
 
-  * DINOv2 ViT-L/14, mean-pooled patch tokens from layer 23
-  * PE Core L/14 336px
-  * SigLIP2 SO400M Patch14 384px
-  * OpenCLIP LAION ViT-H/14
+   stimuli/
+   ├── task-images_stimuli.h5          # the images
+   ├── task-images_metadata.csv        # image-level metadata
+   ├── task-images_desc-CLIP_embeddings.h5
+   ├── task-images_desc-DINOv2_embeddings.h5
+   ├── task-images_desc-PEcore_embeddings.h5
+   └── task-images_desc-SigLIP2_embeddings.h5
 
-  The HDF5 layout is:
+The four models are:
 
-  .. code-block:: text
+.. list-table::
+   :widths: 15 30 15 40
+   :header-rows: 1
 
-     image_ids
-     subject_indices/sub-01
-     subject_indices/sub-03
-     subject_indices/sub-05
-     subject_indices/sub-06
-     subject_indices/sub-07
-     models/dinov2_vitl14_meanpatch_layer23/embedding
-     models/pe_core_l14_336/embedding
-     models/siglip2_so400m_patch14_384/embedding
-     models/openclip_laion_vith14/embedding
+   * - ``desc-`` label
+     - Model
+     - Feature dim
+     - Notes
+   * - ``CLIP``
+     - OpenCLIP LAION ViT-H/14
+     - 1024
+     - L2-normalised
+   * - ``DINOv2``
+     - DINOv2 ViT-L/14
+     - 1024
+     - Mean-pooled patch tokens from layer 23; not normalised
+   * - ``PEcore``
+     - PE Core L/14, 336 px
+     - 1024
+     - L2-normalised
+   * - ``SigLIP2``
+     - SigLIP2 SO400M Patch14, 384 px
+     - 1152
+     - L2-normalised
 
-  Rows in each ``models/<model>/embedding`` dataset map one-to-one to
-  ``image_ids``. To recover embeddings in a participant's stimulus order, index
-  the canonical embedding matrix with ``subject_indices/<subject>``.
+Each file has the same layout — a flat HDF5 with three datasets of
+length 25,052:
+
+.. code-block:: text
+
+   embedding   # (25052, feature_dim) float16
+   image_ids   # (25052,) variable-length strings — image filenames
+   valid       # (25052,) bool — True for every image in release-main
+
+Rows in ``embedding`` correspond one-to-one to entries in ``image_ids``,
+and all four files share the same ``image_ids`` order. To work with a
+specific subject's stimuli, intersect ``image_ids`` with the
+``image_name`` column of the stimulus metadata (filtered to that
+subject's images).
+
+Loading them with the package:
+
+.. code-block:: python
+
+   import laion_fmri
+
+   emb = laion_fmri.load_embeddings("CLIP")
+   emb.image_ids           # (25052,) array of image filenames
+   emb["CLIP"]             # (25052, 1024) float16 array
+   emb.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")  # one vector
+
+   # All four at once (lazily opened):
+   all_emb = laion_fmri.load_embeddings()
+
+   # Subject-ordered slice (joined against the stimulus metadata):
+   sub01_clip = emb.for_subject("sub-01", "CLIP")
 
 Distribution of Stimuli
 =======================
