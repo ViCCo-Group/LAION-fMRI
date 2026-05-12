@@ -159,7 +159,7 @@ object-segmentation bundle:
    ├── task-images_desc-SigLIP2_embeddings.h5
    ├── task-images_desc-segmentations.h5         # object masks for shared images
    ├── task-images_desc-segmentations_metadata.csv
-   └── task-images_desc-captions.csv             # human + AI image captions
+   └── task-images_desc-captions.csv             # human captions + shared non-OOD AI captions
 
 Per-asset file layout and download flow are documented in the
 respective sections below.
@@ -332,20 +332,21 @@ in place of the image name:
 Stimulus Captions
 =================
 
-Each stimulus carries a small set of short *human* captions plus, where
-available, one *AI* caption. The target is:
+Each stimulus carries a small set of short *human* captions. Shared
+non-OOD stimuli additionally carry one *AI* caption. The target is:
 
 * **shared** images (seen by every participant) get **five** human
-  captions
+  captions and, for non-OOD images, **one** AI caption
 * **unique** images (presented to one participant only) get **three**
+  human captions and no AI caption
+* **OOD** images get their target human captions and no AI caption
 
 The human captions were written by crowdworkers on Prolific — each
 shown one image at a time and asked to describe it in a single
-sentence. The AI captions come from large multimodal models (currently
-GPT-5.1 for the shared stimulus set, GPT-4o for the rest). Together
-they give you a small set of independent natural-language descriptions
-per image, useful for caption-conditioned modelling, retrieval, or
-quick qualitative checks.
+sentence. The AI captions come from large multimodal models and are
+included for shared non-OOD images only. Together they give you a small
+set of independent natural-language descriptions per image, useful for
+caption-conditioned modelling, retrieval, or quick qualitative checks.
 
 See :doc:`metadata_acquisition` for the collection procedure (Prolific
 batches, quality screening, AI prompt design).
@@ -359,8 +360,10 @@ Captions live in a single CSV that sits next to the stimulus images:
      task-images_metadata.csv
      task-images_desc-captions.csv
 
-The CSV is in long form: one row per caption. An image with three
-human captions and one AI caption contributes four rows.
+The CSV is in long form: one row per caption. A shared non-OOD image
+with five human captions and one AI caption contributes six rows; a
+shared OOD image contributes five rows; a unique image contributes
+three rows.
 
 .. list-table::
    :widths: 22 78
@@ -388,10 +391,9 @@ human captions and one AI caption contributes four rows.
    * - ``ai_model``
      - Model name. Empty for human rows.
 
-The target counts (3 unique / 5 shared) aren't always hit yet — some
-images still come up short, mostly because some captions were manually
-flagged as bad and removed. AI captions are present for a subset only
-(mostly shared images). Treat the file as "best available so far".
+All images have their target human-caption count (three for unique
+images, five for shared images). AI captions are present for shared
+non-OOD images only.
 
 Loading them with the package:
 
@@ -417,6 +419,11 @@ Loading them with the package:
 
    # And the full long-form table:
    stim.captions.metadata.head()
+
+   # Trial-aligned access through Subject uses global trial indices:
+   sub = laion_fmri.load_subject("sub-03")
+   sub.captions.human(42)
+   sub.captions.ai(42)  # None for unique-image and OOD trials
 
 Distribution of Stimuli
 =======================
@@ -462,4 +469,3 @@ full mapping convention.
 
 See also :doc:`train_test_splits` for how stimuli are partitioned into
 training and test sets.
-

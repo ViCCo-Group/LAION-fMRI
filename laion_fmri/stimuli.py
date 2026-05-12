@@ -11,9 +11,10 @@ that is attached *per stimulus image*:
 * ``stim.images``        -- the JPEG images themselves
 * ``stim.embeddings``    -- pretrained image embeddings (CLIP, DINOv2, …)
 * ``stim.segmentations`` -- object-level segmentation masks
+* ``stim.captions``      -- human + AI captions (text)
 
-The auxiliary modalities (``embeddings``, ``segmentations``) are lazy:
-their HDF5 files are not opened until you touch them, and they remain
+The auxiliary modalities (``embeddings``, ``segmentations``, ``captions``)
+are lazy: their files are not opened until you touch them, and they remain
 optional downloads.
 
 Quick start
@@ -46,6 +47,7 @@ from laion_fmri._paths import (
 from laion_fmri.config import get_data_dir
 
 if TYPE_CHECKING:
+    from laion_fmri.captions import Captions
     from laion_fmri.embeddings import Embeddings
     from laion_fmri.segmentations import Segmentations
 
@@ -159,7 +161,7 @@ class Stimuli:
             self._h5.close()
             self._h5 = None
         # Close sub-modalities if they were ever opened.
-        for attr in ("embeddings", "segmentations"):
+        for attr in ("embeddings", "segmentations", "captions"):
             ns = self.__dict__.get(attr)
             if ns is not None and hasattr(ns, "close"):
                 ns.close()
@@ -221,6 +223,17 @@ class Stimuli:
         """
         from laion_fmri.segmentations import Segmentations
         return Segmentations(data_dir=self.data_dir)
+
+    @cached_property
+    def captions(self) -> "Captions":
+        """Per-stimulus human + AI captions.
+
+        Lazily reads ``task-images_desc-captions.csv``. Raises
+        :class:`FileNotFoundError` if the captions file is missing
+        (it ships alongside the stimulus images).
+        """
+        from laion_fmri.captions import Captions
+        return Captions(data_dir=self.data_dir)
 
     # ── internals ─────────────────────────────────────────────
 

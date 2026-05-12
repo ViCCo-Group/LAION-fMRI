@@ -234,6 +234,16 @@ def segmentations_metadata_path(data_dir):
     return stimuli_dir_path(data_dir) / "task-images_desc-segmentations_metadata.csv"
 
 
+def captions_path(data_dir):
+    """CSV of per-stimulus captions (human + AI), long form.
+
+    One row per caption. Columns:
+    ``image_name``, ``caption_idx``, ``source``, ``caption``,
+    ``origin_collection``, ``participant_id``, ``ai_model``.
+    """
+    return stimuli_dir_path(data_dir) / "task-images_desc-captions.csv"
+
+
 # ── Dataset-level files ─────────────────────────────────────────
 
 def participants_tsv_path(data_dir):

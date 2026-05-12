@@ -150,6 +150,19 @@ def test_cli_download_passes_include_stimuli(monkeypatch):
     assert captured["include_stimuli"] is True
 
 
+def test_cli_download_captions(monkeypatch):
+    called = {}
+
+    def fake_download_captions():
+        called["ok"] = True
+
+    monkeypatch.setattr(
+        "laion_fmri.download.download_captions", fake_download_captions,
+    )
+    main(["download-captions"])
+    assert called["ok"] is True
+
+
 def test_cli_download_passes_all_filters_combined(monkeypatch):
     captured = _capture_download(monkeypatch)
     main([

@@ -318,6 +318,17 @@ subject's trial ordering -- e.g. computing similarity matrices on all
        "shared_12rep_LAION_cluster_1003_i0.jpg", "fingers",
    )                                          # (1000, 1000) uint8
 
+   # ── Captions (human for all images; AI for shared non-OOD) ────────
+   stim.captions.human(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                          # list[str], length 5 for shared
+   stim.captions.ai(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                          # str or None
+   stim.captions.get(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                          # pandas DataFrame
+
 Files are opened lazily: touching ``stim.embeddings`` does not open
 the embedding HDF5 until you actually look up a vector. The
 modality-specific HDF5 files are independent downloads:
@@ -334,8 +345,12 @@ modality-specific HDF5 files are independent downloads:
    # Object segmentations (public, CC0, ~68 MB):
    laion_fmri.download_segmentations()
 
+   # Captions (public, CC0):
+   laion_fmri.download_captions()
+
 CLI equivalents: ``laion-fmri download-stimuli``,
-``laion-fmri download-embeddings``, ``laion-fmri download-segmentations``.
+``laion-fmri download-embeddings``, ``laion-fmri download-segmentations``,
+``laion-fmri download-captions``.
 
 .. note::
 
@@ -344,6 +359,12 @@ CLI equivalents: ``laion-fmri download-stimuli``,
    The listing methods (``nouns``, ``for_image``, ``has_image``)
    return empty results -- not errors -- for uncovered images, so
    loops across all trials need no special-casing.
+
+   Captions cover every stimulus image with human captions: shared
+   images have five and unique images have three. AI captions are
+   provided for shared non-OOD images only, so
+   ``stim.captions.ai(name)`` and ``sub.captions.ai(trial)`` return
+   ``None`` for unique-image and OOD trials.
 
 See :doc:`/stimulus_data` for the per-model embedding details
 (feature dimensions, normalisation, exact model identifiers) and a

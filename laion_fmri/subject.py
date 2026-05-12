@@ -101,6 +101,7 @@ class Subject:
         self._images_ns = _SubjectImages(self)
         self._embeddings_ns = _SubjectEmbeddings(self)
         self._segmentations_ns = _SubjectSegmentations(self)
+        self._captions_ns = _SubjectCaptions(self)
 
     @property
     def subject_id(self):
@@ -620,15 +621,16 @@ class Subject:
             ),
         )
 
-    # ── Stimulus-side data: images, embeddings, segmentations ──
+    # ── Stimulus-side data: images, embeddings, segmentations, captions ──
 
     def has_stimuli(self):
         """Return True if the stimuli (HDF5 + CSV) are on disk.
 
         Useful as a guard before touching stimulus-side data
         (:attr:`metadata`, :attr:`images`, :attr:`embeddings`,
-        :attr:`segmentations`, :meth:`to_torch_dataset`) when the
-        archive hasn't been downloaded yet.
+        :attr:`segmentations`, :attr:`captions`,
+        :meth:`to_torch_dataset`) when the archive hasn't been
+        downloaded yet.
         """
         return (
             stimuli_metadata_path(self._data_dir).exists()
@@ -649,7 +651,8 @@ class Subject:
         pandas.DataFrame
             Indexed 0..n_total_trials-1. Each row's index is the
             "global trial index" used by :attr:`images`,
-            :attr:`embeddings`, and :attr:`segmentations`.
+            :attr:`embeddings`, :attr:`segmentations`, and
+            :attr:`captions`.
         """
         if self._trial_table_cache is None:
             self._trial_table_cache = self._build_trial_table()
@@ -669,6 +672,11 @@ class Subject:
     def segmentations(self):
         """Per-trial object-segmentation masks (shared images only)."""
         return self._segmentations_ns
+
+    @property
+    def captions(self):
+        """Per-trial human captions, plus shared non-OOD AI captions."""
+        return self._captions_ns
 
     # ── Stimulus-side internals ─────────────────────────────────
 
@@ -915,3 +923,43 @@ class _SubjectSegmentations:
         """
         name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
         return self._subject._stim().segmentations.get(name, noun, instance)
+
+
+class _SubjectCaptions:
+    """``sub.captions`` namespace: per-trial stimulus captions.
+
+    Human captions are present for every stimulus image. AI captions
+    are present for shared non-OOD images only.
+    """
+
+    def __init__(self, subject):
+        self._subject = subject
+
+    def list(self, trial_idx, source=None):
+        """Captions for the image shown on ``trial_idx``.
+
+        Parameters
+        ----------
+        trial_idx : int
+            Global trial index (row of :attr:`Subject.metadata`).
+        source : {"human", "ai"}, optional
+            Restrict to one source. ``None`` returns all available
+            captions in ``caption_idx`` order.
+        """
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().captions.list(name, source=source)
+
+    def human(self, trial_idx, limit=None):
+        """Human captions for the image shown on ``trial_idx``."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().captions.human(name, limit=limit)
+
+    def ai(self, trial_idx):
+        """AI caption for this trial's image, or ``None`` if absent."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().captions.ai(name)
+
+    def for_image(self, trial_idx):
+        """Caption table slice for the image shown on ``trial_idx``."""
+        name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
+        return self._subject._stim().captions.get(name)

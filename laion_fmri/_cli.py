@@ -106,6 +106,11 @@ def main(argv=None):
     )
 
     subparsers.add_parser(
+        "download-captions",
+        help="Download per-stimulus captions (public, no DUA).",
+    )
+
+    subparsers.add_parser(
         "request-access",
         help=(
             "Walk through the LAION-fMRI Data Use Agreement form and "
@@ -145,6 +150,8 @@ def main(argv=None):
         _handle_download_embeddings(args)
     elif args.command == "download-segmentations":
         _handle_download_segmentations(args)
+    elif args.command == "download-captions":
+        _handle_download_captions(args)
     elif args.command == "request-access":
         _handle_request_access(args)
     elif args.command == "login":
@@ -207,6 +214,12 @@ def _handle_download_segmentations(args):
     """Handle the download-segmentations subcommand."""
     from laion_fmri.download import download_segmentations
     download_segmentations()
+
+
+def _handle_download_captions(args):
+    """Handle the download-captions subcommand."""
+    from laion_fmri.download import download_captions
+    download_captions()
 
 
 def _handle_request_access(args):

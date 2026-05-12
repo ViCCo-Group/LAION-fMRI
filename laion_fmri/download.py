@@ -11,6 +11,7 @@ from laion_fmri._constants import (
 from laion_fmri._errors import LicenseNotAcceptedError
 from laion_fmri._laion_fmri_fetch import _clamp_n_jobs, fetch_laion_fmri
 from laion_fmri._paths import (
+    captions_path,
     embeddings_h5_path,
     license_marker_path,
     segmentations_h5_path,
@@ -436,6 +437,53 @@ def download_segmentations(data_dir=None):
         download_key(LAION_FMRI_BUCKET, key, local)
 
     return paths
+
+
+def download_captions(data_dir=None):
+    """Download the per-stimulus captions CSV from the public S3 bucket.
+
+    Pulls ``task-images_desc-captions.csv`` into ``<data_dir>/stimuli/``.
+    The file is a dataset-wide stimulus metadata derivative: shared
+    images have five human captions, shared non-OOD images have one AI
+    caption, and unique images have three human captions and no AI
+    caption.
+
+    The download is **idempotent**: a file whose local size matches the
+    S3 size is skipped, so re-running an interrupted transfer only
+    fetches what's missing.
+
+    Parameters
+    ----------
+    data_dir : str or Path, optional
+        Override the configured data directory.
+
+    Returns
+    -------
+    pathlib.Path
+        Local path to ``task-images_desc-captions.csv``.
+    """
+    if data_dir is None:
+        data_dir = get_data_dir()
+
+    accept_license()
+
+    key = "stimuli/task-images_desc-captions.csv"
+    local = captions_path(data_dir)
+    bucket_objects = list_prefix_objects(LAION_FMRI_BUCKET, "stimuli/")
+    sizes = {o["Key"]: o["Size"] for o in bucket_objects}
+    expected_size = sizes.get(key)
+    if expected_size is None:
+        raise RuntimeError(
+            f"Captions file {key!r} not found on "
+            f"s3://{LAION_FMRI_BUCKET}/. Has it been uploaded yet?"
+        )
+    if local.exists() and local.stat().st_size == expected_size:
+        print("[laion-fmri] captions already up to date.")
+        return local
+
+    print("[laion-fmri] Downloading captions file:")
+    download_key(LAION_FMRI_BUCKET, key, local)
+    return local
 
 
 # ── Public entry point ──────────────────────────────────────────

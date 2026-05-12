@@ -6,10 +6,12 @@ from laion_fmri._constants import LICENSE_AGREEMENT_TEXT
 from laion_fmri._errors import LicenseNotAcceptedError, SubjectNotFoundError
 from laion_fmri.download import (
     _check_license_accepted,
+    _prompt_stimulus_form,
     _write_license_marker,
     accept_license,
     accept_licenses,
     download,
+    download_captions,
 )
 
 
@@ -142,6 +144,26 @@ def test_download_without_stimuli_does_not_call_access_service(configured_env):
     mock_stim.assert_not_called()
 
 
+def test_download_captions_fetches_public_csv(configured_env):
+    with patch("laion_fmri.download.accept_license") as mock_accept, patch(
+        "laion_fmri.download.list_prefix_objects",
+        return_value=[
+            {
+                "Key": "stimuli/task-images_desc-captions.csv",
+                "Size": 123,
+            }
+        ],
+    ), patch("laion_fmri.download.download_key") as mock_download:
+        path = download_captions(data_dir=str(configured_env))
+
+    mock_accept.assert_called_once()
+    mock_download.assert_called_once_with(
+        "laion-fmri",
+        "stimuli/task-images_desc-captions.csv",
+        path,
+    )
+
+
 # ── CC0 license prompt ────────────────────────────────────────
 
 
@@ -257,6 +279,37 @@ def test_accept_licenses_with_include_stimuli_is_no_op_for_stimuli(
     assert not (
         configured_env_no_license / ".laion_fmri" / "stimuli_terms_accepted"
     ).exists()
+
+
+def test_prompt_stimulus_form_acknowledges_terms_and_privacy(capsys):
+    responses = iter([
+        "Ada Lovelace",
+        "ada@example.edu",
+        "Analytical Engine Institute",
+        "",
+        "Benchmarking visual encoding models on LAION-fMRI stimuli.",
+        "yes",
+    ])
+
+    with patch(
+        "laion_fmri.download.current_terms_version",
+        return_value="2026-05-12",
+    ), patch(
+        "builtins.input",
+        side_effect=lambda prompt="": next(responses),
+    ) as mock_input:
+        payload, email = _prompt_stimulus_form("https://example.test")
+
+    captured = capsys.readouterr()
+    assert "https://example.test/terms" in captured.out
+    assert "https://example.test/privacy" in captured.out
+    assert "Terms of Use" in mock_input.call_args_list[-1].args[0]
+    assert "Privacy notice" in mock_input.call_args_list[-1].args[0]
+    assert payload["accepted_terms"] is True
+    assert payload["acknowledged_privacy"] is True
+    assert payload["terms_version"] == "2026-05-12"
+    assert payload["source"] == "cli"
+    assert email == "ada@example.edu"
 
 
 def test_download_stimuli_skips_auth_when_local_files_match(configured_env):

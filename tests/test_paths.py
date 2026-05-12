@@ -4,6 +4,7 @@ import pytest
 
 from laion_fmri._paths import (
     betas_path,
+    captions_path,
     glmsingle_subject_dir,
     license_marker_path,
     participants_tsv_path,
@@ -180,6 +181,12 @@ def test_stimuli_h5_path():
 def test_stimuli_metadata_path():
     assert stimuli_metadata_path("/data") == Path(
         "/data/stimuli/task-images_metadata.csv"
+    )
+
+
+def test_captions_path():
+    assert captions_path("/data") == Path(
+        "/data/stimuli/task-images_desc-captions.csv"
     )
 
 
