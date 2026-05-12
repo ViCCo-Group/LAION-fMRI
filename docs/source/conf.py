@@ -123,7 +123,13 @@ language = "en"
 exclude_patterns = []
 pygments_style = "tango"
 pygments_dark_style = "monokai"
-todo_include_todos = True
+# Two-mode build: pass ``-t dev`` (or ``make html-dev``) to render the
+# in-progress TODO planning blocks and any content guarded by
+# ``.. only:: dev``. The default build is the public-facing "live" view
+# that hides both.
+todo_include_todos = tags.has("dev")
+if not tags.has("dev"):
+    tags.add("live")
 
 
 # -- Options for HTML output ----------------------------------------------

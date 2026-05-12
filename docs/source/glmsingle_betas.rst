@@ -210,18 +210,20 @@ additional sessions, as reflected in the color scales of the figures below:
 the meaningful range extends once repeats are averaged across multiple
 sessions.
 
-.. todo::
+.. only:: dev
 
-   Add figures: ``sub-03_ses-01_nc`` (per-session NC) and ``sub-03_ses-all_nc``
-   (cross-session NC).
+   .. todo::
 
-.. figure:: _static/placeholder_noise_ceilings.png
-   :align: center
-   :width: 70%
-   :alt: Noise ceiling map
+      Add figures: ``sub-03_ses-01_nc`` (per-session NC) and ``sub-03_ses-all_nc``
+      (cross-session NC).
 
-   Noise ceiling map for an example subject. *(placeholder — replace with
-   actual figure)*
+   .. figure:: _static/placeholder_noise_ceilings.png
+      :align: center
+      :width: 70%
+      :alt: Noise ceiling map
+
+      Noise ceiling map for an example subject. *(placeholder — replace with
+      actual figure)*
 
 Relation to Stimuli
 ===================

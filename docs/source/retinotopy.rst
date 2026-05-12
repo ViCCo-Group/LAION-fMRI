@@ -4,85 +4,93 @@
 Retinotopy
 ===========
 
-.. todo::
+.. only:: live
 
-   Introductory narrative (2-3 sentences): Were retinotopic mapping
-   experiments conducted? What is provided — pRF parameter maps, visual area
-   definitions, or both?
+   *Full retinotopy documentation will be added with the final release.*
+   For the retinotopy experimental paradigm, see
+   :doc:`experimental_design`.
 
-   For the retinotopy experimental paradigm, see :doc:`experimental_design`.
+.. only:: dev
 
-.. todo::
+   .. todo::
 
-   Add an overview figure showing example pRF maps (polar angle +
-   eccentricity) on a flatmap or inflated surface for one subject.
+      Introductory narrative (2-3 sentences): Were retinotopic mapping
+      experiments conducted? What is provided — pRF parameter maps, visual area
+      definitions, or both?
 
-.. figure:: _static/placeholder_retinotopy_maps.png
-   :align: center
-   :width: 80%
-   :alt: Example retinotopic maps
+      For the retinotopy experimental paradigm, see :doc:`experimental_design`.
 
-   Polar angle and eccentricity maps on an example subject. *(placeholder —
-   replace with actual figure)*
+   .. todo::
 
-pRF Modeling
-============
+      Add an overview figure showing example pRF maps (polar angle +
+      eccentricity) on a flatmap or inflated surface for one subject.
 
-.. todo::
+   .. figure:: _static/placeholder_retinotopy_maps.png
+      :align: center
+      :width: 80%
+      :alt: Example retinotopic maps
 
-   Document:
+      Polar angle and eccentricity maps on an example subject. *(placeholder —
+      replace with actual figure)*
 
-   - Software and version used for pRF fitting
-   - pRF model type (e.g., isotropic Gaussian, CSS)
-   - Input data (preprocessed BOLD from which space?)
-   - Any non-default parameters or preprocessing specific to retinotopy
+   pRF Modeling
+   ============
 
-pRF Maps
-========
+   .. todo::
 
-.. todo::
+      Document:
 
-   List all pRF output maps provided. For each, briefly describe what it
-   represents, its units/range, and what it looks like. Include a figure
-   for each map type if possible, or a combined multi-panel figure.
+      - Software and version used for pRF fitting
+      - pRF model type (e.g., isotropic Gaussian, CSS)
+      - Input data (preprocessed BOLD from which space?)
+      - Any non-default parameters or preprocessing specific to retinotopy
 
-The following maps are provided per subject:
+   pRF Maps
+   ========
 
-- **Polar angle** — (placeholder)
-- **Eccentricity** — (placeholder)
-- **pRF size** — (placeholder)
-- **R-squared** — (placeholder)
-- *(add or remove as needed)*
+   .. todo::
 
-Visual Area Definitions
-========================
+      List all pRF output maps provided. For each, briefly describe what it
+      represents, its units/range, and what it looks like. Include a figure
+      for each map type if possible, or a combined multi-panel figure.
 
-.. todo::
+   The following maps are provided per subject:
 
-   Which visual areas are delineated (V1, V2, V3, ...)?  How were
-   boundaries drawn (automatic, manual, threshold-based)?
-   Add a figure showing visual area boundaries.
+   - **Polar angle** — (placeholder)
+   - **Eccentricity** — (placeholder)
+   - **pRF size** — (placeholder)
+   - **R-squared** — (placeholder)
+   - *(add or remove as needed)*
 
-.. figure:: _static/placeholder_visual_areas.png
-   :align: center
-   :width: 70%
-   :alt: Visual area boundary definitions
+   Visual Area Definitions
+   ========================
 
-   Visual area boundaries derived from retinotopic mapping. *(placeholder —
-   replace with actual figure)*
+   .. todo::
 
-These ROI definitions are also available under ``derivatives/rois/`` — see
-:doc:`rois`.
+      Which visual areas are delineated (V1, V2, V3, ...)?  How were
+      boundaries drawn (automatic, manual, threshold-based)?
+      Add a figure showing visual area boundaries.
 
-File Organization
-=================
+   .. figure:: _static/placeholder_visual_areas.png
+      :align: center
+      :width: 70%
+      :alt: Visual area boundary definitions
 
-.. todo::
+      Visual area boundaries derived from retinotopic mapping. *(placeholder —
+      replace with actual figure)*
 
-   Paste the actual file tree from ``derivatives/retinotopy/sub-XX/``.
+   These ROI definitions are also available under ``derivatives/rois/`` — see
+   :doc:`rois`.
 
-.. code-block:: text
+   File Organization
+   =================
 
-    derivatives/retinotopy/
-    └── sub-XX/
-        └── ... (placeholder — fill with actual file listing)
+   .. todo::
+
+      Paste the actual file tree from ``derivatives/retinotopy/sub-XX/``.
+
+   .. code-block:: text
+
+       derivatives/retinotopy/
+       └── sub-XX/
+           └── ... (placeholder — fill with actual file listing)

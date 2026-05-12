@@ -2,68 +2,76 @@
 Anatomical Data
 ===============
 
-.. todo::
+.. only:: live
 
-   Introductory narrative (1-2 sentences): What structural data is provided
-   (raw T1w, FreeSurfer outputs, tissue segmentations)? How many T1w scans
-   per subject — were they averaged?
+   *Full anatomical documentation will be added with the final release.*
+   For acquisition parameters of the T1w (MP2RAGE) and the MEGRE
+   T2*-mapping scans, see :doc:`mri_acquisition`.
 
-For acquisition parameters, see :doc:`mri_acquisition`.
+.. only:: dev
 
-T1-weighted Images
-==================
+   .. todo::
 
-.. todo::
+      Introductory narrative (1-2 sentences): What structural data is provided
+      (raw T1w, FreeSurfer outputs, tissue segmentations)? How many T1w scans
+      per subject — were they averaged?
 
-   Paste the actual file tree for a representative subject's ``anat/``
-   directory.
+   For acquisition parameters, see :doc:`mri_acquisition`.
 
-.. code-block:: text
+   T1-weighted Images
+   ==================
 
-    sub-XX/
-    └── anat/
-        └── ... (placeholder — fill with actual file listing)
+   .. todo::
 
-FreeSurfer Reconstructions
-==========================
+      Paste the actual file tree for a representative subject's ``anat/``
+      directory.
 
-.. todo::
+   .. code-block:: text
 
-   Document:
+       sub-XX/
+       └── anat/
+           └── ... (placeholder — fill with actual file listing)
 
-   - FreeSurfer version used
-   - Which outputs are actually shipped (not every FS output needs to be
-     distributed — list what's included)
-   - Paste the actual file tree from ``derivatives/freesurfer/sub-XX/``
+   FreeSurfer Reconstructions
+   ==========================
 
-.. code-block:: text
+   .. todo::
 
-    derivatives/freesurfer/
-    └── sub-XX/
-        └── ... (placeholder — fill with actual file listing)
+      Document:
 
-Tissue Segmentations
-====================
+      - FreeSurfer version used
+      - Which outputs are actually shipped (not every FS output needs to be
+        distributed — list what's included)
+      - Paste the actual file tree from ``derivatives/freesurfer/sub-XX/``
 
-.. todo::
+   .. code-block:: text
 
-   Document:
+       derivatives/freesurfer/
+       └── sub-XX/
+           └── ... (placeholder — fill with actual file listing)
 
-   - What tissue maps are provided (GM, WM, CSF probability maps)?
-   - Which spaces are they available in?
-   - Are transformation files (e.g., T1w-to-MNI warps) included?
-   - Paste the actual file tree from ``derivatives/fmriprep/sub-XX/anat/``
+   Tissue Segmentations
+   ====================
 
-.. code-block:: text
+   .. todo::
 
-    derivatives/fmriprep/
-    └── sub-XX/
-        └── anat/
-            └── ... (placeholder — fill with actual file listing)
+      Document:
 
-Loading Anatomical Data
-=======================
+      - What tissue maps are provided (GM, WM, CSF probability maps)?
+      - Which spaces are they available in?
+      - Are transformation files (e.g., T1w-to-MNI warps) included?
+      - Paste the actual file tree from ``derivatives/fmriprep/sub-XX/anat/``
 
-.. todo::
+   .. code-block:: text
 
-   Provide minimal code examples once file paths are finalized.
+       derivatives/fmriprep/
+       └── sub-XX/
+           └── anat/
+               └── ... (placeholder — fill with actual file listing)
+
+   Loading Anatomical Data
+   =======================
+
+   .. todo::
+
+      Provide minimal code examples once file paths are finalized.

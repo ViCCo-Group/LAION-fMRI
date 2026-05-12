@@ -2,49 +2,107 @@
 Quickstart
 ==========
 
-This guide will help you get started with the LAION-fMRI dataset quickly.
+The shortest path from "I have nothing installed" to single-trial betas
+and stimuli in Python. For the full reference of every download path
+and option, see :doc:`data_access`.
 
-.. todo::
+Install
+=======
 
-   This page should be written once the data access method and file paths are
-   finalized. It should give a user the shortest path from "I have nothing"
-   to "I'm looking at data in Python." Keep it under 5 minutes of reading.
+.. code-block:: bash
 
-   **Avoid duplicating** :doc:`data_access` — this page should be brief and
-   link there for details.
+   pip install laion_fmri
 
-Getting the Data
-================
+Point the package at a local data directory (the place every download
+will land):
 
-.. todo::
+.. code-block:: bash
 
-   Minimal download instructions — just enough to get one subject's betas
-   and stimuli. Point to :doc:`data_access` for full options (all subjects,
-   raw data, etc.).
+   laion-fmri config --data-dir ./laion_fmri_data
 
-   Decide: is the primary access method AWS S3, a Python package, or
-   something else? Show only one method here; put alternatives in
-   :doc:`data_access`.
+Download one subject
+====================
 
-Loading Betas and Stimuli
-=========================
+This pulls the GLMsingle single-trial betas, noise ceilings, ROI masks,
+and per-session trial tables for ``sub-01``. The bucket is public, so
+the first call asks you to accept the CC0 license; no AWS credentials
+needed.
 
-.. todo::
+.. code-block:: bash
 
-   A single, minimal code example that:
+   laion-fmri download --subject sub-01
 
-   1. Loads single-trial betas for one subject
-   2. Loads the stimulus metadata
-   3. Shows how they map to each other
+Re-running is safe — the downloader is idempotent and only fetches
+files whose local size doesn't match the bucket. Pass ``--n-jobs 4``
+for faster parallel transfers, or ``--ses ses-01`` to narrow to a
+single session.
 
-   This should use correct file paths and column names — do not add until
-   those are finalized.
+Load betas in Python
+====================
+
+.. code-block:: python
+
+   from laion_fmri import load_subject
+
+   sub = load_subject("sub-01")
+
+   betas = sub.get_betas(session="ses-01")          # (n_trials, n_voxels)
+   trials = sub.get_trial_info(session="ses-01")    # pandas DataFrame
+
+The ``trials`` table has one row per beta volume; its ``label`` column
+is the stimulus image filename and is the join key to the stimulus
+metadata. Restrict by ROI in the same call:
+
+.. code-block:: python
+
+   betas_ffa = sub.get_betas(session="ses-01", roi="FFA1")
+   betas_face = sub.get_betas(session="ses-01", roi="face")  # union of face ROIs
+   betas_lo = sub.get_betas(session="ses-01", roi="all", nc_threshold=0.2)
+
+The full accessor grammar — categories, mask combinations, surface
+ROIs, streaming mode for memory-tight machines — is in
+:doc:`laion_fmri_package/load`.
+
+Get the stimulus images
+=======================
+
+Stimulus images are gated by a short Data Use Agreement. The package
+walks you through the form on first request and caches the resulting
+``request_id`` for subsequent calls:
+
+.. code-block:: bash
+
+   laion-fmri download-stimuli
+
+Then load them in Python:
+
+.. code-block:: python
+
+   from laion_fmri import load_stimuli
+
+   stim = load_stimuli()
+   stim.metadata.head()                                 # pandas DataFrame
+   img = stim.image("shared_12rep_LAION_cluster_1003_i0.jpg")  # PIL.Image
+
+Pretrained image embeddings (OpenCLIP, DINOv2, PE Core, SigLIP2) are
+public and do not need the DUA:
+
+.. code-block:: bash
+
+   laion-fmri download-embeddings
+
+.. code-block:: python
+
+   from laion_fmri import load_embeddings
+   emb = load_embeddings("CLIP")
+   emb["CLIP"][0]                                       # (1024,) float16
 
 Next Steps
 ==========
 
 * :doc:`dataset_at_a_glance` — full dataset overview and "what files do I need"
-* :doc:`glmsingle_betas` — details on the beta estimates
-* :doc:`stimulus_data` — stimulus images and metadata
-* :doc:`train_test_splits` — train/test partitioning
+* :doc:`glmsingle_betas` — details on the beta estimates and noise ceilings
+* :doc:`stimulus_data` — stimulus images, metadata, and embeddings
+* :doc:`train_test_splits` — predefined train/test partitions
+* :doc:`laion_fmri_package/load` — full ``Subject`` API reference
 * :doc:`faq` — common questions

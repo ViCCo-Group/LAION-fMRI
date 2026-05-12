@@ -4,40 +4,47 @@
 Diffusion Data
 ==============
 
-.. todo::
+.. only:: live
 
-   **Decision needed:** Is diffusion-weighted MRI (dMRI) data included in the
-   dataset? If not, remove this page and its entry from the toctree in
-   ``index.rst``.
+   *Full diffusion-MRI documentation will be added with the final
+   release.*
 
-   If included, document the following sections:
+.. only:: dev
 
-Overview
-========
+   .. todo::
 
-.. todo::
+      **Decision needed:** Is diffusion-weighted MRI (dMRI) data included in the
+      dataset? If not, remove this page and its entry from the toctree in
+      ``index.rst``.
 
-   Brief narrative: What diffusion data is provided and why?
+      If included, document the following sections:
 
-Acquisition Parameters
-======================
+   Overview
+   ========
 
-.. todo::
+   .. todo::
 
-   Document acquisition parameters (b-values, number of directions,
-   resolution, etc.). Or cross-reference :doc:`mri_acquisition` if documented
-   there.
+      Brief narrative: What diffusion data is provided and why?
 
-Derived Products
-================
+   Acquisition Parameters
+   ======================
 
-.. todo::
+   .. todo::
 
-   What derived products are provided, if any (DTI maps, tractography,
-   connectivity matrices)? Paste the actual file tree.
+      Document acquisition parameters (b-values, number of directions,
+      resolution, etc.). Or cross-reference :doc:`mri_acquisition` if documented
+      there.
 
-.. code-block:: text
+   Derived Products
+   ================
 
-    derivatives/diffusion/
-    └── sub-XX/
-        └── ... (placeholder — fill with actual file listing)
+   .. todo::
+
+      What derived products are provided, if any (DTI maps, tractography,
+      connectivity matrices)? Paste the actual file tree.
+
+   .. code-block:: text
+
+       derivatives/diffusion/
+       └── sub-XX/
+           └── ... (placeholder — fill with actual file listing)

@@ -2,70 +2,77 @@
 Metadata Acquisition
 ====================
 
-.. todo::
+.. only:: live
 
-   Introductory narrative (2-3 sentences): What metadata was collected or
-   computed for the stimuli beyond basic image properties? Why is this
-   metadata useful (e.g., for controlling confounds, building feature spaces,
-   analyzing category structure)?
+   *This section will be added in the final release of the LAION-fMRI
+   documentation.*
 
-Image-level Metadata
-====================
+.. only:: dev
 
-.. todo::
+   .. todo::
 
-   Document all metadata fields that were collected or computed per image.
-   For each field or group of fields, describe:
+      Introductory narrative (2-3 sentences): What metadata was collected or
+      computed for the stimuli beyond basic image properties? Why is this
+      metadata useful (e.g., for controlling confounds, building feature spaces,
+      analyzing category structure)?
 
-   - What it is and how it was obtained (manual annotation, automated tool,
-     model extraction, database lookup)
-   - Software / model / API used (with version)
-   - Units or value range
+   Image-level Metadata
+   ====================
 
-   Candidate metadata categories to cover:
+   .. todo::
 
-Low-level Visual Properties
----------------------------
+      Document all metadata fields that were collected or computed per image.
+      For each field or group of fields, describe:
 
-.. todo::
+      - What it is and how it was obtained (manual annotation, automated tool,
+        model extraction, database lookup)
+      - Software / model / API used (with version)
+      - Units or value range
 
-   E.g., luminance, contrast, spatial frequency, color statistics.
-   How were these computed? Which tool or script?
+      Candidate metadata categories to cover:
 
-Semantic Annotations
---------------------
+   Low-level Visual Properties
+   ---------------------------
 
-.. todo::
+   .. todo::
 
-   E.g., object categories, scene types, number of objects, animacy.
-   Were these human-annotated, from an existing dataset (COCO, ImageNet
-   labels), or model-derived?
+      E.g., luminance, contrast, spatial frequency, color statistics.
+      How were these computed? Which tool or script?
 
-Model-derived Features
-----------------------
+   Semantic Annotations
+   --------------------
 
-.. todo::
+   .. todo::
 
-   E.g., CLIP embeddings, DNN feature vectors, caption embeddings.
-   Which models and layers? How are they stored (separate files, columns in
-   stimuli.tsv)?
+      E.g., object categories, scene types, number of objects, animacy.
+      Were these human-annotated, from an existing dataset (COCO, ImageNet
+      labels), or model-derived?
 
-Other Metadata
---------------
+   Model-derived Features
+   ----------------------
 
-.. todo::
+   .. todo::
 
-   Any other metadata: image source/provenance, licensing info per image,
-   NSFW scores, aesthetic scores, etc.
+      E.g., CLIP embeddings, DNN feature vectors, caption embeddings.
+      Which models and layers? How are they stored (separate files, columns in
+      stimuli.tsv)?
 
-Metadata File Format
-====================
+   Other Metadata
+   --------------
 
-.. todo::
+   .. todo::
 
-   Where does the metadata live? Is it all in ``stimuli/stimuli.tsv``, or
-   are there separate files for different metadata types (e.g., embeddings
-   as .npy)? Document file paths and formats.
+      Any other metadata: image source/provenance, licensing info per image,
+      NSFW scores, aesthetic scores, etc.
 
-   Cross-reference :doc:`stimulus_data` for the full stimulus file
-   organization.
+   Metadata File Format
+   ====================
+
+   .. todo::
+
+      Where does the metadata live? Is it all in ``stimuli/stimuli.tsv``, or
+      are there separate files for different metadata types (e.g., embeddings
+      as .npy)? Document file paths and formats.
+
+      Cross-reference :doc:`stimulus_data` for the full stimulus file
+      organization.

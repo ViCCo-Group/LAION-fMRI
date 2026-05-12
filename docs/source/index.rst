@@ -183,9 +183,17 @@ Getting Started
 Latest Updates
 ==============
 
-.. todo::
+.. only:: live
 
-   Keep this short — 3-5 most recent updates, one line each. Move older
-   entries to :doc:`release-history` when the list gets long.
+   *Release notes will be added as the dataset moves toward its
+   public release. See* :doc:`release-history` *for the full
+   changelog once it's available.*
 
-* **YYYY-MM-DD** — (placeholder)
+.. only:: dev
+
+   .. todo::
+
+      Keep this short — 3-5 most recent updates, one line each. Move older
+      entries to :doc:`release-history` when the list gets long.
+
+   * **YYYY-MM-DD** — (placeholder)

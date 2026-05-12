@@ -33,74 +33,80 @@ At a Glance
         :class-card: sd-border-0
         :shadow: sm
 
-        .. todo:: Total size in TB
+        Reported with the final release
 
 What's Included
 ===============
 
-.. todo::
+The dataset bundles raw and preprocessed functional MRI
+(:doc:`fmri_data`, :doc:`preprocessing`), anatomical scans and
+FreeSurfer reconstructions (:doc:`anatomical_data`), single-trial
+GLMsingle beta estimates with per-session and cross-session noise
+ceilings (:doc:`glmsingle_betas`), stimulus images plus metadata and
+pretrained image embeddings (:doc:`stimulus_data`), ROI masks
+(:doc:`rois`) derived from retinotopy (:doc:`retinotopy`) and
+functional localizers (:doc:`localizers`), and predefined train/test
+splits (:doc:`train_test_splits`). The fMRI side is CC0; the stimulus
+images are gated by a short Data Use Agreement
+(:doc:`data_access`).
 
-   Brief prose overview (4-6 sentences) of what the dataset contains,
-   linking to the relevant detail pages. This replaces the old summary table
-   — a narrative reads better here than a giant key-value list. Mention:
+.. only:: live
 
-   - Raw + preprocessed fMRI → :doc:`fmri_data`, :doc:`preprocessing`
-   - Anatomical scans + FreeSurfer → :doc:`anatomical_data`
-   - GLMsingle betas → :doc:`glmsingle_betas`
-   - Stimuli + metadata → :doc:`stimulus_data`
-   - ROIs, retinotopy, localizers → :doc:`rois`, :doc:`retinotopy`, :doc:`localizers`
-   - Train/test splits → :doc:`train_test_splits`
-   - License
+   *A full BIDS directory tree, the complete list of coordinate spaces,
+   and a per-ROI-set summary table will be added with the final
+   release.*
 
-Dataset Structure
-=================
+.. only:: dev
 
-.. todo::
+   Dataset Structure
+   =================
 
-   Paste the actual top-level BIDS directory tree here. This should reflect
-   the real file/folder names, task labels, and derivative directories.
+   .. todo::
 
-.. code-block:: text
+      Paste the actual top-level BIDS directory tree here. This should reflect
+      the real file/folder names, task labels, and derivative directories.
 
-    LAION-fMRI/
-    └── ... (placeholder — fill with actual directory tree)
+   .. code-block:: text
 
-Available Spaces
-================
+       LAION-fMRI/
+       └── ... (placeholder — fill with actual directory tree)
 
-.. todo::
+   Available Spaces
+   ================
 
-   List all coordinate spaces the data is provided in, with resolutions.
+   .. todo::
 
-.. list-table::
-   :widths: 25 50 25
-   :header-rows: 1
+      List all coordinate spaces the data is provided in, with resolutions.
 
-   * - Space
-     - Description
-     - Resolution
-   * - (placeholder)
-     - (placeholder)
-     - (placeholder)
+   .. list-table::
+      :widths: 25 50 25
+      :header-rows: 1
 
-ROIs
-====
+      * - Space
+        - Description
+        - Resolution
+      * - (placeholder)
+        - (placeholder)
+        - (placeholder)
 
-.. todo::
+   ROIs
+   ====
 
-   Brief summary of available ROI sets. For full details, point to
-   :doc:`rois`.
+   .. todo::
 
-.. list-table::
-   :widths: 25 40 35
-   :header-rows: 1
+      Brief summary of available ROI sets. For full details, point to
+      :doc:`rois`.
 
-   * - ROI set
-     - Description
-     - How defined
-   * - (placeholder)
-     - (placeholder)
-     - (placeholder)
+   .. list-table::
+      :widths: 25 40 35
+      :header-rows: 1
+
+      * - ROI set
+        - Description
+        - How defined
+      * - (placeholder)
+        - (placeholder)
+        - (placeholder)
 
 
 What Files Do I Need?
@@ -207,8 +213,9 @@ Data Formats
      - TSV (.tsv)
      - Tab-separated, BIDS-compliant
    * - Stimulus images
-     - (placeholder)
-     - (placeholder)
+     - HDF5 (.h5)
+     - Single packed file with raw JPEG bytes, indexed by image name. Loaded
+       via :func:`laion_fmri.load_stimuli`.
    * - Stimulus metadata
      - TSV + JSON
      - Stimulus properties and categories

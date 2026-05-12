@@ -2,23 +2,26 @@
 Preprocessing
 ==============
 
-.. todo::
+The functional data were preprocessed with NORDIC denoising followed
+by tedana optimal echo combination, and the resulting BOLD timeseries
+were fed to GLMsingle. Both raw and preprocessed data are shipped, so
+you can rerun your own pipeline if you prefer. The choice of pipeline
+is explained below, and a full step-by-step list of parameters will be
+added with the final release.
 
-   Introductory narrative (2-3 sentences): Which pipeline was used and why?
-   Emphasize that both raw and preprocessed data are provided so users can
-   rerun their own pipeline if desired. Link to the dataset paper.
+For raw-data acquisition parameters, see :doc:`mri_acquisition`.
 
-For raw data acquisition parameters, see :doc:`mri_acquisition`.
+.. only:: dev
 
-Preprocessing Steps
-===================
+   Preprocessing Steps
+   ===================
 
-.. todo::
+   .. todo::
 
-   List the actual preprocessing steps applied, separately for anatomical
-   and functional data. Note any non-default settings. Add a brief narrative
-   on key decisions (e.g., why a particular SDC method, whether slice timing
-   correction was applied, whether smoothing was applied or not).
+      List the actual preprocessing steps applied, separately for anatomical
+      and functional data. Note any non-default settings. Add a brief narrative
+      on key decisions (e.g., why a particular SDC method, whether slice timing
+      correction was applied, whether smoothing was applied or not).
 
 Comparing combinations of NORDIC and tedana
 --------------------------------
@@ -75,36 +78,38 @@ However, this limitation applies equally to all six variants.
 
 .. _GLMsingle documentation: https://glmsingle.readthedocs.io/en/latest/wiki.html#pre-processing-choices
 
-Parameters
-==========
+.. only:: dev
 
-.. todo::
+   Parameters
+   ==========
 
-   Fill in all parameter values below. Add or remove rows as needed to
-   match the actual pipeline configuration.
+   .. todo::
 
-.. list-table::
-   :widths: 30 70
-   :stub-columns: 1
+      Fill in all parameter values below. Add or remove rows as needed to
+      match the actual pipeline configuration.
 
-   * - Pipeline
-     - (placeholder)
-   * - Version
-     - (placeholder)
-   * - Template
-     - (placeholder)
-   * - Output spaces
-     - (placeholder)
-   * - Output resolution
-     - (placeholder)
-   * - Slice timing correction
-     - (placeholder — applied or not?)
-   * - SDC method
-     - (placeholder)
-   * - High-pass filter
-     - (placeholder)
-   * - Smoothing
-     - (placeholder)
+   .. list-table::
+      :widths: 30 70
+      :stub-columns: 1
+
+      * - Pipeline
+        - (placeholder)
+      * - Version
+        - (placeholder)
+      * - Template
+        - (placeholder)
+      * - Output spaces
+        - (placeholder)
+      * - Output resolution
+        - (placeholder)
+      * - Slice timing correction
+        - (placeholder — applied or not?)
+      * - SDC method
+        - (placeholder)
+      * - High-pass filter
+        - (placeholder)
+      * - Smoothing
+        - (placeholder)
 
 Output Files
 ============

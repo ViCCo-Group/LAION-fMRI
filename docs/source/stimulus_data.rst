@@ -2,45 +2,57 @@
 Stimulus Data
 ==============
 
-.. todo::
+The LAION-fMRI stimulus set is a deduplicated collection of 25,052
+natural images shown across all subjects. The images are drawn from
+the LAION-natural pool (a curated subset of LAION-5B, Roth & Hebart,
+2025) and supplemented with shared images from NSD and THINGS+, plus
+an OOD test set of 371 images held out for out-of-distribution
+evaluation. For how the images were selected, see
+:doc:`stimulus_selection`; for the per-trial schedule across
+participants and sessions, see :doc:`experimental_design`.
 
-   Introductory narrative (2-3 sentences): What stimuli are provided, how
-   many, and for which experiments (main experiment, localizer, etc.)?
-   Cross-reference :doc:`stimulus_selection` for how they were chosen.
+.. only:: dev
 
-.. todo::
+   .. todo::
 
-   Add a large montage / grid figure showing a representative sample of
-   stimuli from the dataset (e.g., 50-100 random images in a grid).
+      Add a large montage / grid figure showing a representative sample of
+      stimuli from the dataset (e.g., 50-100 random images in a grid).
 
-.. figure:: _static/placeholder_stimulus_montage.png
-   :align: center
-   :width: 90%
-   :alt: Montage of example stimuli
+   .. figure:: _static/placeholder_stimulus_montage.png
+      :align: center
+      :width: 90%
+      :alt: Montage of example stimuli
 
-   A representative sample of stimuli from the LAION-fMRI dataset.
-   *(placeholder — replace with actual figure)*
+      A representative sample of stimuli from the LAION-fMRI dataset.
+      *(placeholder — replace with actual figure)*
 
-Stimulus Sets
-=============
+.. only:: dev
 
-.. todo::
+   Stimulus Sets
+   =============
 
-   List all stimulus sets included in the dataset (main experiment,
-   localizer, n-back, etc.). For each set: how many images, what kind of
-   images, what experiment they belong to.
+   .. todo::
+
+      List all stimulus sets included in the dataset (main experiment,
+      localizer, n-back, etc.). For each set: how many images, what kind of
+      images, what experiment they belong to.
 
 File Organization
 =================
 
-.. todo::
-
-   Paste the actual directory tree under ``stimuli/``.
+The stimuli ship as a single HDF5 file plus a sidecar metadata CSV
+under ``stimuli/``, together with four per-model embedding files (see
+`Stimulus Embeddings`_ below):
 
 .. code-block:: text
 
-    stimuli/
-    └── ... (placeholder — fill with actual file listing)
+   stimuli/
+   ├── task-images_stimuli.h5           # raw JPEG bytes, indexed by image name
+   ├── task-images_metadata.csv         # per-image metadata, row-aligned to the HDF5
+   ├── task-images_desc-CLIP_embeddings.h5
+   ├── task-images_desc-DINOv2_embeddings.h5
+   ├── task-images_desc-PEcore_embeddings.h5
+   └── task-images_desc-SigLIP2_embeddings.h5
 
 .. figure:: _static/oodA_images.png
    :align: center
@@ -49,17 +61,19 @@ File Organization
 
    Example stimuli from different categories in the LAION-fMRI dataset.
 
-Image Format
-============
+.. only:: dev
 
-.. todo::
+   Image Format
+   ============
 
-   Document the technical specs of the image files:
+   .. todo::
 
-   - File format (PNG, JPEG, etc.)
-   - Resolution (pixels)
-   - Color space and bit depth
-   - Any preprocessing applied (cropping, resizing, background)
+      Document the technical specs of the image files:
+
+      - File format (PNG, JPEG, etc.)
+      - Resolution (pixels)
+      - Color space and bit depth
+      - Any preprocessing applied (cropping, resizing, background)
 
 Stimulus Metadata
 =================
@@ -68,13 +82,20 @@ For details on how the metadata was collected and computed (visual properties,
 semantic annotations, model-derived features), see
 :doc:`metadata_acquisition`.
 
-.. todo::
+.. only:: live
 
-   Document the ``stimuli.tsv`` file:
+   *Full documentation of the* ``stimuli.tsv`` *columns will be added
+   with the final release.*
 
-   - List every column and what it contains
-   - Show a few example rows (copy from the actual file)
-   - Document the companion ``stimuli.json`` sidecar if one exists
+.. only:: dev
+
+   .. todo::
+
+      Document the ``stimuli.tsv`` file:
+
+      - List every column and what it contains
+      - Show a few example rows (copy from the actual file)
+      - Document the companion ``stimuli.json`` sidecar if one exists
 
 Stimulus Embeddings
 ===================

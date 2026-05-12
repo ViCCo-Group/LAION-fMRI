@@ -2,109 +2,119 @@
 ROIs
 ====
 
-.. todo::
+.. only:: live
 
-   Introductory narrative (2-3 sentences): What ROIs are provided and why?
-   Are they intended for most users, or only for ROI-based analyses?
+   *Full ROI documentation will be added with the final release.* In the
+   meantime, the :doc:`load API <laion_fmri_package/load>` documents how
+   to load ROI masks and apply them to single-trial betas
+   (``sub.get_betas(roi="FFA1")``, category filters like ``"face"``,
+   surface and FreeSurfer-label loading, etc.).
 
-.. todo::
+.. only:: dev
 
-   Add an overview figure showing all ROI sets on a brain (e.g., glass brain
-   or inflated surface with ROIs color-coded by set).
+   .. todo::
 
-.. figure:: _static/placeholder_rois_overview.png
-   :align: center
-   :width: 80%
-   :alt: Overview of all ROI sets
+      Introductory narrative (2-3 sentences): What ROIs are provided and why?
+      Are they intended for most users, or only for ROI-based analyses?
 
-   Overview of all available ROI sets on an example subject. *(placeholder —
-   replace with actual figure)*
+   .. todo::
 
-Available ROI Sets
-==================
+      Add an overview figure showing all ROI sets on a brain (e.g., glass brain
+      or inflated surface with ROIs color-coded by set).
 
-.. todo::
+   .. figure:: _static/placeholder_rois_overview.png
+      :align: center
+      :width: 80%
+      :alt: Overview of all ROI sets
 
-   For each ROI set below, write a short description (2-3 sentences) covering
-   what it is, how it was defined, and when a user would use it.
-   Add or remove subsections as needed. Cross-reference the source page where
-   applicable.
+      Overview of all available ROI sets on an example subject. *(placeholder —
+      replace with actual figure)*
 
-Atlas-based ROIs
-----------------
+   Available ROI Sets
+   ==================
 
-.. todo::
+   .. todo::
 
-   Which atlas-based ROIs are provided (e.g., Glasser parcellation, DKT,
-   Schaefer)? Brief description of each, which regions are included, and a
-   figure.
+      For each ROI set below, write a short description (2-3 sentences) covering
+      what it is, how it was defined, and when a user would use it.
+      Add or remove subsections as needed. Cross-reference the source page where
+      applicable.
 
-.. figure:: _static/placeholder_atlas_rois.png
-   :align: center
-   :width: 70%
-   :alt: Atlas-based ROI parcellation
+   Atlas-based ROIs
+   ----------------
 
-   Atlas-based ROI parcellation. *(placeholder — replace with actual figure)*
+   .. todo::
 
-Retinotopy-derived ROIs
-------------------------
+      Which atlas-based ROIs are provided (e.g., Glasser parcellation, DKT,
+      Schaefer)? Brief description of each, which regions are included, and a
+      figure.
 
-.. todo::
+   .. figure:: _static/placeholder_atlas_rois.png
+      :align: center
+      :width: 70%
+      :alt: Atlas-based ROI parcellation
 
-   Which visual area ROIs come from retinotopic mapping (V1, V2, V3, ...)?
-   Brief description + figure showing them on a flatmap or inflated surface.
-   Cross-reference :doc:`retinotopy`.
+      Atlas-based ROI parcellation. *(placeholder — replace with actual figure)*
 
-.. figure:: _static/placeholder_retino_rois.png
-   :align: center
-   :width: 70%
-   :alt: Retinotopy-derived visual area ROIs
+   Retinotopy-derived ROIs
+   ------------------------
 
-   Retinotopy-derived visual area ROIs on an inflated surface.
-   *(placeholder — replace with actual figure)*
+   .. todo::
 
-Localizer-derived ROIs
------------------------
+      Which visual area ROIs come from retinotopic mapping (V1, V2, V3, ...)?
+      Brief description + figure showing them on a flatmap or inflated surface.
+      Cross-reference :doc:`retinotopy`.
 
-.. todo::
+   .. figure:: _static/placeholder_retino_rois.png
+      :align: center
+      :width: 70%
+      :alt: Retinotopy-derived visual area ROIs
 
-   Which category-selective ROIs come from localizers (FFA, PPA, EBA, ...)?
-   Brief description of how they were defined (individual thresholding, etc.)
-   + figure. Cross-reference :doc:`localizers`.
+      Retinotopy-derived visual area ROIs on an inflated surface.
+      *(placeholder — replace with actual figure)*
 
-.. figure:: _static/placeholder_localizer_rois.png
-   :align: center
-   :width: 70%
-   :alt: Localizer-derived category-selective ROIs
+   Localizer-derived ROIs
+   -----------------------
 
-   Localizer-derived category-selective ROIs. *(placeholder — replace with
-   actual figure)*
+   .. todo::
 
-Available Spaces
-================
+      Which category-selective ROIs come from localizers (FFA, PPA, EBA, ...)?
+      Brief description of how they were defined (individual thresholding, etc.)
+      + figure. Cross-reference :doc:`localizers`.
 
-.. todo::
+   .. figure:: _static/placeholder_localizer_rois.png
+      :align: center
+      :width: 70%
+      :alt: Localizer-derived category-selective ROIs
 
-   Which spaces are the ROI masks provided in? Are all ROI sets available in
-   all spaces, or only some?
+      Localizer-derived category-selective ROIs. *(placeholder — replace with
+      actual figure)*
 
-File Organization
-=================
+   Available Spaces
+   ================
 
-.. todo::
+   .. todo::
 
-   Paste the actual file tree from ``derivatives/rois/``.
+      Which spaces are the ROI masks provided in? Are all ROI sets available in
+      all spaces, or only some?
 
-.. code-block:: text
+   File Organization
+   =================
 
-    derivatives/rois/
-    └── ... (placeholder — fill with actual file listing)
+   .. todo::
 
-Loading ROIs
-============
+      Paste the actual file tree from ``derivatives/rois/``.
 
-.. todo::
+   .. code-block:: text
 
-   Provide minimal code examples once file paths and naming are finalized.
-   Show how to load an ROI mask and apply it to beta estimates
-   (cross-ref :doc:`glmsingle_betas`).
+       derivatives/rois/
+       └── ... (placeholder — fill with actual file listing)
+
+   Loading ROIs
+   ============
+
+   .. todo::
+
+      Provide minimal code examples once file paths and naming are finalized.
+      Show how to load an ROI mask and apply it to beta estimates
+      (cross-ref :doc:`glmsingle_betas`).

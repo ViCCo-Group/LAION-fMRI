@@ -5,81 +5,89 @@ Example Methods Text
 Ready-to-use text for the methods section of papers using the LAION-fMRI
 dataset. Adapt as needed for your specific analyses.
 
-Short Version (~2 sentences)
-============================
+.. only:: live
 
-.. todo::
+   *Finalised methods-text templates and the dataset citation will be
+   added with the final release. The acknowledgment text below is
+   stable and can be used today.*
 
-   Fill in the blanks below once dataset parameters are finalized.
+.. only:: dev
 
-    We used data from the LAION-fMRI dataset (CITATION, YEAR), an open fMRI
-    dataset comprising [N] participants who viewed [N] unique natural images
-    during event-related fMRI scanning at [X]T. Single-trial response estimates
-    were obtained using GLMsingle (Prince et al., 2022).
+   Short Version (~2 sentences)
+   ============================
 
-Standard Version
-================
+   .. todo::
 
-.. todo::
+      Fill in the blanks below once dataset parameters are finalized.
 
-   Fill in the blanks below once dataset parameters are finalized.
+       We used data from the LAION-fMRI dataset (CITATION, YEAR), an open fMRI
+       dataset comprising [N] participants who viewed [N] unique natural images
+       during event-related fMRI scanning at [X]T. Single-trial response estimates
+       were obtained using GLMsingle (Prince et al., 2022).
 
-    We used functional and anatomical MRI data from the LAION-fMRI dataset
-    (CITATION, YEAR; freely available at [URL]). The dataset includes [N]
-    healthy adult participants ([N] female, mean age [X] +/- [X] years), each
-    of whom completed [N] scanning sessions. In each session, participants
-    viewed [N] unique natural images presented for [X] ms each in an
-    event-related design while performing a [task description]. Functional
-    images were acquired on a [manufacturer] [field strength] [model] scanner
-    using a [sequence] (TR = [X] s, TE = [X] ms, [X] mm isotropic voxels,
-    multiband factor = [X]). High-resolution T1-weighted anatomical images
-    ([X] mm isotropic) were also acquired for each participant.
+   Standard Version
+   ================
 
-    Functional data were preprocessed using [pipeline] ([version]; CITATION),
-    including [list key steps]. Single-trial beta estimates were computed using
-    GLMsingle (Prince et al., 2022), which optimizes the hemodynamic response
-    function per voxel, applies data-driven denoising (GLMdenoise), and
-    regularizes estimates via ridge regression.
+   .. todo::
 
-Citation
-========
+      Fill in the blanks below once dataset parameters are finalized.
 
-.. todo::
+       We used functional and anatomical MRI data from the LAION-fMRI dataset
+       (CITATION, YEAR; freely available at [URL]). The dataset includes [N]
+       healthy adult participants ([N] female, mean age [X] +/- [X] years), each
+       of whom completed [N] scanning sessions. In each session, participants
+       viewed [N] unique natural images presented for [X] ms each in an
+       event-related design while performing a [task description]. Functional
+       images were acquired on a [manufacturer] [field strength] [model] scanner
+       using a [sequence] (TR = [X] s, TE = [X] ms, [X] mm isotropic voxels,
+       multiband factor = [X]). High-resolution T1-weighted anatomical images
+       ([X] mm isotropic) were also acquired for each participant.
 
-   Add the full citation once the paper is published.
+       Functional data were preprocessed using [pipeline] ([version]; CITATION),
+       including [list key steps]. Single-trial beta estimates were computed using
+       GLMsingle (Prince et al., 2022), which optimizes the hemodynamic response
+       function per voxel, applies data-driven denoising (GLMdenoise), and
+       regularizes estimates via ridge regression.
 
-.. code-block:: text
+   Citation
+   ========
 
-    (placeholder — add full citation)
+   .. todo::
 
-BibTeX:
+      Add the full citation once the paper is published.
 
-.. code-block:: bibtex
+   .. code-block:: text
 
-    @dataset{laion_fmri,
-      title={LAION-fMRI: ...},
-      author={...},
-      year={...},
-      url={...}
-    }
+       (placeholder — add full citation)
 
-If you use the GLMsingle beta estimates, also cite:
+   BibTeX:
 
-.. code-block:: bibtex
+   .. code-block:: bibtex
 
-    @article{prince2022glmsingle,
-      title={Improving the accuracy of single-trial fMRI response estimates using GLMsingle},
-      author={Prince, Jacob S and Charest, Ian and Bhatt, Prapti and others},
-      journal={eLife},
-      volume={11},
-      pages={e77599},
-      year={2022}
-    }
+       @dataset{laion_fmri,
+         title={LAION-fMRI: ...},
+         author={...},
+         year={...},
+         url={...}
+       }
 
-.. todo::
+   If you use the GLMsingle beta estimates, also cite:
 
-   Add citations for other tools used (fMRIPrep, FreeSurfer, pRF software,
-   etc.) that users should cite depending on which data products they use.
+   .. code-block:: bibtex
+
+       @article{prince2022glmsingle,
+         title={Improving the accuracy of single-trial fMRI response estimates using GLMsingle},
+         author={Prince, Jacob S and Charest, Ian and Bhatt, Prapti and others},
+         journal={eLife},
+         volume={11},
+         pages={e77599},
+         year={2022}
+       }
+
+   .. todo::
+
+      Add citations for other tools used (fMRIPrep, FreeSurfer, pRF software,
+      etc.) that users should cite depending on which data products they use.
 
 Acknowledgment
 ==============

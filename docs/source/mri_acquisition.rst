@@ -184,21 +184,30 @@ over time, which can be substantial at 7T.
    * - Number acquired per session
      - up to 4 (interleaved through the session to track B0 drift)
 
-Retinotopy & Localizers
-========================
+.. only:: live
 
-.. todo::
+   *Acquisition parameters for the retinotopy, localizer, and diffusion
+   scans will be added with the final release. For the experimental
+   paradigms of the retinotopy and localizer tasks, see*
+   :doc:`experimental_design` *.*
 
-   Document the acquisition parameters for retinotopy and localizer scans.
-   If they used the same functional sequence as above, just state that.
-   If any parameters differed, note what changed and why.
+.. only:: dev
 
-Diffusion MRI
-=============
+   Retinotopy & Localizers
+   ========================
 
-.. todo::
+   .. todo::
 
-   If DWI data are included: narrative + parameter table (b-values,
-   directions, resolution). If not included, remove this section.
+      Document the acquisition parameters for retinotopy and localizer scans.
+      If they used the same functional sequence as above, just state that.
+      If any parameters differed, note what changed and why.
 
-   See also :doc:`diffusion`.
+   Diffusion MRI
+   =============
+
+   .. todo::
+
+      If DWI data are included: narrative + parameter table (b-values,
+      directions, resolution). If not included, remove this section.
+
+      See also :doc:`diffusion`.

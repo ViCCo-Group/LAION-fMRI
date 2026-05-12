@@ -2,88 +2,96 @@
 Functional Localizers
 ======================
 
-.. todo::
+.. only:: live
 
-   Introductory narrative (2-3 sentences): What functional localizers were
-   run and what do they provide? Are the outputs contrast maps,
-   thresholded ROIs, or both?
-
-   For the localizer experimental paradigm (categories, timing, task), see
+   *Full localizer documentation will be added with the final release.*
+   For the experimental paradigm (categories, timing, task), see
    :doc:`experimental_design`.
 
-.. todo::
+.. only:: dev
 
-   Add an overview figure showing example localizer activation maps on a
-   brain (e.g., category-selective regions highlighted on an inflated
-   surface or anatomical slice).
+   .. todo::
 
-.. figure:: _static/placeholder_localizer_overview.png
-   :align: center
-   :width: 80%
-   :alt: Example localizer activation maps
+      Introductory narrative (2-3 sentences): What functional localizers were
+      run and what do they provide? Are the outputs contrast maps,
+      thresholded ROIs, or both?
 
-   Category-selective regions identified by the functional localizer.
-   *(placeholder — replace with actual figure)*
+      For the localizer experimental paradigm (categories, timing, task), see
+      :doc:`experimental_design`.
 
-Localizer Contrasts
-====================
+   .. todo::
 
-.. todo::
+      Add an overview figure showing example localizer activation maps on a
+      brain (e.g., category-selective regions highlighted on an inflated
+      surface or anatomical slice).
 
-   For each contrast, write a brief description (1-2 sentences) of what it
-   targets and how it was computed. Add or remove entries as needed.
-   Include figures showing example activation maps for each contrast.
+   .. figure:: _static/placeholder_localizer_overview.png
+      :align: center
+      :width: 80%
+      :alt: Example localizer activation maps
 
-Contrast 1: (placeholder)
----------------------------
+      Category-selective regions identified by the functional localizer.
+      *(placeholder — replace with actual figure)*
 
-.. todo::
+   Localizer Contrasts
+   ====================
 
-   - Contrast definition (e.g., faces > objects)
-   - Target region(s) (e.g., FFA, OFA, STS)
-   - Brief note on thresholding if ROIs were derived
+   .. todo::
 
-.. figure:: _static/placeholder_localizer_contrast1.png
-   :align: center
-   :width: 60%
-   :alt: Example activation map for contrast 1
+      For each contrast, write a brief description (1-2 sentences) of what it
+      targets and how it was computed. Add or remove entries as needed.
+      Include figures showing example activation maps for each contrast.
 
-   *(placeholder — replace with actual figure)*
+   Contrast 1: (placeholder)
+   ---------------------------
 
-Contrast 2: (placeholder)
----------------------------
+   .. todo::
 
-.. todo::
+      - Contrast definition (e.g., faces > objects)
+      - Target region(s) (e.g., FFA, OFA, STS)
+      - Brief note on thresholding if ROIs were derived
 
-   Same as above for the next contrast.
+   .. figure:: _static/placeholder_localizer_contrast1.png
+      :align: center
+      :width: 60%
+      :alt: Example activation map for contrast 1
 
-.. figure:: _static/placeholder_localizer_contrast2.png
-   :align: center
-   :width: 60%
-   :alt: Example activation map for contrast 2
+      *(placeholder — replace with actual figure)*
 
-   *(placeholder — replace with actual figure)*
+   Contrast 2: (placeholder)
+   ---------------------------
 
-*(Add more contrasts as needed.)*
+   .. todo::
 
-Derived ROIs
-============
+      Same as above for the next contrast.
 
-.. todo::
+   .. figure:: _static/placeholder_localizer_contrast2.png
+      :align: center
+      :width: 60%
+      :alt: Example activation map for contrast 2
 
-   Were category-selective ROIs derived from the localizer contrasts?
-   If so, describe how (individual-subject thresholding, group-level, etc.).
-   These are also available under ``derivatives/rois/`` — see :doc:`rois`.
+      *(placeholder — replace with actual figure)*
 
-File Organization
-=================
+   *(Add more contrasts as needed.)*
 
-.. todo::
+   Derived ROIs
+   ============
 
-   Paste the actual file tree from ``derivatives/localizers/sub-XX/``.
+   .. todo::
 
-.. code-block:: text
+      Were category-selective ROIs derived from the localizer contrasts?
+      If so, describe how (individual-subject thresholding, group-level, etc.).
+      These are also available under ``derivatives/rois/`` — see :doc:`rois`.
 
-    derivatives/localizers/
-    └── sub-XX/
-        └── ... (placeholder — fill with actual file listing)
+   File Organization
+   =================
+
+   .. todo::
+
+      Paste the actual file tree from ``derivatives/localizers/sub-XX/``.
+
+   .. code-block:: text
+
+       derivatives/localizers/
+       └── sub-XX/
+           └── ... (placeholder — fill with actual file listing)

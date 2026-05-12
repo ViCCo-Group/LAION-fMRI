@@ -16,7 +16,13 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile examples-rebuild
+.PHONY: help Makefile examples-rebuild html-dev
+
+# Internal/contributor build: shows the .. todo:: planning blocks and any
+# content wrapped in `.. only:: dev`. The default `make html` target
+# produces the public-facing "live" view that hides both.
+html-dev:
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" -t dev $(SPHINXOPTS) $(O)
 
 # Re-execute the example gallery and sanitize host paths from the
 # captured output. Run this whenever an example script changes
