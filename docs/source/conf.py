@@ -331,7 +331,7 @@ html_meta = {
 # sphinxext-opengraph: Open Graph + Twitter card tags on every page.
 ogp_site_url = html_baseurl
 ogp_site_name = "LAION-fMRI"
-ogp_image = f"{html_baseurl}_static/laion_fmri_logo_mosaic.png"
+ogp_image = f"{html_baseurl}_static/og-image.png"
 ogp_image_alt = "LAION-fMRI — a 7T fMRI dataset of human vision"
 ogp_description_length = 300
 ogp_type = "website"
