@@ -48,6 +48,9 @@ extensions = [
     "sphinx_tabs.tabs",
     "sphinx.ext.todo",
     "sphinx_gallery.gen_gallery",
+    # SEO: canonical URLs + sitemap.xml + Open Graph / Twitter cards
+    "sphinx_sitemap",
+    "sphinxext.opengraph",
 ]
 
 if _BUILD_EXAMPLES:
@@ -112,7 +115,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 project = "LAION-fMRI"
-copyright = "2026, ViCCo-Group"
+copyright = "2026, Hebart Lab (hebartlab.com)"
 author = "ViCCo-Group"
 
 _version = "0.1.0"
@@ -270,6 +273,51 @@ html_favicon = "_static/favicon.ico"
 html_show_sourcelink = True
 html_show_sphinx = False
 htmlhelp_basename = "laion-fmri"
+
+# Anything under html_extra_path is copied verbatim to the build root —
+# we use it to ship robots.txt so search engines can discover sitemap.xml.
+html_extra_path = ["_extra"]
+
+# -- SEO ------------------------------------------------------------------
+#
+# Canonical site root. Trailing slash is required by sphinx-sitemap, and
+# Sphinx's githubpages extension reuses it to emit per-page canonical
+# <link rel="canonical"> tags.
+html_baseurl = "https://laion-fmri.hebartlab.com/"
+
+# sphinx-sitemap: write a sitemap.xml at the build root with absolute URLs.
+sitemap_url_scheme = "{link}"
+
+# Default <meta name="description"> applied site-wide. Per-page meta in
+# rst files (`.. meta::`) overrides this.
+html_meta = {
+    "description": (
+        "LAION-fMRI (LfMRI / LAION MRI dataset): a deeply-sampled 7T fMRI "
+        "dataset of brain responses to 25,000+ natural images. Five subjects, "
+        "165 sessions, single-trial GLMsingle betas, retinotopy, localizers, "
+        "diffusion MRI. Used by the re:vision replication initiative."
+    ),
+    "keywords": (
+        "LAION-fMRI, LAION fMRI, LfMRI, LAION MRI dataset, fMRI dataset, "
+        "7T fMRI, visual neuroscience, GLMsingle, NSD, THINGS, "
+        "revision initiative, re:vision, neuroimaging"
+    ),
+}
+
+# sphinxext-opengraph: Open Graph + Twitter card tags on every page.
+ogp_site_url = html_baseurl
+ogp_site_name = "LAION-fMRI"
+ogp_image = f"{html_baseurl}_static/laion_fmri_logo_mosaic.png"
+ogp_image_alt = "LAION-fMRI — a 7T fMRI dataset of human vision"
+ogp_description_length = 300
+ogp_type = "website"
+ogp_enable_meta_description = True
+ogp_social_cards = {
+    # The opengraph extension can auto-generate per-page social cards.
+    # Disabled by default to keep builds cheap; flip to True locally to
+    # render PNGs once and commit them.
+    "enable": False,
+}
 
 # -- Other output formats -------------------------------------------------
 

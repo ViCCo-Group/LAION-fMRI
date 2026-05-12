@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://laion-fmri.hebartlab.com/sitemap.xml

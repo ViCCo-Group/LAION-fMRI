@@ -1,4 +1,33 @@
+:og:title: LAION-fMRI — a 7T fMRI dataset of human vision
+:og:description: LAION-fMRI (LfMRI / LAION MRI dataset): 5 subjects, 25,000+ natural images, 165 sessions of 7T fMRI with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.
+
+.. meta::
+   :description: LAION-fMRI (also known as LfMRI or the LAION MRI dataset) is a deeply-sampled 7T fMRI dataset of brain responses to 25,000+ natural images across 165 sessions. Used by the re:vision replication initiative.
+   :keywords: LAION-fMRI, LAION fMRI, LfMRI, LAION MRI dataset, 7T fMRI, visual neuroscience, GLMsingle, NSD, THINGS, revision initiative, re:vision
+
 .. raw:: html
+
+   <script type="application/ld+json">
+   {
+     "@context": "https://schema.org",
+     "@type": "Dataset",
+     "name": "LAION-fMRI",
+     "alternateName": ["LfMRI", "LAION fMRI", "LAION MRI dataset"],
+     "description": "A deeply-sampled 7T fMRI dataset of brain responses to natural visual images. Five participants viewed over 25,000 unique images across 165 sessions at 1.8 mm resolution, with single-trial GLMsingle betas, retinotopic mapping, functional localizers, and diffusion MRI.",
+     "url": "https://laion-fmri.hebartlab.com/",
+     "sameAs": "https://re-vision-initiative.org/dataset",
+     "keywords": ["fMRI", "7T", "visual neuroscience", "natural images", "GLMsingle", "neuroimaging", "LAION"],
+     "measurementTechnique": "Ultra-high-field 7T functional magnetic resonance imaging (BOLD)",
+     "variableMeasured": "BOLD signal (single-trial beta estimates)",
+     "spatialCoverage": "Whole brain (1.8 mm isotropic)",
+     "license": "https://creativecommons.org/licenses/by/4.0/",
+     "creator": {
+       "@type": "Organization",
+       "name": "ViCCo-Group (Hebart Lab)",
+       "url": "https://hebartlab.com"
+     }
+   }
+   </script>
 
    <link rel="stylesheet" href="_static/hero/hero.css">
    <div id="lf-hero-root">
