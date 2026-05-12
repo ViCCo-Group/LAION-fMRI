@@ -198,13 +198,96 @@ PyTorch users: ``to_torch_dataset(...)`` exposes the same
 accessors lazily per ``__getitem__`` call, so total RAM stays
 proportional to batch size rather than the dataset.
 
-Stimuli: images, embeddings, segmentations
-==========================================
+Per-trial stimulus access
+=========================
 
-Everything attached *per stimulus image* lives behind a single hub,
-:func:`load_stimuli`. The hub exposes three namespaces -- ``images``,
-``embeddings``, ``segmentations`` -- each with a uniform ``get()``
-shape and modality-specific helpers.
+For most analyses you don't want to talk to the stimulus set directly
+-- you want, *for the trials this subject saw*, the images,
+embeddings, captions, or segmentation masks aligned to the betas. The
+``Subject`` exposes those four modalities as namespaces, each keyed by
+**global trial index** (a row of :attr:`Subject.metadata`):
+
+.. code-block:: python
+
+   sub = load_subject("sub-03")
+
+   sub.metadata                                # ── the trial table ──
+   # One row per single-trial beta, concatenated across sessions.
+   # Columns: session, session_trial, image_name, stim_idx,
+   #          unique_or_shared, dataset, (+ events.tsv extras).
+   # The row index is the "trial index" used everywhere below.
+
+   sub.images.get(42)                          # PIL.Image for trial 42
+   sub.images[42]                              # raw JPEG bytes
+   sub.images.array(session="ses-01")          # (n, 1000, 1000, 3) uint8 stack
+   sub.images.all()                            # iterator, length n_trials
+
+   sub.embeddings.models                       # ['CLIP', 'DINOv2', ...]
+   sub.embeddings.get("CLIP", 42)              # (D,) features for trial 42
+   sub.embeddings.all("CLIP")                  # (n_trials, D) — ready to regress
+   sub.embeddings.all("CLIP", session="ses-01")
+
+   sub.segmentations.nouns(42)                 # ['hand', 'piano', ...]
+   sub.segmentations.has_image(42)             # False if unique-image trial
+   sub.segmentations.get(42, "hand")           # (1000, 1000) uint8 mask
+
+   sub.captions.list(42)                       # all captions for trial 42's image
+
+The bulk methods (``.all(...)`` / ``.array(...)``) preserve trial order,
+so the rows of ``sub.embeddings.all("CLIP")`` line up one-to-one with
+the rows of ``sub.get_betas(session=None)`` concatenated across
+sessions. That's the regression workflow in one expression.
+
+Single concrete example — fit CLIP features to betas:
+
+.. code-block:: python
+
+   import numpy as np
+
+   sub = load_subject("sub-03")
+
+   # Per-session z-score, then concatenate, for fair scale:
+   beta_chunks = []
+   for ses in sub.get_sessions():
+       b = sub.get_betas(session=ses, roi="visual")
+       beta_chunks.append((b - b.mean(0)) / b.std(0))
+   y = np.concatenate(beta_chunks, axis=0)   # (n_trials, n_voxels)
+
+   # Trial-aligned CLIP features (same row order as y):
+   X = sub.embeddings.all("CLIP")             # (n_trials, 1024)
+
+   # Standard regression from here...
+
+Another typical pattern — pull masks only for shared-image trials,
+since masks ship only for the shared set:
+
+.. code-block:: python
+
+   trials = sub.metadata
+   shared_trials = trials.index[trials["unique_or_shared"] == "shared"]
+
+   for trial in shared_trials:
+       nouns = sub.segmentations.nouns(trial)
+       if "face" in nouns:
+           face_mask = sub.segmentations.get(trial, "face")
+           ...                                # do something with this trial
+
+The ``sub.segmentations`` API is **safe to call on every trial**:
+``has_image(trial)`` returns ``False`` and ``nouns(trial)`` returns
+``[]`` for unique-image trials, so loops across the full trial table
+need no special-casing.
+
+PyTorch users get the same per-trial access lazily via
+:meth:`~laion_fmri.subject.Subject.to_torch_dataset`.
+
+Stimuli: images, embeddings, segmentations (dataset-wide)
+=========================================================
+
+The same modalities are also reachable through a dataset-wide hub,
+:func:`load_stimuli`, keyed by ``image_name`` rather than trial index.
+Use this when you want the full stimulus set independent of any
+subject's trial ordering -- e.g. computing similarity matrices on all
+1,492 shared images, or pulling embeddings for arbitrary names.
 
 .. code-block:: python
 
