@@ -11,11 +11,14 @@ procedure that promotes uniform coverage of CLIP feature space.
 Selection was anchored in two established neuroimaging benchmarks by
 incorporating images from the Natural Scenes Dataset (NSD;
 Allen et al., 2022) and from THINGS / THINGS+ (Hebart et al., 2019;
-Stoinski et al., 2024). The shared set is supplemented with a 371-image
-out-of-distribution (OOD) test set — visual illusions, Gabor patches,
-shape stimuli, cropped textures, and similarly unusual configurations
-— intended as a stress test for encoding and decoding models trained
-on the natural-image pool.
+Stoinski et al., 2024). The THINGS / THINGS+ images additionally
+overlap with the THINGS-data EEG + fMRI release (Hebart et al., 2023),
+so analyses on the LAION-fMRI shared set can be compared against
+results from that dataset as well. The shared set is supplemented with
+a 371-image out-of-distribution (OOD) test set — visual illusions,
+Gabor patches, shape stimuli, cropped textures, and similarly unusual
+configurations — intended as a stress test for encoding and decoding
+models trained on the natural-image pool.
 
 "Natural images" here means real-world photographs of scenes, objects,
 and events — illustrations, graphic designs, images with applied
@@ -53,7 +56,8 @@ the main experiment; the full selection procedure is in
    * - THINGS+
      - 240
      - 12
-     - CC0 object photographs from the THINGS+ extension
+     - CC0 object photographs from the THINGS+ extension; the same images
+       appear in the THINGS-data EEG + fMRI release
    * - NSD
      - 240
      - 4
@@ -79,11 +83,13 @@ the main experiment; the full selection procedure is in
    * - THINGS
      - 144
      - 4
-     - Object photographs from the original THINGS database
+     - Object photographs from the original THINGS database; also
+       present in the THINGS-data EEG + fMRI release
    * - THINGS+
      - 322
      - 4
-     - Additional CC0 object photographs from THINGS+
+     - Additional CC0 object photographs from THINGS+; also present in
+       the THINGS-data EEG + fMRI release
 
 Across all five participants the experiment encompasses **25,052
 distinct images** (1,492 shared + 5 × 4,712 unique). For cross-subject
