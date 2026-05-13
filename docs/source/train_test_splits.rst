@@ -2,11 +2,10 @@
 Train / Test Splits
 ===================
 
-LAION-fMRI ships with **predefined train/test splits** so that
-encoding-model and representation-similarity replications can
+LAION-fMRI comes with **predefined train/test splits** so that
+encoding-model and representation-similarity analyses can
 report comparable generalization scores. The splits implement all
-three methods of the
-`re:vision generalization framework <https://re-vision-initiative.org/generalization/>`_:
+three methods of the `re:vision initiative <https://re-vision-initiative.org/generalization/>`_:
 
 * **Method 1 — Independent within-distribution.** An 80/20 split
   that covers the image distribution as fully as possible while
@@ -47,14 +46,13 @@ three methods of the
 Pools
 =====
 
-Every split is bundled for **six pools**. Pick the one whose
-stimulus subset matches the original study — see
-:func:`~laion_fmri.splits.list_pools`.
+Every split is bundled for **six pools**. Pick the pool whose stimulus
+subset matches your analysis; use
+:func:`~laion_fmri.splits.list_pools` to inspect the available pools.
 
 * ``"shared"`` — the **1,121 cross-subject shared images** (non-OOD
   subset of the shared block). Use this when the original study
-  used only stimuli that every subject saw (e.g. NSD- or
-  Conwell-style benchmarks).
+  used only stimuli that every subject saw.
 * ``"sub-01"``, ``"sub-03"``, ``"sub-05"``, ``"sub-06"``, ``"sub-07"``
   — the per-subject pools (1,121 shared + 4,712 subject-unique
   images = **5,833 images each**). Use a subject's pool when the
