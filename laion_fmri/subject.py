@@ -841,6 +841,40 @@ class Subject:
             custom_mask=mask,
         )
 
+    def to_template(self, values, target, **kwargs):
+        """Project T1w-space values into a template / reference space.
+
+        Thin wrapper around :func:`laion_fmri.templates.to_template`;
+        see that function's docstring for the full kwargs surface
+        (``hemi``, ``route``, ``surface``, ``fsaverage_density``,
+        ``interpolation``, ``output_dir``, ``desc``, ``session``).
+
+        Requires the optional ``[template]`` extra; ``ImportError``
+        is raised at call time if any of nilearn / nitransforms /
+        neuromaps / templateflow is missing.
+        """
+        from laion_fmri.templates import to_template
+        return to_template(self, values, target, **kwargs)
+
+    def volume_to_surface(self, values, target="fsaverage", **kwargs):
+        """Volume input → surface target (currently ``"fsaverage"``)."""
+        from laion_fmri.templates import volume_to_surface
+        return volume_to_surface(self, values, target, **kwargs)
+
+    def volume_to_template(self, values, target, **kwargs):
+        """Volume input → volume target (MNI variants)."""
+        from laion_fmri.templates import volume_to_template
+        return volume_to_template(self, values, target, **kwargs)
+
+    def surface_to_template(self, values, target="fsaverage", **kwargs):
+        """fsnative-surface input → surface target.
+
+        Accepts a single hemi array (with ``hemi="L"``/``"R"``) or
+        a ``{"L": ..., "R": ...}`` dict; returns the same shape.
+        """
+        from laion_fmri.templates import surface_to_template
+        return surface_to_template(self, values, target, **kwargs)
+
     def get_voxel_coordinates(self, roi=None, mask=None):
         """Return MNI/T1w coordinates for the selected voxels."""
         from laion_fmri.brain import get_voxel_coordinates

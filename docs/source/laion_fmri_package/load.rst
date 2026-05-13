@@ -223,6 +223,7 @@ Each accessor returns a ``pathlib.Path``; load with
 reads in :meth:`get_brain_mask` and the voxel-axis accessors,
 so the voxel axis stays aligned.
 
+
 PyTorch integration
 ===================
 
