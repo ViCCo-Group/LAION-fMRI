@@ -21,19 +21,21 @@ At a Glance
         :class-card: sd-border-0
         :shadow: sm
 
-        ~25,000 unique images
+        25,052 launch-release images; 1,492 shared
 
     .. grid-item-card:: Sessions
         :class-card: sd-border-0
         :shadow: sm
 
-        165 sessions (34 per subject)
+        165 acquired fMRI sessions; 150 main sessions in launch release
 
     .. grid-item-card:: Dataset Size
         :class-card: sd-border-0
         :shadow: sm
 
         Reported with the final release
+
+.. include:: _includes/current_release_stats.inc
 
 What's Included
 ===============
@@ -125,7 +127,7 @@ This is the most common use case (e.g. Algonauts challenge participants).
    * - What you need
      - Details
    * - Single-trial beta estimates
-     - ``derivatives/glmsingle/sub-XX/`` — see :doc:`glmsingle_betas`
+     - ``derivatives/glmsingle-tedana/sub-XX/`` — see :doc:`glmsingle_betas`
    * - Stimulus images & metadata
      - ``stimuli/`` — see :doc:`stimulus_data`
    * - Stimulus derivatives
@@ -146,7 +148,7 @@ RSA / pattern similarity analyses
    * - What you need
      - Details
    * - Single-trial betas
-     - ``derivatives/glmsingle/sub-XX/`` — see :doc:`glmsingle_betas`
+     - ``derivatives/glmsingle-tedana/sub-XX/`` — see :doc:`glmsingle_betas`
    * - Stimulus metadata & categories
      - ``stimuli/task-images_metadata.csv`` — see
        :doc:`stimulus_data`

@@ -9,8 +9,9 @@ def _check_torch_available():
     """Raise ImportError if torch is not installed."""
     if importlib.util.find_spec("torch") is None:
         raise ImportError(
-            "PyTorch is required for LaionFMRIDataset. "
-            "Install it with: pip install laion-fmri[torch]"
+            "PyTorch is required for LaionFMRIDataset. Install it with: "
+            "python -m pip install 'laion-fmri[torch] @ "
+            "git+https://github.com/ViCCo-Group/LAION-fMRI.git@main'"
         )
 
 

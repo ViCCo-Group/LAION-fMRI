@@ -510,7 +510,7 @@ cross-subject loaders that delegate to each one.
         )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 405-418
+.. GENERATED FROM PYTHON SOURCE LINES 405-419
 
 PyTorch dataset integration
 ----------------------------
@@ -524,9 +524,10 @@ The PyTorch dependencies are optional -- install them with the
 
 .. code-block:: bash
 
-    uv pip install "laion-fmri[torch]"
+    python -m pip install \
+      "laion-fmri[torch] @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
 
-.. GENERATED FROM PYTHON SOURCE LINES 418-441
+.. GENERATED FROM PYTHON SOURCE LINES 419-442
 
 .. code-block:: Python
 

@@ -414,7 +414,8 @@ else:
 #
 # .. code-block:: bash
 #
-#     uv pip install "laion-fmri[torch]"
+#     python -m pip install \
+#       "laion-fmri[torch] @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
 
 # The PyTorch dataset pairs each beta with a stimulus image, so it
 # requires the stimuli/ prefix to be populated.

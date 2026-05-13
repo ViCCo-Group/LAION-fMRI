@@ -2,8 +2,8 @@
 Stimulus Set
 ============
 
-The LAION-fMRI stimulus set is a deduplicated collection of 25,052
-distinct natural images shown across all five participants. The
+The launch-release LAION-fMRI stimulus set is a deduplicated collection of
+25,052 distinct natural images shown across all five participants. The
 majority were drawn from LAION-natural — a curated 120-million-image
 subset of LAION-2B filtered to natural photographs (Roth & Hebart,
 2025) — and were chosen by an effective-dimensionality optimisation
@@ -32,6 +32,11 @@ ceilings and cross-participant comparison) plus **4,712 subject-unique**
 images sampled disjointly from the same pools. Repetition counts and
 per-session scheduling are documented in :doc:`experimental_design`;
 the methodology behind image selection is in :doc:`stimulus_selection`.
+Supplemental sessions acquired after the main experiment expand the shared
+image set to about **2,200** images; those sessions and images will be
+released later and are not included in the counts below.
+
+.. include:: _includes/current_release_stats.inc
 
 Stimulus Sets
 =============

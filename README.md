@@ -19,13 +19,24 @@ Full documentation is available at https://laion-fmri.hebartlab.com/ and include
 - Technical details and metadata
 - Contributing guidelines
 
+## Install
+
+Until the PyPI package is published, install directly from GitHub:
+
+```bash
+python -m pip install "laion-fmri @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
+```
+
+The package is imported as `laion_fmri`; the command-line tool is
+`laion-fmri`.
+
 ## 📖 Documentation Development
 
 This repository uses Sphinx for documentation. To set up a development environment:
 
 ```bash
 # Create a conda environment from the development environment file
-conda env create -f environment-dev.yml
+conda env create -f environment.yml
 conda activate laion-fmri-dev
 
 # Build the documentation

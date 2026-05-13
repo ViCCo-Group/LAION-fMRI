@@ -66,9 +66,9 @@ We did not, however, choose the most aggressive variant. NORDIC followed by
 tedana ICA denoising was slightly ahead at the group level, but it reduced
 the noise ceiling for ``sub-07`` relative to the NORDIC + ``optcom`` variant.
 Given that subject-specific drop, and because GLMsingle already performs its
-own GLMdenoise step, we treated NORDIC + tedana ``optcom`` as the more robust
-choice for the beta pipeline. This keeps the gain from NORDIC while avoiding
-an additional ICA-denoising step that was not consistently beneficial.
+own GLMdenoise step, we picked NORDIC + tedana ``optcom`` for the beta
+pipeline. This keeps the gain from NORDIC while avoiding an additional
+ICA-denoising step that was not consistently beneficial across subjects.
 
 A caveat is important here: this comparison used only one session, so the
 absolute noise-ceiling values are lower than they should be for the full

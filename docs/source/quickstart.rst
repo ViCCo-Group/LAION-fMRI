@@ -10,13 +10,14 @@ Install
 
 .. code-block:: bash
 
-   pip install laion-fmri
+   python -m pip install "laion-fmri @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
 
 Point the package at a local data directory (the place every download
 will land):
 
 .. code-block:: bash
 
+   mkdir -p ./laion_fmri_data
    laion-fmri config --data-dir ./laion_fmri_data
 
 Download one subject

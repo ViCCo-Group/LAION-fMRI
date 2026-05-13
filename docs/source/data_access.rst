@@ -43,11 +43,12 @@ Python package (recommended)
 ----------------------------
 
 The :mod:`laion_fmri` package handles both the public S3 mirror and the
-stimulus service. Install via pip / uv:
+stimulus service. Until the PyPI package is published, install directly
+from GitHub:
 
 .. code-block:: bash
 
-   pip install laion-fmri
+   python -m pip install "laion-fmri @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
 
 Common operations:
 
@@ -74,6 +75,7 @@ CLI equivalents:
 
 .. code-block:: bash
 
+   mkdir -p ./laion_fmri_data
    laion-fmri config --data-dir ./laion_fmri_data
    laion-fmri download --subject sub-01
    laion-fmri download-stimuli
@@ -126,9 +128,11 @@ Software Requirements
 =====================
 
 * Python 3.10+
-* The ``laion_fmri`` package (``pip install laion-fmri``), which pulls
-  in ``numpy``, ``h5py``, ``nibabel``, ``pandas``, ``awscli``, and
-  ``Pillow``.
+* The ``laion_fmri`` package, installed from GitHub until the PyPI
+  distribution is published:
+  ``python -m pip install "laion-fmri @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"``.
+  It pulls in ``numpy``, ``h5py``, ``nibabel``, ``pandas``, ``awscli``,
+  and ``Pillow``.
 * Raw stimulus-image downloads require the Data Use Agreement flow
   through ``download_stimuli()``, ``laion-fmri download-stimuli``, or
   ``laion-fmri request-access``.

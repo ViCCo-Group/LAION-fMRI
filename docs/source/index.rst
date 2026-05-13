@@ -1,8 +1,8 @@
 :og:title: LAION-fMRI — a 7T fMRI dataset of human vision
-:og:description: LAION-fMRI (LfMRI / LAION MRI dataset): 5 subjects, 25,000+ natural images, 165 sessions of 7T fMRI with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.
+:og:description: LAION-fMRI (LfMRI / LAION MRI dataset): 5 subjects, 25,052 launch-release natural images, 165 acquired 7T fMRI sessions with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.
 
 .. meta::
-   :description: LAION-fMRI (also known as LfMRI or the LAION MRI dataset) is a deeply-sampled 7T fMRI dataset of brain responses to 25,000+ natural images across 165 sessions. Used by the re:vision replication initiative.
+   :description: LAION-fMRI (also known as LfMRI or the LAION MRI dataset) is a deeply-sampled 7T fMRI dataset of brain responses to 25,052 launch-release natural images across 150 main image-viewing sessions, with 165 fMRI sessions acquired overall. Used by the re:vision replication initiative.
    :keywords: LAION-fMRI, LAION fMRI, LfMRI, LAION MRI dataset, 7T fMRI, visual neuroscience, GLMsingle, NSD, THINGS, revision initiative, re:vision
 
 .. raw:: html
@@ -13,7 +13,7 @@
      "@type": "Dataset",
      "name": "LAION-fMRI",
      "alternateName": ["LfMRI", "LAION fMRI", "LAION MRI dataset"],
-     "description": "A deeply-sampled 7T fMRI dataset of brain responses to natural visual images. Five participants viewed over 25,000 unique images across 165 sessions at 1.8 mm resolution, with single-trial GLMsingle betas, retinotopic mapping, functional localizers, and diffusion MRI.",
+     "description": "A deeply-sampled 7T fMRI dataset of brain responses to natural visual images. Five participants viewed 25,052 launch-release images across 150 main image-viewing sessions at 1.8 mm resolution; 165 fMRI sessions were acquired overall, with single-trial GLMsingle betas, retinotopic mapping, functional localizers, and diffusion MRI.",
      "url": "https://laion-fmri.hebartlab.com/",
      "sameAs": "https://re-vision-initiative.org/dataset",
      "keywords": ["fMRI", "7T", "visual neuroscience", "natural images", "GLMsingle", "neuroimaging", "LAION"],
@@ -51,7 +51,7 @@
        window.LaionFmriHero.init({
          logoSrc: "_static/laion_fmri_logo_mosaic.png",
          title: "A deeply-sampled fMRI dataset of <em>human vision</em>",
-         lede: "Five participants. 25,000+ natural images. 165 sessions of 7T BOLD with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.",
+         lede: "Five participants. 25,052 launch-release images. 165 acquired 7T BOLD sessions with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.",
          primaryHref: "quickstart.html",
          primaryLabel: "Get started",
          meta: ["5 subjects", "25K+ stimuli", "7T multi-echo", "Open access"]
@@ -61,9 +61,14 @@
 
 **LAION-fMRI** is a deeply-sampled 7T fMRI dataset of brain responses to visual
 images, built to uncover how the human brain sees and understands the world.
-Five participants viewed over 25,000 unique natural images across 165 sessions,
-capturing hundreds of thousands of brain responses at 1.8 mm resolution with an
-ultra-high-field 7T MRI scanner.
+Five participants viewed 25,052 unique natural images across the launch
+release's 150 main image-viewing sessions, capturing hundreds of thousands of
+brain responses at 1.8 mm resolution with an ultra-high-field 7T MRI scanner.
+Across all acquired fMRI protocols, the dataset contains 165 fMRI sessions;
+the supplemental image sessions and their additional shared images will be
+released later.
+
+.. include:: _includes/current_release_stats.inc
 
 The images span everything from everyday photographs - drawn from a 120M
 image-text corpus (Roth & Hebart, 2025) - to abstract shapes and visual
@@ -76,8 +81,9 @@ retinotopic mapping, functional localizers, precision diffusion MRI, and
 behavioral responses - making it one of the most deeply characterized
 neuroimaging resources assembled to date.
 
-* **Scale** - thousands of unique images per participant (including ~2,200 shared
-  across subjects), 34 sessions each, up to 12 repeats for shared images
+* **Scale** - thousands of unique images per participant (including 1,492
+  shared images in the launch release), 30 main image-viewing sessions each,
+  up to 12 repeats for shared images
 * **Acquisition** - multi-echo 7T fMRI at 1.8 mm isotropic, 1.9 s TR
 * **Broad sampling** - natural photographs, prior benchmark images (NSD,
   THINGS), plus out-of-distribution test stimuli

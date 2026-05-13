@@ -47,7 +47,9 @@ Data Access
 
 .. dropdown:: How do I download the dataset?
 
-   Install the package (``pip install laion-fmri``) and run
+   Install the package from GitHub
+   (``python -m pip install "laion-fmri @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"``)
+   and run ``mkdir -p <path>`` followed by
    ``laion-fmri config --data-dir <path>`` once, then
    ``laion-fmri download --subject sub-01`` to pull one participant. The
    data lives in an AWS Open Data S3 bucket and downloads anonymously —

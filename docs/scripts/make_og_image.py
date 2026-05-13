@@ -164,7 +164,7 @@ def main() -> int:
     draw.text((block_left, tagline_y), "A 7T fMRI dataset of human vision", font=f_tag, fill=FG)
     draw.text(
         (block_left, tagline_y + 50),
-        "5 subjects  ·  25,000+ natural images  ·  165 sessions  ·  open access",
+        "5 subjects  ·  25,052 launch images  ·  165 acquired fMRI sessions",
         font=f_meta,
         fill=FG_MUTED,
     )

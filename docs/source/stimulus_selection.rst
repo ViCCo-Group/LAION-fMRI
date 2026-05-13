@@ -7,9 +7,10 @@ diversity and coverage of the natural image space. The majority of stimuli
 were selected from `LAION-natural`_ using an effective-dimensionality
 optimisation procedure that promotes uniform coverage of the CLIP feature
 space, supplemented by images from NSD and THINGS+ for cross-study
-comparability. The resulting stimulus set comprises 25,052 distinct images
-across the five participants, with 1,492 shared stimuli enabling
-cross-participant analyses.
+comparability. The launch-release stimulus set comprises 25,052 distinct
+images across the five participants, with 1,492 shared stimuli enabling
+cross-participant analyses. Supplemental sessions expand the shared set to
+about 2,200 images and will be released later.
 
 .. _LAION-natural: https://huggingface.co/datasets/andropar/relaion2b-natural
 

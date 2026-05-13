@@ -21,6 +21,7 @@ The same three workflow steps *configure*, *inspect*, and *download* are also ex
 
 .. code-block:: bash
 
+   mkdir -p ./laion_fmri_data
    laion-fmri config   --data-dir ./laion_fmri_data
    laion-fmri info
    laion-fmri download --subject sub-03

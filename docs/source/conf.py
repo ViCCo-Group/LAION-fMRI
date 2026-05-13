@@ -317,9 +317,10 @@ sitemap_url_scheme = "{link}"
 html_meta = {
     "description": (
         "LAION-fMRI (LfMRI / LAION MRI dataset): a deeply-sampled 7T fMRI "
-        "dataset of brain responses to 25,000+ natural images. Five subjects, "
-        "165 sessions, single-trial GLMsingle betas, retinotopy, localizers, "
-        "diffusion MRI. Used by the re:vision replication initiative."
+        "dataset of brain responses to 25,052 launch-release natural images. "
+        "Five subjects, 165 acquired fMRI sessions, single-trial GLMsingle "
+        "betas, retinotopy, localizers, diffusion MRI. Used by the "
+        "re:vision replication initiative."
     ),
     "keywords": (
         "LAION-fMRI, LAION fMRI, LfMRI, LAION MRI dataset, fMRI dataset, "

@@ -217,7 +217,7 @@ class Embeddings:
             if not csv_path.exists():
                 raise FileNotFoundError(
                     f"Stimulus metadata not found at {csv_path}. "
-                    "Run `laion-fmri download --include-stimuli` first."
+                    "Run `laion-fmri download-stimuli` first."
                 )
             self._meta = pd.read_csv(csv_path)
         return self._meta

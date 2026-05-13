@@ -153,7 +153,7 @@ def request_stimulus_access(server_url=ACCESS_SERVICE_URL):
     )
     print(
         f"\n✓ Access granted. request_id saved to {saved_path}\n"
-        f"  You can now run `laion-fmri download --include-stimuli`.\n"
+        f"  You can now run `laion-fmri download-stimuli`.\n"
     )
     return response
 

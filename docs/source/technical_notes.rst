@@ -4,8 +4,8 @@
 Technical Notes
 ===============
 
-Important implementation details, conventions, and known issues. Read this
-page to avoid common mistakes when working with the LAION-fMRI data.
+Implementation details, conventions, and known issues that aren't
+covered elsewhere.
 
 Coordinate Spaces & Conventions
 ===============================
@@ -72,8 +72,7 @@ File Sizes & Memory
 Common Pitfalls
 ===============
 
-A list of things that can trip you up. We'll expand this as we learn what
-users run into.
+Things that can silently produce wrong results if you miss them.
 
 .. warning::
 

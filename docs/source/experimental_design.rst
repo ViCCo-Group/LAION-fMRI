@@ -8,12 +8,17 @@ participants are scanned across many sessions, each seeing on the order of
 subjects, many sessions, controlled image repetitions for noise ceiling
 estimation), but with a broader image set based on LAION-natural (derived from
 LAION-5B, Roth & Hebart, 2025) that goes beyond standard scene or object
-datasets. Each
-of the 5 participants completed 30 main sessions of image viewing and one
-eyetracking session (ses-31), followed with a time gap of half a year by 3
-additional sessions. In total, the recording took place over the course of
-about 1.5 years (Nov 2024 to Mar 2026) at the Max Planck Institute for Human
-Cognitive and Brain Sciences in Leipzig, Germany.
+datasets. Each of the 5 participants completed 30 main sessions of image
+viewing, one eyetracking session (ses-31), and 3 supplemental fMRI sessions
+after a time gap of about half a year. The launch release focuses on the 30
+main image-viewing sessions per participant; the supplemental sessions and
+their additional shared images will be released later. Counting all acquired
+fMRI sessions gives 165 sessions (33 per participant), plus 5 eyetracking
+sessions. In total, the recording took place over the course of about 1.5
+years (Nov 2024 to Mar 2026) at the Max Planck Institute for Human Cognitive
+and Brain Sciences in Leipzig, Germany.
+
+.. include:: _includes/current_release_stats.inc
 
 Experiments
 ===========

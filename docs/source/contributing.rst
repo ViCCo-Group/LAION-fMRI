@@ -53,10 +53,12 @@ Making Changes
 Style Guide
 ===========
 
-- Clear, concise language
-- Include code examples where helpful
-- Follow existing structure and formatting
-- Ensure code examples are correct and runnable
+- Write for cognitive neuroscientists, not engineers: avoid jargon
+  unless it's the precise term, and prefer plain language over
+  marketing register
+- Include runnable code examples where they replace prose
+- Match the existing reStructuredText structure and cross-reference
+  conventions
 
 Questions?
 ==========
