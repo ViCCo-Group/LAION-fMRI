@@ -104,6 +104,18 @@ The cards below walk through each step in detail.
       +++
       ``Subject`` · ``Group``
 
+   .. grid-item-card:: Template space
+      :link: template_space
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Project T1w-space values onto fsaverage surfaces or MNI
+      volumes via the bundled FreeSurfer recon.
+
+      +++
+      ``Subject.to_template``
+
    .. grid-item-card:: Examples gallery
       :link: /auto_examples/index
       :link-type: doc
@@ -139,4 +151,5 @@ The cards below walk through each step in detail.
    discover
    download
    load
+   template_space
    api

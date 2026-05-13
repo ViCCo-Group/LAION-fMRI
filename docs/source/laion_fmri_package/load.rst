@@ -159,6 +159,9 @@ Brain-space mapping
    sub.to_nifti(per_voxel_array, "/tmp/out.nii.gz")
    sub.get_voxel_coordinates()                 # (n_voxels, 3)
 
+For projecting subject-T1w-space values onto fsaverage or MNI
+templates, see :doc:`template_space`.
+
 PyTorch integration
 ===================
 

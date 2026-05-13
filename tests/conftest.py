@@ -67,6 +67,9 @@ N_STIMULI = 20
 N_SHARED = 12
 N_UNIQUE = 8
 N_SESSIONS = 2
+# Synthetic fsnative meshes are level-2 icosahedrons.
+# Closed-form vertex count: 10 * 4**level + 2.
+N_FSNATIVE_VERTICES = 162
 N_REPS_PER_STIMULUS = 3
 N_TRIALS_PER_SESSION = N_STIMULI * N_REPS_PER_STIMULUS  # 60
 AFFINE = np.eye(4)

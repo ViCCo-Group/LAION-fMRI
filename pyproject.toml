@@ -34,6 +34,17 @@ dependencies = [
 torch = ["torch>=2.0", "torchvision>=0.15", "Pillow>=9.0"]
 bids = ["pybids>=0.16"]
 images = ["Pillow>=9.0"]
+# Template-space transforms: T1w volume -> fsaverage/fsLR/CIVET/MNI*
+# via the FreeSurfer recon ``Subject.to_template`` reads.
+# ``setuptools<80`` is pinned because ``neuromaps`` still imports
+# ``pkg_resources``, which setuptools 80+ no longer ships.
+template = [
+    "nilearn>=0.10",
+    "nitransforms>=23",
+    "neuromaps>=0.0.5",
+    "templateflow>=24",
+    "setuptools<80",
+]
 
 [project.scripts]
 laion-fmri = "laion_fmri._cli:main"
