@@ -194,7 +194,7 @@ class Stimuli:
         return self._images_ns
 
     @cached_property
-    def embeddings(self) -> "Embeddings":
+    def embeddings(self) -> "laion_fmri.embeddings.Embeddings":
         """Pretrained image embeddings.
 
         Loads every model whose HDF5 file is present on disk. If no
@@ -216,7 +216,7 @@ class Stimuli:
         return Embeddings(tuple(present), data_dir=self.data_dir)
 
     @cached_property
-    def segmentations(self) -> "Segmentations":
+    def segmentations(self) -> "laion_fmri.segmentations.Segmentations":
         """Object-level segmentation masks (one per detected noun-instance).
 
         Lazily opens ``task-images_desc-segmentations.h5``. Raises
@@ -226,7 +226,7 @@ class Stimuli:
         return Segmentations(data_dir=self.data_dir)
 
     @cached_property
-    def captions(self) -> "Captions":
+    def captions(self) -> "laion_fmri.captions.Captions":
         """Per-stimulus human + AI captions.
 
         Lazily reads ``task-images_desc-captions.csv``. Raises

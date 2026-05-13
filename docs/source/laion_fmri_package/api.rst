@@ -13,11 +13,15 @@ Auto-generated reference for every public module, class, and function in
    :recursive:
 
    laion_fmri.brain
+   laion_fmri.captions
    laion_fmri.config
    laion_fmri.discovery
    laion_fmri.download
+   laion_fmri.embeddings
    laion_fmri.group
    laion_fmri.io
+   laion_fmri.segmentations
+   laion_fmri.splits
    laion_fmri.stimuli
    laion_fmri.subject
    laion_fmri.torch_data

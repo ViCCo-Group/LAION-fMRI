@@ -496,5 +496,38 @@ by ``sub.images``, ``sub.embeddings``, ``sub.segmentations``, and
 ``sub.captions``. See :doc:`glmsingle_betas` for the beta-to-stimulus
 mapping convention.
 
+.. code-block:: python
+
+   import laion_fmri
+
+   sub = laion_fmri.load_subject("sub-01")
+
+   trials = sub.metadata
+   trials[[
+       "session", "session_trial", "image_name",
+       "unique_or_shared", "dataset",
+   ]].head()
+
+   trial = 42  # global row index in sub.metadata
+
+   # Images shown on this subject's trials:
+   img = sub.images.get(trial)                # PIL.Image
+   raw = sub.images[trial]                    # raw JPEG bytes
+   session_imgs = sub.images.array("ses-01")  # (n, 1000, 1000, 3) uint8
+
+   # Pretrained features aligned to the same trial rows:
+   x_one = sub.embeddings.get("CLIP", trial)          # (1024,)
+   x_all = sub.embeddings.all("CLIP")                 # (n_trials, 1024)
+   x_ses = sub.embeddings.all("CLIP", session="ses-01")
+
+   # Object masks for shared-image trials:
+   if sub.segmentations.has_image(trial):
+       nouns = sub.segmentations.nouns(trial)
+       mask = sub.segmentations.get(trial, nouns[0])  # (1000, 1000) uint8
+
+   # Captions for the stimulus shown on this trial:
+   human = sub.captions.human(trial)
+   ai = sub.captions.ai(trial)  # None for unique-image and OOD trials
+
 See also :doc:`train_test_splits` for how stimuli are partitioned into
 training and test sets.

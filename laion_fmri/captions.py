@@ -1,8 +1,8 @@
 """Access per-stimulus captions for the LAION-fMRI images.
 
 Each stimulus carries a small set of short *human* captions (collected on
-Prolific). Shared non-OOD stimuli additionally carry one *AI* caption
-(a GPT-generated description). The target is:
+CloudResearch Connect). Shared non-OOD stimuli additionally carry one
+*AI* caption (a GPT-generated description). The target is:
 
 * **shared** images (seen by every participant) get **5 human captions**
   and, for non-OOD images, **1 AI caption**
@@ -23,21 +23,22 @@ Files on disk:
 
 The CSV is long-form (one row per caption) with columns:
 
-==================  =========================================================
-``image_name``      Stimulus filename. Join key against
-                    ``task-images_metadata.csv``.
-``caption_idx``     Position within the image. Rank ``1`` is the
-                    highest-quality human caption; ranks go up to ``3``
-                    for unique images and up to ``5`` for shared images.
-                    The AI caption (if any) gets ``0``.
-``source``          ``"human"`` or ``"ai"``.
-``caption``         The caption text.
-``origin_collection`` Which collection the caption came from
-                    (Prolific batch label like ``"main3"`` / ``"topup1"``
-                    for humans, model name like ``"gpt-5.1"`` for AI).
-``participant_id``  Prolific participant identifier (NaN for AI).
-``ai_model``        Model name (NaN for human captions).
-==================  =========================================================
+=======================  =====================================================
+``image_name``           Stimulus filename. Join key against
+                         ``task-images_metadata.csv``.
+``caption_idx``          Position within the image. Rank ``1`` is the
+                         highest-quality human caption; ranks go up to ``3``
+                         for unique images and up to ``5`` for shared images.
+                         The AI caption (if any) gets ``0``.
+``source``               ``"human"`` or ``"ai"``.
+``caption``              The caption text.
+``origin_collection``    Which collection the caption came from
+                         (CloudResearch Connect batch labels for humans,
+                         model name like ``"gpt-5.1"`` for AI).
+``participant_id``       CloudResearch Connect participant identifier
+                         (NaN for AI).
+``ai_model``             Model name (NaN for human captions).
+=======================  =====================================================
 
 All images have their target human-caption count. AI captions are
 provided for shared non-OOD images only.

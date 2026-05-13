@@ -14,7 +14,10 @@ This page documents the top-level public Python API for
 Configuration
 =============
 
-.. autofunction:: laion_fmri.set_data_dir
+.. autofunction:: laion_fmri.dataset_initialize
+
+``laion_fmri.set_data_dir`` is an alias for
+``laion_fmri.dataset_initialize``.
 
 .. autofunction:: laion_fmri.get_data_dir
 
@@ -112,21 +115,30 @@ train/test splits used by the re:vision generalization framework.
 See :doc:`/train_test_splits` for the conceptual guide.
 
 .. autofunction:: laion_fmri.splits.list_pools
+   :no-index:
 
 .. autofunction:: laion_fmri.splits.list_splits
+   :no-index:
 
 .. autofunction:: laion_fmri.splits.list_ood_types
+   :no-index:
 
 .. autofunction:: laion_fmri.splits.load_split
+   :no-index:
 
 .. autofunction:: laion_fmri.splits.load_all_splits
+   :no-index:
 
 .. autofunction:: laion_fmri.splits.get_train_test_ids
+   :no-index:
 
 .. autofunction:: laion_fmri.splits.get_split_masks
+   :no-index:
 
 .. autoclass:: laion_fmri.splits.Split
    :members:
+   :no-index:
 
 .. autoclass:: laion_fmri.splits.SplitVariant
    :members:
+   :no-index:
