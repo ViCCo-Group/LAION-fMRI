@@ -2,7 +2,7 @@
 ``laion_fmri``
 ==============
 
-A data access package for the LAION-fMRI dataset for downloading and loading the LAION-fMRI dataset.
+A data access package for downloading and loading the LAION-fMRI dataset.
 
 .. code-block:: python
 
@@ -98,11 +98,11 @@ The cards below walk through each step in detail.
       :class-card: sd-border-0
       :shadow: sm
 
-      Four hands-on, narrated walkthroughs covering the full
+      Five hands-on, narrated walkthroughs covering the full
       workflow.
 
       +++
-      ``plot_01`` … ``plot_04``
+      ``plot_01`` ... ``plot_05``
 
    .. grid-item-card:: API reference
       :link: api
@@ -124,7 +124,6 @@ The cards below walk through each step in detail.
 
    initialize
    access
-   license
    discover
    download
    load
