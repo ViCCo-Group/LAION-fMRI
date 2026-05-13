@@ -2,70 +2,252 @@
 ROIs
 ====
 
-.. only:: live
+ROI masks are provided for all subjects and cover retinotopically defined
+visual areas, category-selective regions from functional localizers,
+motion-selective areas, and visual-stream parcels. The ROIs are
+provided as a suggested common reference for downstream analyses; the underlying
+contrasts and retinotopic maps will be released too to enable alternative
+definitions.
 
-   *Full ROI documentation will be added with the final release.* In the
-   meantime, the :doc:`load API <laion_fmri_package/load>` documents how
-   to load ROI masks and apply them to single-trial betas
-   (``sub.get_betas(roi="FFA1")``, category filters like ``"face"``,
-   surface and FreeSurfer-label loading, etc.).
+Available ROI Sets
+==================
+
+.. list-table::
+   :widths: 22 35 20 23
+   :header-rows: 1
+
+   * - Set
+     - ROIs
+     - Source
+     - Criterion
+   * - **Retinotopic**
+     - V1v, V1d, V2v, V2d, V3v, V3d, V3A, V3B, hV4, LO1, LO2,
+       TO1, TO2, VO1, VO2, IPS0, SPCS, IPCS, EVC
+     - Retinotopy localizer
+     - Polar angle reversals, eccentricity gradients (R²-thresholded)
+   * - **Face-selective**
+     - OFA, FFA-1, FFA-2, pSTS-faces
+     - fLoc
+     - faces > others
+   * - **Body-selective**
+     - EBA, FBA
+     - fLoc
+     - bodies > others
+   * - **Scene-selective**
+     - PPA, OPA, MPA, SPL
+     - fLoc
+     - scenes > others
+   * - **Character-selective**
+     - VWFA-1, VWFA-2, mfs-words
+     - fLoc
+     - characters > others
+   * - **Object-selective**
+     - l-objects, v-objects
+     - Object localizer
+     - objects > scrambled
+   * - **Motion**
+     - MT, MST
+     - Motion localizer
+     - motion > static, ipsilateral > static
+   * - **General visual selectivity**
+     - laion-general
+     - LAION main experiment
+     - GLMsingle R²
+   * - **Sectors of visual selectivity**
+     - laion-EVC, laion-dorsal, laion-lateral, laion-ventral
+     - Retinotopic ROIs + anatomical borders
+     - Subdivision of laion-general
+
+Functional ROIs
+===============
+
+Design Choices
+---------------
+
+All functional ROIs were manually delineated on the cortical surface.
+Statistical maps informing the delineations, such as polar angle, or
+localizer contrast t-statistics, were rendered as flatmaps via pycortex and
+annotated in Inkscape [ref].
+
+**Selection of ROIs.**
+ROIs were included based on relevance to the field and consistent
+identifiability across subjects.
+
+**Mutual exclusivity.**
+ROIs can overlap across sets but not within a set. For example, face-selective
+FFA-1 may overlap with body-selective FBA, but not with face-selective FFA-2.
+
+**Contrast thresholds.**
+Localizer contrasts were thresholded at t > 0. The resulting ROIs may
+therefore be larger than those reported in studies applying more conservative
+thresholds.
+
+**Spurious activity in early visual cortex.**
+Some category localizer contrasts yield significant responses in V1–V3,
+likely reflecting low-level stimulus confounds rather than genuine category
+selectivity. Such activations are excluded from all category-selective ROI
+labels.
+
+Retinotopy-derived ROIs
+------------------------
+
+Boundaries are traced on pRF parameter maps.
+
+.. figure:: _static/retinotopic_rois_sub-03.png
+   :align: center
+   :width: 100%
+   :alt: Retinotopy-derived visual area ROIs
+
+   Retinotopy-derived visual area ROIs.
+
+*V1 / V2 / V3* are defined by successive polar-angle reversals and
+released as separate dorsal (``*d``, lower visual field) and ventral (``*v``, upper
+visual field) ROIs. *EVC* is the union of V1-V3, provided as a convenience mask for
+analyses targeting early visual cortex as a whole.
+
+.. note::
+
+   *EVC* is not to be confused with *laion-EVC*.
+   *laion-EVC* is restricted to vertices showing significant responses in the
+   LAION experiment and is typically smaller than the retinotopically defined *EVC*.
+
+*V3A / V3B* lie anterior to V3d near the transverse occipital sulcus. They
+share a foveal representation; V3A on its medial side and V3B on its lateral side.
+
+*IPS0* extends along the intraparietal sulcus from V3A/V3B, with a polar
+angle progression from the upper vertical meridian (UVM) to the lower vertical meridian (LVM).
+
+*hV4* sits lateral to V3v. The anterior boundary is an eccentricity reversal. hV4 contains a full
+hemifield representation.
+
+*VO1 / VO2* are anterior to hV4 on the ventral surface. They share a
+another foveal cluster and can be separated by a UVM representation.
+
+*LO1 / LO2 / TO1 / TO2* cover the lateral occipitotemporal cortex. LO1 extends laterally from V3d. 
+Each area contains a hemifield representation and their boundaries are defined by polar angle reversals. 
+LO1 and LO2 share the foveal confluence of EVC whereas TO1 and TO2 contain a separate foveal representation.
+
+*SPCS / IPCS* (superior and inferior precentral sulcus) are defined by
+binarizing the population receptive field R² map without polar angle delineation; only clear
+clusters on the precentral sulcus are labeled.
+
+
+Localizer-derived ROIs
+-----------------------
+
+Localizer-derived ROIs are defined from the fLoc and motion localizer
+experiments. For details on the localizer paradigms, see :doc:`localizers`.
+
+.. figure:: _static/all_contrasts_sub-03.png
+   :align: center
+   :width: 100%
+   :alt: Localizer-derived category-selective ROIs
+
+   Localizer-derived category-selective ROIs.
+
+**Face-selective (faces > others).**
+*OFA* (IOG-faces) is on the inferior occipital gyrus, lateral to hV4. 
+*FFA1* (posterior fusiform, pFus-faces) and
+*FFA2* (mid-fusiform, mFus-faces) are on the fusiform gyrus: FFA1 sits
+posteriorly on the lateral fusiform gyrus; FFA2 is a separable cluster anterior to FFA1. 
+*pSTS-faces* is on the posterior superior temporal sulcus (pSTS),
+anterior to EBA, and kept separate from EBA.
+
+**Body-selective (bodies > others).**
+*EBA* is a large complex on the lateral occipitotemporal cortex surrounding
+motion-selective MT/MST. 
+*FBA* is on the fusiform gyrus lying approximately on the boundary of FFA1 and FFA2.
+
+**Scene-selective (scenes > others).**
+*PPA* is a contiguous cluster of selectivity along the collateral sulcus.
+Separated clusters in VO1 are not included.
+*OPA* lies around the transverse occipital sulcus.
+*MPA* (also known as retrosplenial cortex, RSC) is in medial parietal cortex.
+We tentatively delineate a fourth scene-selective area, *SPL*, on the superior parietal lobule, dorsal and
+anterior to OPA. Bridging activations connecting MPA and OPA are discarded. 
+
+**Character-selective (characters > others).**
+*VWFA-1* is the first contiguous character-selective region in the
+posterior occipitotemporal sulcus (pOTS) and surrounding banks. 
+*VWFA-2* is the second character-selective region on the mid-occipitotemporal sulcus (mOTS).
+Clusters of character-selective activation entirely outside the occipitotemporal sulcus
+(OTS) are not labeled as VWFA. *mfs-words* is a mid-fusiform cluster distinct
+from the OTS patches, labeled where identifiable.
+
+**Object-selective (objects > scrambled).**
+Object selectivity is subdivided into two mutually exclusive sectors using a coarse
+lateral/ventral anatomical boundary: the inferior occipital–inferior temporal gyrus (IOG–ITG).
+*l-objects* covers object-selective cortex on the lateral surface, dorsal to the IOG–ITG boundary
+(~LO). *v-objects* covers object-selective cortex ventral to that boundary, on the
+fusiform gyrus (~pFs), collateral sulcus, and neighboring banks.
+
+**Motion-selective (motion > static; ipsilateral > static).**
+*MT* (~TO1) sits on the posterior-ventral bank of the ascending limb of the inferior
+temporal sulcus (ITS) and responds to contralateral stimulation only. 
+*MST* (~TO2) sits on the anterior-dorsal bank of the same sulcus and has bilateral
+receptive fields. MST is distinguished from MST through ipsilateral responsiveness; where the ipsilateral contrast is
+inconclusive, the upper vertical meridian (the retinotopic TO1/TO2 boundary)
+is used as a fallback to separate them.
+
+General Visual Selectivity and Subdivisions
+-------------------------------------------
+
+.. figure:: _static/visual_streams_sub-03.png
+   :align: center
+   :width: 100%
+   :alt: laion-general selectivity mask and dorsal/lateral/ventral subdivisions
+
+   ``laion-general`` and its dorsal / lateral / ventral subdivisions on
+   ``sub-03``.
+
+*laion-general* covers all cortical regions showing visual responses
+in the LAION experiment (GLMsingle R²), including isolated patches in the IPS
+and pSTS. *laion-EVC* comprises the intersection of the V1–V3 with the laion-general selectivity mask.
+
+.. note::
+
+   laion-EVC is not to be confused with the retinotopic *EVC* mask (union of V1–V3).
+   laion-EVC is restricted to vertices showing significant responses in the
+   LAION experiment and is typically smaller than the retinotopically defined *EVC*.
+
+The remainder of laion-general is subdivided into three mutually exclusive
+anatomical parcels: *laion-dorsal*, *laion-lateral*, and *laion-ventral*. These
+parcels reflect broad cortical territories with anatomically drawn borders and
+are not intended as functional stream definitions.
+
+The following borders are defined via anatomical landmarks and retinotopy.
+
+- **Posterior boundary** (shared with EVC): the outer border of V3 as defined
+  by the retinotopic delineation.
+- **Dorsal/lateral boundary**: runs roughly along the middle temporal gyrus
+  (MTG), tracing the gap between retinotopic areas LO and V3A/V3B.
+- **Lateral/ventral boundary**: runs along the inferior occipital–inferior
+  temporal gyrus (IOG–ITG).
+
+This yields three broad visual sectors:
+
+- **laion-dorsal** — cortex dorsal to the LO–V3A/B boundary, covering dorsal
+  occipital and parietal regions.
+- **laion-lateral** — cortex between the MTG boundary (dorsal) and the IOG–ITG
+  boundary (ventral), covering lateral occipitotemporal cortex.
+- **laion-ventral** — cortex ventral to the IOG–ITG boundary, covering the
+  ventral occipitotemporal surface.
+
+Available Spaces
+================
+
+Per-subject ROIs are released in two spaces:
+
+- **``fsnative``** — surface masks on each subject's FreeSurfer surface, as
+  ``.func.gii`` (one value per vertex) and ``.label`` files, per hemisphere.
+- **``T1w`` (1.8 mm)** — volumetric masks resampled to the subject's T1w grid
+  at the functional resolution, as ``.nii.gz``.
+
+Both spaces cover the same ROI sets. Surface masks are the canonical
+reference; the T1w volumes are derived from them and provided for
+convenience in volume-based analyses.
 
 .. only:: dev
-
-   .. todo::
-
-      Introductory narrative (2-3 sentences): What ROIs are provided and why?
-      Are they intended for most users, or only for ROI-based analyses?
-
-   .. todo::
-
-      Add an overview figure showing all ROI sets on a brain (e.g., glass brain
-      or inflated surface with ROIs color-coded by set).
-
-   Available ROI Sets
-   ==================
-
-   .. todo::
-
-      For each ROI set below, write a short description (2-3 sentences) covering
-      what it is, how it was defined, and when a user would use it.
-      Add or remove subsections as needed. Cross-reference the source page where
-      applicable.
-
-   Atlas-based ROIs
-   ----------------
-
-   .. todo::
-
-      Which atlas-based ROIs are provided (e.g., Glasser parcellation, DKT,
-      Schaefer)? Brief description of each, which regions are included, and a
-      figure.
-
-   Retinotopy-derived ROIs
-   ------------------------
-
-   .. todo::
-
-      Which visual area ROIs come from retinotopic mapping (V1, V2, V3, ...)?
-      Brief description + figure showing them on a flatmap or inflated surface.
-      Cross-reference :doc:`retinotopy`.
-
-   Localizer-derived ROIs
-   -----------------------
-
-   .. todo::
-
-      Which category-selective ROIs come from localizers (FFA, PPA, EBA, ...)?
-      Brief description of how they were defined (individual thresholding, etc.)
-      + figure. Cross-reference :doc:`localizers`.
-
-   Available Spaces
-   ================
-
-   .. todo::
-
-      Which spaces are the ROI masks provided in? Are all ROI sets available in
-      all spaces, or only some?
 
    File Organization
    =================
