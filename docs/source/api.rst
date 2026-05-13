@@ -9,6 +9,7 @@ This page documents the top-level public Python API for
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 Configuration
