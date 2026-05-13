@@ -120,7 +120,7 @@ angle progression from the upper vertical meridian (UVM) to the lower vertical m
 *hV4* sits lateral to V3v. The anterior boundary is an eccentricity reversal. hV4 contains a full
 hemifield representation.
 
-*VO1 / VO2* are anterior to hV4 on the ventral surface. They share a
+*VO1 / VO2* are anterior to hV4 on the ventral surface. They share
 another foveal cluster and can be separated by a UVM representation.
 
 *LO1 / LO2 / TO1 / TO2* cover the lateral occipitotemporal cortex. LO1 extends laterally from V3d. 
@@ -147,16 +147,16 @@ experiments. For details on the localizer paradigms, see :doc:`localizers`.
 
 **Face-selective (faces > others).**
 *OFA* (IOG-faces) is on the inferior occipital gyrus, lateral to hV4. 
-*FFA1* (posterior fusiform, pFus-faces) and
-*FFA2* (mid-fusiform, mFus-faces) are on the fusiform gyrus: FFA1 sits
-posteriorly on the lateral fusiform gyrus; FFA2 is a separable cluster anterior to FFA1. 
+*FFA-1* (posterior fusiform, pFus-faces) and
+*FFA-2* (mid-fusiform, mFus-faces) are on the fusiform gyrus: FFA-1 sits
+posteriorly on the lateral fusiform gyrus; FFA-2 is a separable cluster anterior to FFA-1. 
 *pSTS-faces* is on the posterior superior temporal sulcus (pSTS),
 anterior to EBA, and kept separate from EBA.
 
 **Body-selective (bodies > others).**
 *EBA* is a large complex on the lateral occipitotemporal cortex surrounding
 motion-selective MT/MST. 
-*FBA* is on the fusiform gyrus lying approximately on the boundary of FFA1 and FFA2.
+*FBA* is on the fusiform gyrus lying approximately on the boundary of FFA-1 and FFA-2.
 
 **Scene-selective (scenes > others).**
 *PPA* is a contiguous cluster of selectivity along the collateral sulcus.
@@ -185,7 +185,7 @@ fusiform gyrus (~pFs), collateral sulcus, and neighboring banks.
 *MT* (~TO1) sits on the posterior-ventral bank of the ascending limb of the inferior
 temporal sulcus (ITS) and responds to contralateral stimulation only. 
 *MST* (~TO2) sits on the anterior-dorsal bank of the same sulcus and has bilateral
-receptive fields. MST is distinguished from MST through ipsilateral responsiveness; where the ipsilateral contrast is
+receptive fields. MST is distinguished from MT through ipsilateral responsiveness; where the ipsilateral contrast is
 inconclusive, the upper vertical meridian (the retinotopic TO1/TO2 boundary)
 is used as a fallback to separate them.
 
@@ -197,11 +197,10 @@ General Visual Selectivity and Subdivisions
    :width: 100%
    :alt: laion-general selectivity mask and dorsal/lateral/ventral subdivisions
 
-   ``laion-general`` and its dorsal / lateral / ventral subdivisions on
-   ``sub-03``.
+   laion-general and its dorsal / lateral / ventral subdivisions.
 
 *laion-general* covers all cortical regions showing visual responses
-in the LAION experiment (GLMsingle R²), including isolated patches in the IPS
+in the LAION experiment (GLMsingle R²), including isolated patches in IPS
 and pSTS. *laion-EVC* comprises the intersection of the V1–V3 with the laion-general selectivity mask.
 
 .. note::
