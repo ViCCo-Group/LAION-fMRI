@@ -298,11 +298,13 @@ def fetch_laion_fmri(
     suffix=None,
     extension=None,
     n_jobs=1,
+    include_freesurfer=False,
 ):
-    """Download fMRI / derivatives for one subject, optionally narrowed by entities.
+    """Download fMRI / derivatives for one subject.
 
-    Stimulus images are not fetched here — they're dataset-wide and
-    gated through the access service (see
+    Optionally narrowed by BIDS entities. Stimulus images are not
+    fetched here — they're dataset-wide and gated through the
+    access service (see
     :func:`laion_fmri.download.download_stimuli`).
 
     Parameters
@@ -323,6 +325,12 @@ def fetch_laion_fmri(
         sequential. Each worker is one subprocess that itself runs
         AWS-CLI's internal multipart concurrency, so doubling this
         number more than doubles the open S3 connections.
+    include_freesurfer : bool
+        If True, also pull the per-subject FreeSurfer recon under
+        ``derivatives/freesurfer/{subject}/``. The recon files do
+        not carry BIDS-entity tokens (``brain.mgz``, ``lh.white``,
+        ``talairach.lta``, ...), so the BIDS filters above are NOT
+        applied to the recon -- it's pulled as a whole.
     """
     bucket = LAION_FMRI_BUCKET
     filters = {
@@ -364,6 +372,15 @@ def fetch_laion_fmri(
         data_dir, roi_filters, n_jobs=n_jobs,
     )
 
+    if include_freesurfer:
+        # Recon files don't carry BIDS-entity tokens, so the
+        # strict ses filter and the BIDS suffix/extension filters
+        # would otherwise drop them. Pull the recon prefix with
+        # no filters; the recon is a whole-tree atomic unit.
+        _filtered_download(
+            bucket, f"derivatives/freesurfer/{subject}/",
+            data_dir, {}, n_jobs=n_jobs,
+        )
 
 
 def _ses_filters_specific_sessions(ses):

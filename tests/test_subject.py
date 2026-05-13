@@ -697,7 +697,50 @@ def test_has_stimuli_true_when_present(configured_subject):
     assert configured_subject.has_stimuli() is True
 
 
-# ── Trial-to-stimulus mapping via sub.metadata.stim_idx ────────
+# ── FreeSurfer recon access ────────────────────────────────────
+
+
+def test_has_freesurfer_true_when_recon_present(configured_subject):
+    """Synthetic fixture builds the recon -- has_freesurfer is True."""
+    assert configured_subject.has_freesurfer() is True
+
+
+def test_has_freesurfer_false_when_recon_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """Subject without a recon directory reports False."""
+    import shutil
+
+    fs_dir = (
+        synthetic_data_dir / "derivatives" / "freesurfer" / "sub-01"
+    )
+    shutil.rmtree(fs_dir)
+    assert configured_subject.has_freesurfer() is False
+
+
+def test_get_freesurfer_dir_returns_local_path(
+    configured_subject, synthetic_data_dir,
+):
+    """The path resolves under ``derivatives/freesurfer/{sub}/``."""
+    fs_dir = configured_subject.get_freesurfer_dir()
+    assert fs_dir.is_dir()
+    assert fs_dir == (
+        synthetic_data_dir / "derivatives" / "freesurfer" / "sub-01"
+    )
+
+
+def test_get_freesurfer_dir_raises_when_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """No recon on disk -> clear DataNotDownloaded with a fix hint."""
+    import shutil
+
+    fs_dir = (
+        synthetic_data_dir / "derivatives" / "freesurfer" / "sub-01"
+    )
+    shutil.rmtree(fs_dir)
+    with pytest.raises(DataNotDownloadedError, match="freesurfer"):
+        configured_subject.get_freesurfer_dir()
 
 
 def test_sub_metadata_stim_idx_range(configured_subject):

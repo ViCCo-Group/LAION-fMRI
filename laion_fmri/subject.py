@@ -16,6 +16,7 @@ from laion_fmri._errors import (
 )
 from laion_fmri._paths import (
     betas_path,
+    freesurfer_subject_dir,
     glmsingle_subject_dir,
     parse_roi_label,
     r2mean_path,
@@ -636,6 +637,40 @@ class Subject:
             stimuli_metadata_path(self._data_dir).exists()
             and stimuli_h5_path(self._data_dir).exists()
         )
+
+    def has_freesurfer(self):
+        """Return True if the per-subject FreeSurfer recon is on disk.
+
+        The recon ships under
+        ``derivatives/freesurfer/{subject}/``; pull it with
+        ``download(..., include_freesurfer=True)``. Required by
+        :meth:`to_template` to project T1w-volume data onto
+        fsaverage / fsLR / MNI templates.
+        """
+        return freesurfer_subject_dir(
+            self._data_dir, self._subject_id,
+        ).is_dir()
+
+    def get_freesurfer_dir(self):
+        """Return the path to this subject's FreeSurfer recon.
+
+        Raises
+        ------
+        DataNotDownloadedError
+            If the recon directory does not exist on disk.
+        """
+        fs_dir = freesurfer_subject_dir(
+            self._data_dir, self._subject_id,
+        )
+        if not fs_dir.is_dir():
+            raise DataNotDownloadedError(
+                f"FreeSurfer recon for {self._subject_id} not "
+                f"found at {fs_dir}. Run: "
+                "from laion_fmri.download import download; "
+                f"download(subject='{self._subject_id}', "
+                "include_freesurfer=True)"
+            )
+        return fs_dir
 
     @property
     def metadata(self):

@@ -12,10 +12,11 @@ from laion_fmri.discovery import describe, get_rois, get_subjects
 
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_lists_from_bucket(mock_lcp):
-    # First call: glmsingle-tedana, second call: rois
+    # glmsingle-tedana, rois, freesurfer
     mock_lcp.side_effect = [
         ["sub-01", "sub-03"],
         ["sub-01", "sub-03", "sub-05"],
+        [],
     ]
     assert get_subjects() == ["sub-01", "sub-03", "sub-05"]
 
@@ -23,14 +24,14 @@ def test_get_subjects_lists_from_bucket(mock_lcp):
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_union_across_derivatives(mock_lcp):
     """Subject present only in rois is still returned."""
-    mock_lcp.side_effect = [[], ["sub-01"]]
+    mock_lcp.side_effect = [[], ["sub-01"], []]
     assert get_subjects() == ["sub-01"]
 
 
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_probes_glmsingle_tedana_first(mock_lcp):
     """glmsingle-tedana is the primary derivative tree."""
-    mock_lcp.side_effect = [[], []]
+    mock_lcp.side_effect = [[], [], []]
     with pytest.warns(UserWarning):
         get_subjects()
     prefixes = [call.args[1] for call in mock_lcp.call_args_list]
@@ -40,7 +41,7 @@ def test_get_subjects_probes_glmsingle_tedana_first(mock_lcp):
 
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_warns_when_empty(mock_lcp):
-    mock_lcp.side_effect = [[], []]
+    mock_lcp.side_effect = [[], [], []]
     with pytest.warns(UserWarning, match="No subjects found"):
         result = get_subjects()
     assert result == []
@@ -48,18 +49,30 @@ def test_get_subjects_warns_when_empty(mock_lcp):
 
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_subjects_filters_non_subject_names(mock_lcp):
-    mock_lcp.side_effect = [["sub-01", "_tmp"], []]
+    mock_lcp.side_effect = [["sub-01", "_tmp"], [], []]
     assert get_subjects() == ["sub-01"]
 
 
 @patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_queries_both_derivative_prefixes(mock_lcp):
-    mock_lcp.side_effect = [[], []]
+def test_get_subjects_queries_all_derivative_prefixes(mock_lcp):
+    mock_lcp.side_effect = [[], [], []]
     with pytest.warns(UserWarning):
         get_subjects()
     prefixes = [call.args[1] for call in mock_lcp.call_args_list]
     assert "derivatives/glmsingle-tedana/" in prefixes
     assert "derivatives/rois/" in prefixes
+    assert "derivatives/freesurfer/" in prefixes
+
+
+@patch("laion_fmri.discovery.list_common_prefixes")
+def test_get_subjects_finds_freesurfer_only_subjects(mock_lcp):
+    """Subject with only a FreeSurfer recon (no glmsingle, no rois)
+    is still returned -- some subjects may have an anatomical
+    pipeline run before the functional one lands.
+    """
+    # glmsingle-tedana, rois, freesurfer
+    mock_lcp.side_effect = [[], [], ["sub-07"]]
+    assert get_subjects() == ["sub-07"]
 
 
 # ── get_rois ────────────────────────────────────────────────────
@@ -112,7 +125,8 @@ def test_get_rois_category_filter(mock_lpk):
 def test_get_rois_default_subject_uses_first_in_bucket(
     mock_lcp, mock_lpk,
 ):
-    mock_lcp.side_effect = [["sub-01"], []]  # get_subjects listings
+    # get_subjects scans glmsingle-tedana, rois, freesurfer
+    mock_lcp.side_effect = [["sub-01"], [], []]
     mock_lpk.return_value = [
         "derivatives/rois/sub-01/face/"
         "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",
@@ -123,7 +137,7 @@ def test_get_rois_default_subject_uses_first_in_bucket(
 @patch("laion_fmri.discovery.list_prefix_keys")
 @patch("laion_fmri.discovery.list_common_prefixes")
 def test_get_rois_empty_when_bucket_empty(mock_lcp, mock_lpk):
-    mock_lcp.side_effect = [[], []]
+    mock_lcp.side_effect = [[], [], []]
     mock_lpk.return_value = []
     with pytest.warns(UserWarning):
         assert get_rois() == []
@@ -144,7 +158,7 @@ def test_get_rois_warns_for_explicit_subject_without_rois(mock_lpk):
 def test_describe_prints_bucket_summary(
     mock_lcp, mock_lpk, capsys,
 ):
-    mock_lcp.side_effect = [["sub-01", "sub-03"], []]
+    mock_lcp.side_effect = [["sub-01", "sub-03"], [], []]
     mock_lpk.return_value = [
         "derivatives/rois/sub-01/face/"
         "sub-01_space-T1w_res-1pt8_label-OFA_mask.nii.gz",

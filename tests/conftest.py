@@ -24,15 +24,26 @@ Layout:
         │       ├── <single-trial effect statmap .nii.gz>
         │       ├── <per-session noise-ceiling statmap .nii.gz>
         │       └── <GLMsingle events .tsv>
-        └── rois/sub-XX/
-            ├── visualcat/
-            │   ├── sub-XX_space-T1w_res-1pt8_label-visual_mask.nii.gz
-            │   ├── sub-XX_hemi-L_space-fsnative_label-visual_mask.func.gii
-            │   ├── sub-XX_hemi-L_space-fsnative_label-visual_mask.label
-            │   ├── sub-XX_hemi-R_space-fsnative_label-visual_mask.func.gii
-            │   └── sub-XX_hemi-R_space-fsnative_label-visual_mask.label
-            └── hlviscat/
-                └── ... (same five files for label-hlvis)
+        ├── rois/sub-XX/
+        │   ├── visualcat/
+        │   │   ├── sub-XX_space-T1w_res-1pt8_label-visual_mask.nii.gz
+        │   │   ├── sub-XX_hemi-L_space-fsnative_label-visual_mask.func.gii
+        │   │   ├── sub-XX_hemi-L_space-fsnative_label-visual_mask.label
+        │   │   ├── sub-XX_hemi-R_space-fsnative_label-visual_mask.func.gii
+        │   │   └── sub-XX_hemi-R_space-fsnative_label-visual_mask.label
+        │   └── hlviscat/
+        │       └── ... (same five files for label-hlvis)
+        └── freesurfer/sub-XX/
+            ├── mri/
+            │   ├── brain.mgz                      (placeholder bytes)
+            │   ├── aparc+aseg.mgz                 (placeholder bytes)
+            │   └── transforms/
+            │       ├── talairach.lta              (T1w -> MNI305 affine)
+            │       └── talairach.xfm              (same, older format)
+            ├── surf/
+            │   ├── lh.{white,pial,sphere,sphere.reg}
+            │   └── rh.{white,pial,sphere,sphere.reg}
+            └── label/                             (empty dir)
 
 See ``_trial_betas_filename`` etc. below for the exact patterns.
 """
@@ -371,6 +382,169 @@ def _build_rois(data_dir, sub_id, brain_mask):
     )
 
 
+# ── FreeSurfer recon ────────────────────────────────────────────
+
+#: Files placed under ``mri/`` for the synthetic recon.
+_FS_MRI_FILES = ("brain.mgz", "aparc+aseg.mgz")
+
+#: Files placed under ``mri/transforms/`` for the synthetic recon.
+_FS_TRANSFORM_FILES = ("talairach.lta", "talairach.xfm")
+
+#: Per-hemisphere surface files placed under ``surf/``.
+_FS_SURF_NAMES = ("white", "pial", "sphere", "sphere.reg")
+
+
+def _icosahedron(level=2):
+    """Return ``(vertices, faces)`` for a subdivided icosahedron.
+
+    Level 0: 12 vertices, 20 faces. Each subdivision splits every
+    triangle into four; level 2 gives 162 vertices / 320 faces --
+    enough topology for ``vol_to_surf`` + ``SurfaceResampler`` to
+    do meaningful work without slowing the test suite.
+
+    Vertices come back on the unit sphere; callers reposition them
+    onto whatever surface (white/pial/sphere) they need.
+    """
+    phi = (1.0 + np.sqrt(5.0)) / 2.0
+    verts = np.array([
+        [-1,  phi,  0], [1,  phi,  0],
+        [-1, -phi,  0], [1, -phi,  0],
+        [0, -1,  phi], [0, 1,  phi],
+        [0, -1, -phi], [0, 1, -phi],
+        [phi,  0, -1], [phi,  0,  1],
+        [-phi,  0, -1], [-phi,  0,  1],
+    ], dtype=np.float32)
+    verts /= np.linalg.norm(verts, axis=1, keepdims=True)
+    faces = np.array([
+        [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+        [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+        [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+        [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+    ], dtype=np.int32)
+    for _ in range(level):
+        verts, faces = _subdivide(verts, faces)
+    return verts, faces
+
+
+def _subdivide(verts, faces):
+    """Split each triangle into 4 by inserting unit-sphere midpoints."""
+    midpoint_cache = {}
+    new_verts = list(verts)
+    new_faces = []
+
+    def midpoint(a, b):
+        edge = (a, b) if a < b else (b, a)
+        if edge not in midpoint_cache:
+            mid = (verts[a] + verts[b]) / 2.0
+            mid /= np.linalg.norm(mid)
+            midpoint_cache[edge] = len(new_verts)
+            new_verts.append(mid)
+        return midpoint_cache[edge]
+
+    for a, b, c in faces:
+        ab = midpoint(a, b)
+        bc = midpoint(b, c)
+        ca = midpoint(c, a)
+        new_faces.extend([
+            [a, ab, ca], [b, bc, ab],
+            [c, ca, bc], [ab, bc, ca],
+        ])
+    return np.array(new_verts, dtype=np.float32), np.array(
+        new_faces, dtype=np.int32,
+    )
+
+
+def _identity_lta_text(src_shape=(5, 5, 5), dst_shape=(5, 5, 5)):
+    """Return the text of an identity FreeSurfer LTA (RAS→RAS).
+
+    Parseable by ``nitransforms.io.lta.FSLinearTransform``. Source
+    and destination volumes default to the fixture brain shape; the
+    transform itself is the 4×4 identity, so applying it round-trips
+    the input volume unchanged (sans affine metadata).
+    """
+    src_dims = " ".join(str(d) for d in src_shape)
+    dst_dims = " ".join(str(d) for d in dst_shape)
+    return (
+        "type      = 1\n"
+        "nxforms   = 1\n"
+        "mean      = 0.0 0.0 0.0\n"
+        "sigma     = 1.0\n"
+        "1 4 4\n"
+        "1.000000 0.000000 0.000000 0.000000\n"
+        "0.000000 1.000000 0.000000 0.000000\n"
+        "0.000000 0.000000 1.000000 0.000000\n"
+        "0.000000 0.000000 0.000000 1.000000\n"
+        "src volume info\n"
+        "valid = 1\n"
+        "filename = src.mgz\n"
+        f"volume = {src_dims}\n"
+        "voxelsize = 1.000000 1.000000 1.000000\n"
+        "xras   = 1.000000 0.000000 0.000000\n"
+        "yras   = 0.000000 1.000000 0.000000\n"
+        "zras   = 0.000000 0.000000 1.000000\n"
+        "cras   = 0.000000 0.000000 0.000000\n"
+        "dst volume info\n"
+        "valid = 1\n"
+        "filename = dst.mgz\n"
+        f"volume = {dst_dims}\n"
+        "voxelsize = 1.000000 1.000000 1.000000\n"
+        "xras   = 1.000000 0.000000 0.000000\n"
+        "yras   = 0.000000 1.000000 0.000000\n"
+        "zras   = 0.000000 0.000000 1.000000\n"
+        "cras   = 0.000000 0.000000 0.000000\n"
+    )
+
+
+def _build_freesurfer(data_dir, sub_id):
+    """Populate ``derivatives/freesurfer/{sub_id}/`` with synthetic files.
+
+    Transforms are real identity LTAs so ``nitransforms``
+    round-trips cleanly. Surface files are real FreeSurfer-format
+    geometry written by ``nibabel.freesurfer.io.write_geometry``:
+
+    - ``white`` / ``pial``: small ellipsoids placed inside the
+      5x5x5 brain volume so ``nilearn.surface.vol_to_surf`` can
+      sample at every vertex without going out of bounds.
+    - ``sphere`` / ``sphere.reg``: unit-sphere parametrisation at
+      FreeSurfer's 100 mm convention -- gives
+      ``nitransforms.surface.SurfaceResampler`` something
+      topologically valid to resample from.
+
+    ``mri/`` MGZ files are still placeholders -- nothing in the
+    template chain reads them.
+    """
+    fs_root = data_dir / "derivatives" / "freesurfer" / sub_id
+    (fs_root / "mri" / "transforms").mkdir(parents=True)
+    (fs_root / "surf").mkdir(parents=True)
+    (fs_root / "label").mkdir(parents=True)
+
+    for fname in _FS_MRI_FILES:
+        (fs_root / "mri" / fname).write_bytes(b"")
+    lta_text = _identity_lta_text(BRAIN_SHAPE, BRAIN_SHAPE)
+    for fname in _FS_TRANSFORM_FILES:
+        (fs_root / "mri" / "transforms" / fname).write_text(lta_text)
+
+    unit_verts, faces = _icosahedron(level=2)
+    brain_center = np.array(BRAIN_SHAPE, dtype=np.float32) / 2.0
+    white_verts = unit_verts * 1.5 + brain_center
+    pial_verts = unit_verts * 1.8 + brain_center
+    sphere_verts = unit_verts * 100.0
+    for hemi in ("lh", "rh"):
+        nib.freesurfer.io.write_geometry(
+            str(fs_root / "surf" / f"{hemi}.white"), white_verts, faces,
+        )
+        nib.freesurfer.io.write_geometry(
+            str(fs_root / "surf" / f"{hemi}.pial"), pial_verts, faces,
+        )
+        nib.freesurfer.io.write_geometry(
+            str(fs_root / "surf" / f"{hemi}.sphere"), sphere_verts, faces,
+        )
+        nib.freesurfer.io.write_geometry(
+            str(fs_root / "surf" / f"{hemi}.sphere.reg"),
+            sphere_verts, faces,
+        )
+
+
 # ── Fixtures ────────────────────────────────────────────────────
 
 @pytest.fixture
@@ -416,6 +590,7 @@ def synthetic_data_dir(tmp_path):
     for sub_id in ["sub-01", "sub-03"]:
         _build_subject(data_dir, sub_id, brain_mask, stim_meta, rng)
         _build_rois(data_dir, sub_id, brain_mask)
+        _build_freesurfer(data_dir, sub_id)
 
     return data_dir
 
