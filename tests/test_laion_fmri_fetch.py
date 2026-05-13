@@ -324,6 +324,72 @@ def test_fetch_does_not_list_stimuli_prefix(
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
 @patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_lists_freesurfer_when_include_set(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``include_freesurfer=True`` lists the per-subject recon prefix."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_freesurfer=True,
+        )
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/freesurfer/sub-03/" in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_skips_freesurfer_by_default(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """No ``include_freesurfer`` flag → recon prefix is not touched."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/freesurfer/sub-03/" not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_freesurfer_pulled_even_with_ses_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Recon files lack BIDS entity tokens; a strict ``ses=`` filter
+    would otherwise drop them. ``include_freesurfer`` pulls the
+    recon unconditionally regardless of BIDS filters.
+    """
+    fs_key = "derivatives/freesurfer/sub-03/surf/lh.white"
+
+    def list_side_effect(bucket, prefix):
+        if prefix == "derivatives/freesurfer/sub-03/":
+            return [{"Key": fs_key, "Size": 100}]
+        return []
+
+    mock_list_objects.side_effect = list_side_effect
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_freesurfer=True, ses="01",
+        )
+
+    downloaded = [
+        c.args[1] for c in mock_download_key.call_args_list
+    ]
+    assert fs_key in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
 def test_fetch_ses_filter_narrows_downloads(
     mock_download_key, mock_list_objects, tmp_path,
 ):

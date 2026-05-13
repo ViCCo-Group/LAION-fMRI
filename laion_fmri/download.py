@@ -502,6 +502,7 @@ def download(
     extension=None,
     include_stimuli=False,
     include_embeddings=False,
+    include_freesurfer=False,
     n_jobs=1,
 ):
     """Download fMRI dataset files for a subject, narrowed by BIDS entities.
@@ -540,6 +541,12 @@ def download(
         After the fMRI fetch, also call :func:`download_embeddings`.
         Pass ``True`` for all four models, or a model label / list of
         labels to narrow. ``False`` (default) skips the embeddings.
+    include_freesurfer : bool
+        If True, also pull the per-subject FreeSurfer recon under
+        ``derivatives/freesurfer/{subject}/`` (a few hundred MB per
+        subject). The recon enables ``Subject.to_template`` -- the
+        chain that projects T1w-volume data onto fsaverage / fsLR /
+        MNI templates without external tools.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (AWS CLI copy subprocesses). ``1`` (default) is sequential.
@@ -588,6 +595,7 @@ def download(
             suffix=suffix,
             extension=extension,
             n_jobs=n_jobs,
+            include_freesurfer=include_freesurfer,
         )
 
     if include_stimuli:

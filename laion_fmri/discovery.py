@@ -17,6 +17,7 @@ from laion_fmri._sources import LAION_FMRI_BUCKET
 SUBJECT_PREFIXES = (
     "derivatives/glmsingle-tedana/",
     "derivatives/rois/",
+    "derivatives/freesurfer/",
 )
 
 
