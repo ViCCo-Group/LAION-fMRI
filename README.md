@@ -1,17 +1,18 @@
 # LAION-fMRI
 
-**Open fMRI Dataset Documentation**
+**Data loading package and documentation for the LAION-fMRI dataset**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-yellow.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-> ⚠️ **Draft documentation.** This documentation is a work in progress and is not yet complete. Sections may be incomplete, inaccurate, or subject to change before the dataset's official release. Please treat all content as provisional.
-
-LAION-fMRI is an open fMRI dataset collected and curated by ViCCo-Group. This repository contains documentation for the dataset, including structure, specifications, and usage guidelines.
+LAION-fMRI is a deeply sampled 7T fMRI dataset of brain responses to
+natural images, collected and curated by ViCCo-Group. This repository
+contains the Python package and documentation for dataset access,
+structure, specifications, and usage guidelines.
 
 ## 📚 Documentation
 
-Full documentation is available at https://ViCCo-Group.github.io/LAION-fMRI and includes:
+Full documentation is available at https://laion-fmri.hebartlab.com/ and includes:
 
 - Dataset specifications and structure
 - Access and usage guidelines
@@ -36,7 +37,9 @@ The built documentation will be available in `docs/build/html/`.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The package code is licensed under BSD-3-Clause. The fMRI data and
+public derivatives are released under CC0 1.0. Raw stimulus images
+require the LAION-fMRI Data Use Agreement.
 
 ## 🤝 Contributing
 

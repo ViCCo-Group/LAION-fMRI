@@ -27,14 +27,6 @@ Quality Control
       - Where are the per-subject reports stored (``derivatives/mriqc/``)?
       - Add example screenshots or summary figures
 
-   .. figure:: _static/placeholder_mriqc_summary.png
-      :align: center
-      :width: 80%
-      :alt: MRIQC summary metrics
-
-      Summary of MRIQC image quality metrics across subjects. *(placeholder —
-      replace with actual figure)*
-
    Motion & Exclusion Criteria
    ===========================
 
@@ -46,14 +38,6 @@ Quality Control
       - Were decisions made per-run, per-session, or per-subject?
       - How many runs/subjects were excluded, and is there a list?
       - Add a figure showing the distribution of motion across subjects/runs
-
-   .. figure:: _static/placeholder_motion_distribution.png
-      :align: center
-      :width: 70%
-      :alt: Distribution of framewise displacement
-
-      Distribution of mean framewise displacement across subjects and runs.
-      *(placeholder — replace with actual figure)*
 
    Behavioral QC
    =============
@@ -87,14 +71,6 @@ Quality Control
       - Were GLMsingle noise ceilings or R2 maps used for QC?
       - Any per-voxel or per-subject quality thresholds?
       - Cross-reference :doc:`glmsingle_betas` for noise ceiling details
-
-   .. figure:: _static/placeholder_beta_quality.png
-      :align: center
-      :width: 70%
-      :alt: Beta estimate quality summary
-
-      Summary of single-trial beta quality (e.g., noise ceilings, R2) across
-      subjects. *(placeholder — replace with actual figure)*
 
    Known Issues
    ============

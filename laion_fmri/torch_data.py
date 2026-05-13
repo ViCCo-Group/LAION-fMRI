@@ -47,8 +47,8 @@ class LaionFMRIDataset:
 
     Parameters
     ----------
-    subject : Subject
-        A loaded Subject instance.
+    subject : laion_fmri.subject.Subject
+        A loaded subject object.
     session : str
         BIDS session ID. Required -- single-trial betas are stored
         per session.

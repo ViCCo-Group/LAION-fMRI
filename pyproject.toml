@@ -28,12 +28,12 @@ dependencies = [
     "nibabel>=5.0",
     "pandas>=2.0",
     "awscli>=1.30",
+    "Pillow>=9.0",
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=2.0", "torchvision>=0.15", "Pillow>=9.0"]
+torch = ["torch>=2.0", "torchvision>=0.15"]
 bids = ["pybids>=0.16"]
-images = ["Pillow>=9.0"]
 
 [project.scripts]
 laion-fmri = "laion_fmri._cli:main"

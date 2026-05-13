@@ -47,7 +47,7 @@ Data Access
 
 .. dropdown:: How do I download the dataset?
 
-   Install the package (``pip install laion_fmri``) and run
+   Install the package (``pip install laion-fmri``) and run
    ``laion-fmri config --data-dir <path>`` once, then
    ``laion-fmri download --subject sub-01`` to pull one participant. The
    data lives in an AWS Open Data S3 bucket and downloads anonymously —
@@ -222,7 +222,7 @@ Troubleshooting
    The package downloader is idempotent — re-running ``download(...)``
    only fetches files whose local size doesn't match S3, so interrupted
    transfers just resume. For faster pulls, pass ``n_jobs=4`` (or more)
-   to run several ``aws s3 cp`` workers in parallel. If a single file
+   to run several AWS CLI copy workers in parallel. If a single file
    keeps stalling, the raw AWS CLI path (``aws s3 sync --no-sign-request
    s3://laion-fmri/...``) is sometimes the easiest fallback.
 

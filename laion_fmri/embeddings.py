@@ -32,7 +32,7 @@ through the :class:`~laion_fmri.Stimuli` hub:
 
 For subject-aligned arrays, use the Subject namespace:
 
->>> sub = laion_fmri.load_subject(1)
+>>> sub = laion_fmri.load_subject("sub-01")
 >>> features = sub.embeddings.all("CLIP")  # (n_trials, D)
 """
 
@@ -65,9 +65,10 @@ class Embeddings:
 
     Parameters
     ----------
-    models : tuple[str, ...]
+    models : str or iterable[str]
         Model labels this handle covers (subset of
-        :data:`AVAILABLE_MODELS`).
+        :data:`AVAILABLE_MODELS`). A single string such as
+        ``"CLIP"`` is accepted.
     data_dir : str or Path, optional
         Override the configured data directory.
     """
@@ -76,7 +77,10 @@ class Embeddings:
         self.data_dir = (
             Path(data_dir) if data_dir is not None else Path(get_data_dir())
         )
-        self._models = tuple(models)
+        if isinstance(models, str):
+            self._models = (models,)
+        else:
+            self._models = tuple(models)
         for m in self._models:
             if m not in AVAILABLE_MODELS:
                 raise ValueError(
@@ -217,3 +221,19 @@ class Embeddings:
                 )
             self._meta = pd.read_csv(csv_path)
         return self._meta
+
+
+def load_embeddings(models="all", data_dir=None) -> Embeddings:
+    """Return a lazy embedding reader for one or more models.
+
+    Parameters
+    ----------
+    models : "all", str, or iterable[str]
+        ``"all"`` loads every available embedding model. A single
+        model label such as ``"CLIP"`` or an iterable of labels
+        narrows the reader.
+    data_dir : str or Path, optional
+        Override the configured data directory.
+    """
+    selected = AVAILABLE_MODELS if models == "all" else models
+    return Embeddings(selected, data_dir=data_dir)

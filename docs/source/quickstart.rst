@@ -2,8 +2,7 @@
 Quickstart
 ==========
 
-The shortest path from "I have nothing installed" to single-trial betas
-and stimuli in Python. For the full reference of every download path
+Quick introduction to the LAION-fMRI dataset. For the full reference of every download path
 and option, see :doc:`data_access`.
 
 Install
@@ -11,7 +10,7 @@ Install
 
 .. code-block:: bash
 
-   pip install laion_fmri
+   pip install laion-fmri
 
 Point the package at a local data directory (the place every download
 will land):
@@ -66,9 +65,9 @@ ROIs, streaming mode for memory-tight machines — is in
 Get the stimulus images
 =======================
 
-Stimulus images are gated by a short Data Use Agreement. The package
+Stimulus images require accepting a Data Use Agreement. The package
 walks you through the form on first request and caches the resulting
-``request_id`` for subsequent calls:
+access token for subsequent calls:
 
 .. code-block:: bash
 

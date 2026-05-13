@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from laion_fmri._bidsify import bidsify_local_key
+from laion_fmri._errors import NoMatchingDataError
 from laion_fmri._paths import r2mean_path
 from laion_fmri._s3_engine import (
     download_key,
@@ -210,7 +211,7 @@ def _filtered_download(
     Parameters
     ----------
     n_jobs : int
-        Number of worker threads issuing ``aws s3 cp`` in parallel.
+        Number of worker threads issuing AWS CLI copies in parallel.
         ``1`` (default) is fully sequential.
     force_keys : iterable of str
         S3 keys to keep regardless of the filter result. Used by
@@ -219,6 +220,13 @@ def _filtered_download(
     """
     n_jobs = _clamp_n_jobs(n_jobs)
     force_keys = set(force_keys)
+    result = {
+        "prefix": prefix,
+        "matched": [],
+        "downloaded": [],
+        "skipped": [],
+        "access_denied": [],
+    }
 
     objects = list_prefix_objects(bucket, prefix)
     matching = []
@@ -233,19 +241,9 @@ def _filtered_download(
             continue
         matching.append(o)
 
+    result["matched"] = [o["Key"] for o in matching]
     if not matching:
-        local_path = Path(data_dir) / prefix
-        has_local = (
-            local_path.is_dir() and any(local_path.rglob("*"))
-        )
-        if not has_local:
-            warnings.warn(
-                f"No objects matching the requested filters under "
-                f"s3://{bucket}/{prefix}.",
-                UserWarning,
-                stacklevel=3,
-            )
-        return
+        return result
 
     todo = [
         o for o in matching
@@ -254,8 +252,12 @@ def _filtered_download(
             o["Size"],
         )
     ]
+    todo_keys = {o["Key"] for o in todo}
+    result["skipped"] = [
+        o["Key"] for o in matching if o["Key"] not in todo_keys
+    ]
     if not todo:
-        return
+        return result
 
     def _fetch(obj):
         key = obj["Key"]
@@ -276,15 +278,30 @@ def _filtered_download(
                     UserWarning,
                     stacklevel=2,
                 )
-                return
+                return "access_denied", key
             raise
+        return "downloaded", key
 
     if n_jobs <= 1:
         for obj in todo:
-            _fetch(obj)
+            status, key = _fetch(obj)
+            result[status].append(key)
     else:
         with ThreadPoolExecutor(max_workers=n_jobs) as pool:
-            list(pool.map(_fetch, todo))
+            for status, key in pool.map(_fetch, todo):
+                result[status].append(key)
+
+    return result
+
+
+def _format_active_filters(filters):
+    """Return a compact human-readable filter summary."""
+    active = [
+        f"{name}={value!r}"
+        for name, value in filters.items()
+        if value is not None
+    ]
+    return ", ".join(active) if active else "none"
 
 
 def fetch_laion_fmri(
@@ -319,7 +336,7 @@ def fetch_laion_fmri(
     extension : str or list[str], optional
         File extension filter (e.g. ``"nii.gz"``, ``"tsv"``).
     n_jobs : int
-        Number of parallel ``aws s3 cp`` workers. ``1`` (default) is
+        Number of parallel AWS CLI copy workers. ``1`` (default) is
         sequential. Each worker is one subprocess that itself runs
         AWS-CLI's internal multipart concurrency, so doubling this
         number more than doubles the open S3 connections.
@@ -350,7 +367,7 @@ def fetch_laion_fmri(
             bm_local.relative_to(data_dir).as_posix()
         )
 
-    _filtered_download(
+    glm_result = _filtered_download(
         bucket, f"derivatives/glmsingle-tedana/{subject}/",
         data_dir, filters, n_jobs=n_jobs, force_keys=glm_force,
     )
@@ -359,10 +376,28 @@ def fetch_laion_fmri(
     # specific session. Drop ses from the ROI-side filter dict so
     # ROIs come along for any ses= the user passes.
     roi_filters = {k: v for k, v in filters.items() if k != "ses"}
-    _filtered_download(
+    roi_result = _filtered_download(
         bucket, f"derivatives/rois/{subject}/",
         data_dir, roi_filters, n_jobs=n_jobs,
     )
+
+    if not glm_result["matched"] and not roi_result["matched"]:
+        prefixes = (
+            f"s3://{bucket}/{glm_result['prefix']}",
+            f"s3://{bucket}/{roi_result['prefix']}",
+        )
+        raise NoMatchingDataError(
+            "No LAION-fMRI files matched "
+            f"subject={subject!r} with filters "
+            f"({_format_active_filters(filters)}) under "
+            f"{prefixes[0]} or {prefixes[1]}. "
+            "Check the subject ID and BIDS filters."
+        )
+
+    return {
+        "glmsingle": glm_result,
+        "rois": roi_result,
+    }
 
 
 

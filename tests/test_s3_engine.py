@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import sys
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -34,7 +35,7 @@ def test_cli_always_includes_region_and_no_sign_request(mock_run):
     list_prefix_keys("laion-fmri", "x/")
 
     cmd = mock_run.call_args.args[0]
-    assert cmd[0] == "aws"
+    assert cmd[:3] == [sys.executable, "-m", "awscli"]
     assert "--region" in cmd
     assert "us-west-2" in cmd
     assert "--no-sign-request" in cmd
@@ -70,7 +71,9 @@ def test_list_prefix_keys_uses_list_objects_v2(mock_run):
     mock_run.return_value = _completed(stdout="")
     list_prefix_keys("laion-fmri", "a/")
     cmd = mock_run.call_args.args[0]
-    assert cmd[:3] == ["aws", "s3api", "list-objects-v2"]
+    assert cmd[:5] == [
+        sys.executable, "-m", "awscli", "s3api", "list-objects-v2",
+    ]
     assert "--bucket" in cmd
     assert "laion-fmri" in cmd
     assert "--prefix" in cmd
@@ -143,7 +146,7 @@ def test_download_key_runs_s3_cp(mock_run, tmp_path):
     download_key("laion-fmri", "a/file.bin", dest)
 
     cmd = mock_run.call_args.args[0]
-    assert cmd[:3] == ["aws", "s3", "cp"]
+    assert cmd[:5] == [sys.executable, "-m", "awscli", "s3", "cp"]
     assert "s3://laion-fmri/a/file.bin" in cmd
     assert str(dest) in cmd
 
@@ -167,7 +170,7 @@ def test_sync_prefix_runs_s3_sync(mock_run, tmp_path):
     sync_prefix("laion-fmri", "a/", tmp_path)
 
     cmd = mock_run.call_args.args[0]
-    assert cmd[:3] == ["aws", "s3", "sync"]
+    assert cmd[:5] == [sys.executable, "-m", "awscli", "s3", "sync"]
     assert "s3://laion-fmri/a/" in cmd
     assert str(tmp_path / "a") in cmd
 

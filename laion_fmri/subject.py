@@ -315,6 +315,24 @@ class Subject:
         mask_path = r2mean_path(
             self._data_dir, self._subject_id,
         )
+        if not path.exists():
+            raise DataNotDownloadedError(
+                f"Single-trial beta file for {self._subject_id} "
+                f"{session} not found at {path}. "
+                "Run: "
+                f"laion-fmri download --subject {self._subject_id} "
+                f"--ses {session} --desc SingletrialBetas "
+                "--stat effect --suffix statmap --extension nii.gz"
+            )
+        if not mask_path.exists():
+            raise DataNotDownloadedError(
+                f"Subject brain-mask source file for {self._subject_id} "
+                f"not found at {mask_path}. "
+                "Run: "
+                f"laion-fmri download --subject {self._subject_id} "
+                "--ses averages --stat rsquare --desc R2mean "
+                "--suffix statmap --extension nii.gz"
+            )
 
         # Build a single full-volume voxel mask before reading the
         # betas: the streaming path then applies brain + ROI + NC
@@ -576,8 +594,20 @@ class Subject:
             )
 
         if not nc_file.exists():
-            raise FileNotFoundError(
-                f"Noise-ceiling file not found: {nc_file}"
+            if session is not None:
+                command = (
+                    f"laion-fmri download --subject {self._subject_id} "
+                    f"--ses {session} --desc Noiseceiling "
+                    "--suffix statmap --extension nii.gz"
+                )
+            else:
+                command = (
+                    f"laion-fmri download --subject {self._subject_id} "
+                    f"--desc {desc} --suffix statmap --extension nii.gz"
+                )
+            raise DataNotDownloadedError(
+                f"Noise-ceiling file not found at {nc_file}. "
+                f"Run: {command}"
             )
 
         mask_file = r2mean_path(
@@ -615,11 +645,18 @@ class Subject:
             raise ValueError(
                 "session is required: events are stored per session."
             )
-        return load_tsv(
-            trialinfo_path(
-                self._data_dir, self._subject_id, session,
-            ),
+        path = trialinfo_path(
+            self._data_dir, self._subject_id, session,
         )
+        if not path.exists():
+            raise DataNotDownloadedError(
+                f"Trial-info TSV for {self._subject_id} {session} "
+                f"not found at {path}. "
+                "Run: "
+                f"laion-fmri download --subject {self._subject_id} "
+                f"--ses {session} --suffix trials --extension tsv"
+            )
+        return load_tsv(path)
 
     # ── Stimulus-side data: images, embeddings, segmentations, captions ──
 

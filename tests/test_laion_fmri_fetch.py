@@ -12,6 +12,7 @@ from laion_fmri._laion_fmri_fetch import (
     _matches_filters,
     fetch_laion_fmri,
 )
+from laion_fmri._errors import NoMatchingDataError
 
 
 # ── _clamp_n_jobs ───────────────────────────────────────────────
@@ -263,8 +264,7 @@ def test_fetch_downloads_root_metadata(
     """All four root-level metadata files are fetched."""
     mock_list_objects.return_value = []
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
+    with pytest.raises(NoMatchingDataError):
         fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
     keys = [c.args[1] for c in mock_download_key.call_args_list]
@@ -284,8 +284,7 @@ def test_fetch_lists_glmsingle_and_rois_prefixes(
 ):
     mock_list_objects.return_value = []
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
+    with pytest.raises(NoMatchingDataError):
         fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
     listed = [c.args[1] for c in mock_list_objects.call_args_list]
@@ -300,8 +299,7 @@ def test_fetch_skips_stimuli_by_default(
 ):
     mock_list_objects.return_value = []
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
+    with pytest.raises(NoMatchingDataError):
         fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
     listed = [c.args[1] for c in mock_list_objects.call_args_list]
@@ -317,8 +315,7 @@ def test_fetch_does_not_list_stimuli_prefix(
     prefix — stimuli are handled separately by the access service."""
     mock_list_objects.return_value = []
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
+    with pytest.raises(NoMatchingDataError):
         fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
     listed = [c.args[1] for c in mock_list_objects.call_args_list]
@@ -429,19 +426,19 @@ def test_fetch_ses_averages_keeps_all_subject_level(
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
 @patch("laion_fmri._laion_fmri_fetch.download_key")
-def test_fetch_warns_when_no_match(
+def test_fetch_raises_when_no_match(
     mock_download_key, mock_list_objects, tmp_path,
 ):
-    """Empty match + no local copy emits the missing-data warning."""
+    """An empty match exits through a package error."""
     mock_list_objects.return_value = []
 
-    with pytest.warns(UserWarning, match="No objects matching"):
+    with pytest.raises(NoMatchingDataError, match="No LAION-fMRI files"):
         fetch_laion_fmri(str(tmp_path), subject="sub-03")
 
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
 @patch("laion_fmri._laion_fmri_fetch.download_key")
-def test_fetch_does_not_warn_when_local_dir_has_data(
+def test_fetch_local_cache_does_not_mask_empty_source(
     mock_download_key, mock_list_objects, tmp_path,
 ):
     mock_list_objects.return_value = []
@@ -454,15 +451,8 @@ def test_fetch_does_not_warn_when_local_dir_has_data(
         d.mkdir(parents=True)
         (d / "existing.txt").write_text("hi")
 
-    with warnings.catch_warnings(record=True) as record:
-        warnings.simplefilter("always")
+    with pytest.raises(NoMatchingDataError):
         fetch_laion_fmri(str(tmp_path), subject="sub-03")
-    relevant = [
-        w for w in record
-        if issubclass(w.category, UserWarning)
-        and "No objects matching" in str(w.message)
-    ]
-    assert relevant == []
 
 
 # ── size-aware skip (resume support) ────────────────────────────
@@ -770,10 +760,8 @@ def test_fetch_excludes_held_out_when_explicitly_named_in_ses(
 
     mock_list_objects.side_effect = listing
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
+    with pytest.raises(NoMatchingDataError):
         fetch_laion_fmri(str(tmp_path), subject="sub-01", ses="31")
-
     downloaded = [c.args[1] for c in mock_download_key.call_args_list]
     assert held_out not in downloaded
 

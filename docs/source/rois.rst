@@ -22,14 +22,6 @@ ROIs
       Add an overview figure showing all ROI sets on a brain (e.g., glass brain
       or inflated surface with ROIs color-coded by set).
 
-   .. figure:: _static/placeholder_rois_overview.png
-      :align: center
-      :width: 80%
-      :alt: Overview of all ROI sets
-
-      Overview of all available ROI sets on an example subject. *(placeholder —
-      replace with actual figure)*
-
    Available ROI Sets
    ==================
 
@@ -49,13 +41,6 @@ ROIs
       Schaefer)? Brief description of each, which regions are included, and a
       figure.
 
-   .. figure:: _static/placeholder_atlas_rois.png
-      :align: center
-      :width: 70%
-      :alt: Atlas-based ROI parcellation
-
-      Atlas-based ROI parcellation. *(placeholder — replace with actual figure)*
-
    Retinotopy-derived ROIs
    ------------------------
 
@@ -65,14 +50,6 @@ ROIs
       Brief description + figure showing them on a flatmap or inflated surface.
       Cross-reference :doc:`retinotopy`.
 
-   .. figure:: _static/placeholder_retino_rois.png
-      :align: center
-      :width: 70%
-      :alt: Retinotopy-derived visual area ROIs
-
-      Retinotopy-derived visual area ROIs on an inflated surface.
-      *(placeholder — replace with actual figure)*
-
    Localizer-derived ROIs
    -----------------------
 
@@ -81,14 +58,6 @@ ROIs
       Which category-selective ROIs come from localizers (FFA, PPA, EBA, ...)?
       Brief description of how they were defined (individual thresholding, etc.)
       + figure. Cross-reference :doc:`localizers`.
-
-   .. figure:: _static/placeholder_localizer_rois.png
-      :align: center
-      :width: 70%
-      :alt: Localizer-derived category-selective ROIs
-
-      Localizer-derived category-selective ROIs. *(placeholder — replace with
-      actual figure)*
 
    Available Spaces
    ================

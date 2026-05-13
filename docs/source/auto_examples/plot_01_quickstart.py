@@ -68,21 +68,19 @@ describe()
 # mask is the one exception -- it's automatically included with any
 # ``ses`` filter, since the loader needs it to mask voxels.
 #
-# ``n_jobs`` runs that many ``aws s3 cp`` workers in parallel. The
+# ``n_jobs`` runs that many AWS CLI copy workers in parallel. The
 # call is also idempotent -- re-running after an interrupted
 # transfer skips files that already match the bucket size, so you
 # only fetch what's missing.
 #
-# The neuroimaging data and the stimuli are covered by two separate
-# licenses. On the first download you will be prompted **twice** --
-# once for each -- and you must type ``I AGREE`` each time:
+# The neuroimaging data, metadata, and public stimulus-derived files
+# are CC0. The raw stimulus image HDF5 is gated by a short Data Use
+# Agreement and is requested separately with ``download_stimuli()`` or
+# ``include_stimuli=True``:
 #
-# 1. **Neuroimaging data** (CC0 1.0) -- unrestricted use.
-# 2. **Stimuli** (closed, research-only) -- no redistribution, no
-#    commercial or AI/ML-training use.
-#
-# The acceptances are persisted, so the prompts only appear on the
-# first download into a given data directory.
+# 1. **Public data** (CC0 1.0) -- unrestricted use after a one-time
+#    local acknowledgement.
+# 2. **Raw stimulus images** -- DUA-gated via the access service.
 
 from laion_fmri.download import download
 
@@ -328,5 +326,5 @@ plt.show()
 # call below will raise ``StimuliNotDownloadedError`` -- that's
 # the intended signal.
 
-# images = sub.get_images()
-# print(f"Images: {len(images)}")
+# img = sub.images.get(0)         # PIL image for the first trial
+# print(f"First trial image: {img.size}")

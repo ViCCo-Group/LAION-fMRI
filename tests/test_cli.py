@@ -32,6 +32,15 @@ def test_cli_help_shows_usage(capsys):
         main(["--help"])
 
 
+def test_cli_help_does_not_expose_login_logout(capsys):
+    import pytest
+    with pytest.raises(SystemExit, match="0"):
+        main(["--help"])
+    out = capsys.readouterr().out
+    assert "login" not in out
+    assert "logout" not in out
+
+
 # ── download subcommand: BIDS-entity filter forwarding ──────────
 
 

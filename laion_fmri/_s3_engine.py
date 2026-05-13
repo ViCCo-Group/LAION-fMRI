@@ -1,8 +1,8 @@
 """AWS S3 operations wrapping the official AWS CLI.
 
-All S3 listing, copying, and syncing are delegated to the ``aws``
-command provided by the ``awscli`` pip dependency. No other AWS
-SDK is imported.
+All S3 listing, copying, and syncing are delegated to the ``awscli``
+module installed in the current Python environment. No other AWS SDK
+is imported, and callers do not need an ``aws`` executable on ``PATH``.
 
 The LAION-fMRI bucket is public, so every call is made with
 ``--no-sign-request``. No AWS credentials are read or set.
@@ -10,6 +10,7 @@ The LAION-fMRI bucket is public, so every call is made with
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 from laion_fmri._sources import LAION_FMRI_REGION
@@ -32,7 +33,7 @@ def _aws(subcommand_args, capture=True):
     subprocess.CompletedProcess
     """
     cmd = [
-        "aws", *subcommand_args,
+        sys.executable, "-m", "awscli", *subcommand_args,
         "--region", LAION_FMRI_REGION,
         "--no-sign-request",
     ]
@@ -119,7 +120,7 @@ def list_common_prefixes(bucket, prefix):
 
 
 def download_key(bucket, key, dest_path):
-    """Download a single S3 object via ``aws s3 cp``.
+    """Download a single S3 object via AWS CLI copy.
 
     Captures stdout/stderr so callers can inspect ``stderr`` on
     ``CalledProcessError`` to distinguish ``AccessDenied`` (e.g.

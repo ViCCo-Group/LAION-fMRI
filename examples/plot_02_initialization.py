@@ -8,7 +8,7 @@ This example walks through the steps a new user takes the first
 time they use the package:
 
 1. Configure the local data directory.
-2. Read the licenses you'll be asked to accept on first download.
+2. Read the CC0 license you'll be asked to accept on first public download.
 3. Confirm you can reach the bucket and see what it contains.
 
 Downloads themselves are covered by the
@@ -27,7 +27,7 @@ import os
 
 from laion_fmri.config import dataset_initialize, get_data_dir
 
-# If you already accepted the licenses in another example, the
+# If you already accepted the license in another example, the
 # following cells just confirm the configuration -- you won't be
 # re-prompted.
 data_dir = os.environ.get(
@@ -39,49 +39,49 @@ dataset_initialize(data_dir)
 print(f"Configured: {get_data_dir()}")
 
 # %%
-# Inspect the license texts
-# --------------------------
+# Inspect the public-data license
+# -------------------------------
 #
-# Two licenses apply:
+# Two access rules apply:
 #
-# * The **dataset license** (CC0 1.0) covers the brain and
-#   participant data.
-# * The **stimulus license** (closed, research-only) covers the
-#   stimulus images.
+# * The **CC0 dataset license** covers the fMRI data, metadata, and
+#   public stimulus-derived files such as captions, embeddings, and
+#   segmentations.
+# * The **Data Use Agreement** covers the raw stimulus image HDF5.
 #
-# Below we print the body of each so you can read the terms in
-# advance. The actual ``Type "I AGREE"`` prompt happens in the
-# next cell.
+# Below we print the CC0 body so you can read it in advance. The
+# actual ``Type "I AGREE"`` prompt happens in the next cell.
 
-from laion_fmri._constants import (
-    LICENSE_AGREEMENT_BODY,
-    STIMULI_LICENSE_BODY,
-)
+from laion_fmri._constants import LICENSE_AGREEMENT_BODY
 
 print(LICENSE_AGREEMENT_BODY)
-print("---")
-print(STIMULI_LICENSE_BODY)
 
 # %%
-# Accept the licenses
-# --------------------
+# Accept the public-data license
+# ------------------------------
 #
 # This is the same prompt-and-write-marker flow that
 # :func:`laion_fmri.download.download` triggers internally on its
-# first call. ``accept_licenses(include_stimuli=True)`` prompts
-# you to type ``I AGREE`` for both the dataset license and the
-# stimulus license, then records your acceptance under
-# ``{data_dir}/.laion_fmri/`` so future ``download(...)`` calls
-# don't ask again.
+# first call. ``accept_license()`` prompts you to type ``I AGREE``
+# once, then records your acceptance under ``{data_dir}/.laion_fmri/``
+# so future public ``download(...)`` calls don't ask again.
 #
-# If you decline either prompt, the helper raises -- the exception
-# is the signal that you opted out and that downstream
-# ``download(...)`` calls would refuse to run for the
-# corresponding data.
+# If you decline, the helper raises -- the exception is the signal
+# that you opted out and that downstream public ``download(...)`` calls
+# would refuse to run.
 
-from laion_fmri.download import accept_licenses
+from laion_fmri.download import accept_license
 
-accept_licenses(include_stimuli=True)
+accept_license()
+
+# %%
+# Raw stimulus-image access
+# -------------------------
+#
+# Raw stimulus images are requested separately through the access
+# service. Use ``request_stimulus_access()`` to submit the form without
+# downloading, or ``download_stimuli()`` to request access and download
+# any missing image files in one step.
 
 # %%
 # Confirm bucket access

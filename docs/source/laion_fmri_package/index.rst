@@ -2,13 +2,7 @@
 ``laion_fmri``
 ==============
 
-A data downloader and wrangler for the LAION-fMRI dataset.
-The package mirrors the bucket layout to your local disk via the
-official AWS CLI, keeps every accessor as a one-to-one map onto a
-single file in S3, and applies BIDS-entity filters so you only
-fetch what you need.
-
-A typical session looks like:
+A data access package for the LAION-fMRI dataset for downloading and loading the LAION-fMRI dataset.
 
 .. code-block:: python
 
@@ -136,6 +130,7 @@ The cards below walk through each step in detail.
 
    initialize
    access
+   license
    discover
    download
    load

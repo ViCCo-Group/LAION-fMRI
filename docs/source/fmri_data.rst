@@ -26,14 +26,6 @@ fMRI Data
       Add a figure showing example raw vs preprocessed BOLD data (e.g.,
       a single slice before and after preprocessing, or a carpet plot).
 
-   .. figure:: _static/placeholder_bold_example.png
-      :align: center
-      :width: 80%
-      :alt: Example BOLD data
-
-      Example raw and preprocessed BOLD data for one subject. *(placeholder —
-      replace with actual figure)*
-
    Raw Functional Data
    ===================
 

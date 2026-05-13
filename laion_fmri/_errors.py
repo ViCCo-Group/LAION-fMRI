@@ -5,8 +5,16 @@ class DataDirNotSetError(Exception):
     """Raised when data directory has not been configured."""
 
 
-class DataNotDownloadedError(FileNotFoundError):
+class DataNotFoundError(FileNotFoundError):
+    """Raised when requested data is absent from the source or local tree."""
+
+
+class DataNotDownloadedError(DataNotFoundError):
     """Raised when requested data has not been downloaded."""
+
+
+class NoMatchingDataError(DataNotFoundError):
+    """Raised when a download request matches no source objects."""
 
 
 class SubjectNotFoundError(ValueError):

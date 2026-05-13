@@ -25,14 +25,6 @@ Retinotopy
       Add an overview figure showing example pRF maps (polar angle +
       eccentricity) on a flatmap or inflated surface for one subject.
 
-   .. figure:: _static/placeholder_retinotopy_maps.png
-      :align: center
-      :width: 80%
-      :alt: Example retinotopic maps
-
-      Polar angle and eccentricity maps on an example subject. *(placeholder —
-      replace with actual figure)*
-
    pRF Modeling
    ============
 
@@ -70,14 +62,6 @@ Retinotopy
       Which visual areas are delineated (V1, V2, V3, ...)?  How were
       boundaries drawn (automatic, manual, threshold-based)?
       Add a figure showing visual area boundaries.
-
-   .. figure:: _static/placeholder_visual_areas.png
-      :align: center
-      :width: 70%
-      :alt: Visual area boundary definitions
-
-      Visual area boundaries derived from retinotopic mapping. *(placeholder —
-      replace with actual figure)*
 
    These ROI definitions are also available under ``derivatives/rois/`` — see
    :doc:`rois`.

@@ -2,90 +2,100 @@
 API Reference
 =============
 
-This page documents the public Python API for the ``laion_fmri`` package.
-For usage examples and workflows, see the :doc:`usage` guide.
+This page documents the top-level public Python API for
+``laion_fmri``. For workflow examples, see :doc:`quickstart` and the
+:doc:`auto_examples/index` gallery.
 
 .. contents:: On this page
    :local:
    :depth: 2
 
 
-Top-level Functions
-===================
-
 Configuration
--------------
+=============
 
 .. autofunction:: laion_fmri.set_data_dir
 
 .. autofunction:: laion_fmri.get_data_dir
 
+
 Loading Data
-------------
+============
 
 .. autofunction:: laion_fmri.load_subject
 
 .. autofunction:: laion_fmri.load_subjects
 
+.. autofunction:: laion_fmri.load_stimuli
+
+.. autofunction:: laion_fmri.load_embeddings
+
+
 Discovery
----------
+=========
 
 .. autofunction:: laion_fmri.get_subjects
-
-.. autofunction:: laion_fmri.get_downloaded_subjects
 
 .. autofunction:: laion_fmri.get_rois
 
 .. autofunction:: laion_fmri.describe
 
 
-Stimulus Access
----------------
-
-Gated stimuli (HDF5 + metadata CSV). Acceptance and download
-go through the access service at
-`laion-fmri.hebartlab.com <https://laion-fmri.hebartlab.com>`__.
+Downloads and Access
+====================
 
 .. autofunction:: laion_fmri.download_stimuli
 
+.. autofunction:: laion_fmri.download_embeddings
+
+.. autofunction:: laion_fmri.download_segmentations
+
+.. autofunction:: laion_fmri.download_captions
+
 .. autofunction:: laion_fmri.request_stimulus_access
 
-.. autofunction:: laion_fmri.load_stimuli
 
-.. autoclass:: laion_fmri.Stimuli
-   :members:
-   :special-members: __getitem__, __len__, __iter__, __contains__
-
-
-Subject
+Classes
 =======
 
 .. autoclass:: laion_fmri.Subject
    :members:
 
-
-Group
-=====
-
 .. autoclass:: laion_fmri.Group
    :members:
    :special-members: __getitem__, __iter__, __len__
+
+.. autoclass:: laion_fmri.Stimuli
+   :members:
+   :special-members: __getitem__, __len__, __iter__, __contains__
+
+.. autoclass:: laion_fmri.Embeddings
+   :members:
+   :special-members: __getitem__, __len__, __contains__
+
+.. autoclass:: laion_fmri.Captions
+   :members:
+
+.. autoclass:: laion_fmri.Segmentations
+   :members:
 
 
 Exceptions
 ==========
 
-.. autoexception:: laion_fmri.DataNotConfiguredError
+.. autoexception:: laion_fmri.DataDirNotSetError
 
 .. autoexception:: laion_fmri.DataNotFoundError
 
+.. autoexception:: laion_fmri.DataNotDownloadedError
 
-Constants
-=========
+.. autoexception:: laion_fmri.NoMatchingDataError
 
-.. autodata:: laion_fmri.SUBJECTS
+.. autoexception:: laion_fmri.StimuliNotDownloadedError
 
-.. autodata:: laion_fmri.DEFAULT_CVE_THRESHOLD
+.. autoexception:: laion_fmri.SubjectNotFoundError
+
+.. autoexception:: laion_fmri.LicenseNotAcceptedError
 
 
 Utilities

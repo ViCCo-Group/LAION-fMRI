@@ -27,7 +27,7 @@ This example walks through the steps a new user takes the first
 time they use the package:
 
 1. Configure the local data directory.
-2. Read the licenses you'll be asked to accept on first download.
+2. Read the CC0 license you'll be asked to accept on first public download.
 3. Confirm you can reach the bucket and see what it contains.
 
 Downloads themselves are covered by the
@@ -51,7 +51,7 @@ to call ``dataset_initialize`` again from the same machine.
 
     from laion_fmri.config import dataset_initialize, get_data_dir
 
-    # If you already accepted the licenses in another example, the
+    # If you already accepted the license in another example, the
     # following cells just confirm the configuration -- you won't be
     # re-prompted.
     data_dir = os.environ.get(
@@ -63,124 +63,65 @@ to call ``dataset_initialize`` again from the same machine.
     print(f"Configured: {get_data_dir()}")
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 42-54
 
+Inspect the public-data license
+-------------------------------
 
+Two access rules apply:
 
-.. rst-class:: sphx-glr-script-out
+* The **CC0 dataset license** covers the fMRI data, metadata, and
+  public stimulus-derived files such as captions, embeddings, and
+  segmentations.
+* The **Data Use Agreement** covers the raw stimulus image HDF5.
 
- .. code-block:: none
+Below we print the CC0 body so you can read it in advance. The
+actual ``Type "I AGREE"`` prompt happens in the next cell.
 
-    Configured: /path/to/laion-fmri-data
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 42-55
-
-Inspect the license texts
---------------------------
-
-Two licenses apply:
-
-* The **dataset license** (CC0 1.0) covers the brain and
-  participant data.
-* The **stimulus license** (closed, research-only) covers the
-  stimulus images.
-
-Below we print the body of each so you can read the terms in
-advance. The actual ``Type "I AGREE"`` prompt happens in the
-next cell.
-
-.. GENERATED FROM PYTHON SOURCE LINES 55-65
+.. GENERATED FROM PYTHON SOURCE LINES 54-59
 
 .. code-block:: Python
 
 
-    from laion_fmri._constants import (
-        LICENSE_AGREEMENT_BODY,
-        STIMULI_LICENSE_BODY,
-    )
+    from laion_fmri._constants import LICENSE_AGREEMENT_BODY
 
     print(LICENSE_AGREEMENT_BODY)
-    print("---")
-    print(STIMULI_LICENSE_BODY)
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 60-72
 
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    === LAION-fMRI Dataset License (CC0 1.0) ===
-
-    The brain imaging and participant data in the LAION-fMRI dataset are
-    released under the Creative Commons Zero (CC0 1.0) Public Domain
-    Dedication. You are free to copy, modify, distribute, and use the
-    data for any purpose, including commercial, without asking permission.
-
-    Full license text: https://creativecommons.org/publicdomain/zero/1.0/
-
-    NOTE: Stimulus images are NOT covered by CC0. They are subject to a
-    separate, restrictive license. You will be prompted to accept it if
-    you choose to download stimuli.
-
-    ---
-    === LAION-fMRI Stimulus License ===
-
-    The LAION-fMRI stimulus images are provided under a closed license.
-    All rights are reserved by the original copyright holders.
-
-    You may ONLY use these images for non-commercial academic research.
-    All other uses are strictly prohibited. In particular, you may NOT:
-
-      1. Share, redistribute, or make the images available to others.
-      2. Use the images for any commercial purpose.
-      3. Use the images to train, fine-tune, or evaluate commercial
-         AI/ML models or services.
-      4. Create derivative works from the images for any purpose
-         other than non-commercial academic research.
-
-    Full terms: https://laion-fmri.hebartlab.com/terms
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 66-81
-
-Accept the licenses
---------------------
+Accept the public-data license
+------------------------------
 
 This is the same prompt-and-write-marker flow that
 :func:`laion_fmri.download.download` triggers internally on its
-first call. ``accept_licenses(include_stimuli=True)`` prompts
-you to type ``I AGREE`` for both the dataset license and the
-stimulus license, then records your acceptance under
-``{data_dir}/.laion_fmri/`` so future ``download(...)`` calls
-don't ask again.
+first call. ``accept_license()`` prompts you to type ``I AGREE``
+once, then records your acceptance under ``{data_dir}/.laion_fmri/``
+so future public ``download(...)`` calls don't ask again.
 
-If you decline either prompt, the helper raises -- the exception
-is the signal that you opted out and that downstream
-``download(...)`` calls would refuse to run for the
-corresponding data.
+If you decline, the helper raises -- the exception is the signal
+that you opted out and that downstream public ``download(...)`` calls
+would refuse to run.
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-86
+.. GENERATED FROM PYTHON SOURCE LINES 72-77
 
 .. code-block:: Python
 
 
-    from laion_fmri.download import accept_licenses
+    from laion_fmri.download import accept_license
 
-    accept_licenses(include_stimuli=True)
-
-
+    accept_license()
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 78-85
 
+Raw stimulus-image access
+-------------------------
 
-
+Raw stimulus images are requested separately through the access
+service. Use ``request_stimulus_access()`` to submit the form without
+downloading, or ``download_stimuli()`` to request access and download
+any missing image files in one step.
 
 .. GENERATED FROM PYTHON SOURCE LINES 87-96
 
@@ -203,27 +144,6 @@ reachable from your network.
 
     print(f"Subjects in bucket: {get_subjects()}")
     describe()
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Subjects in bucket: ['sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
-    LAION-fMRI Dataset
-      Bucket:    s3://laion-fmri
-      Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
-      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
-
-
-
-
-
-.. rst-class:: sphx-glr-timing
-
-   **Total running time of the script:** (0 minutes 6.421 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_02_initialization.py:

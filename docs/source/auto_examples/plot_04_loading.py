@@ -5,9 +5,9 @@ Loading Data
 Load single-trial betas, noise-ceiling maps, ROI masks, and stimulus
 images.
 
-Every accessor maps to one file in the bucket. The loader does no
-math (no averaging across sessions, no rebinning) -- it returns the
-raw contents of the file you pick.
+Every accessor maps to one file in the bucket: it returns the raw
+contents of the file you pick. Combining sessions, averaging
+across trials, or rebinning is the caller's responsibility.
 
 The "brain mask" is **derived on the fly** from the subject-level
 mean-R^2 map (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``):
@@ -301,8 +301,13 @@ print(f"Trials in {session}: {len(trial_info)}")
 print(trial_info.head())
 
 if sub.has_stimuli():
-    stim_meta = sub.get_stimulus_metadata()
-    print(f"Stimulus metadata rows: {len(stim_meta)}")
+    # The subject's full trial table -- one row per trial across all
+    # sessions, with the image_name already joined in.
+    trials = sub.metadata
+    print(f"Trial table rows: {len(trials)} (across all sessions)")
+    print(trials[
+        ["session", "session_trial", "image_name", "unique_or_shared"]
+    ].head())
 else:
     print("Stimulus metadata not yet uploaded to the bucket.")
 
@@ -310,15 +315,19 @@ else:
 # Stimulus images
 # ----------------
 #
+# Subjects expose images on a per-trial basis via the ``sub.images``
+# namespace. The trial index is global (rows of ``sub.metadata``).
 # Skipped automatically when the bucket's ``stimuli/`` prefix is
 # not yet populated.
 
 if sub.has_stimuli():
-    images = sub.get_images()
-    print(f"Images:          {len(images)} PIL items")
+    # Iterate one session's images:
+    n_session = (sub.metadata["session"] == session).sum()
+    print(f"{session} has {n_session} trial-image pairs")
 
-    single_img = sub.get_image(idx=0)
-    print(f"First image:     {single_img.size}")
+    # Single image for the first trial:
+    single_img = sub.images.get(0)
+    print(f"First trial image: {single_img.size}")
 else:
     print("No stimulus images on disk yet.")
 
@@ -350,9 +359,12 @@ sub.to_nifti(
     ffa1, f"/tmp/{subject_id}_{session}_FFA1_mean.nii.gz", roi="FFA1",
 )
 
-# Companion: get_voxel_coordinates() returns the (i, j, k) of
-# every brain-mask voxel, in the same order as the 1-D arrays
-# returned by get_betas / get_noise_ceiling.
+# If you also need the (i, j, k) location of each voxel --
+# for example to build a custom voxel selection by spatial
+# proximity, or to overlay results outside ``to_nifti``'s
+# round-trip -- ``get_voxel_coordinates`` returns them in the
+# same order as the 1-D arrays from ``get_betas`` and
+# ``get_noise_ceiling``, so they line up index-for-index.
 coords = sub.get_voxel_coordinates()
 print(f"Voxel coordinates: {coords.shape}")
 

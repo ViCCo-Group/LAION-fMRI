@@ -24,7 +24,7 @@ For raw-data acquisition parameters, see :doc:`mri_acquisition`.
       correction was applied, whether smoothing was applied or not).
 
 Comparing combinations of NORDIC and tedana
---------------------------------
+-------------------------------------------
 
 To decide on which preprocessing variant to use, we ran a small variant comparison on the
 first session only. The goal was to assess how much the denoising and echo-combination

@@ -38,17 +38,14 @@ At a Glance
 What's Included
 ===============
 
-The dataset bundles raw and preprocessed functional MRI
+The dataset contains raw and preprocessed functional MRI data
 (:doc:`fmri_data`, :doc:`preprocessing`), anatomical scans and
 FreeSurfer reconstructions (:doc:`anatomical_data`), single-trial
-GLMsingle beta estimates with per-session and cross-session noise
-ceilings (:doc:`glmsingle_betas`), stimulus images plus metadata and
+GLMsingle beta estimates (:doc:`glmsingle_betas`), stimulus images plus metadata and
 pretrained image embeddings (:doc:`stimulus_data`), ROI masks
 (:doc:`rois`) derived from retinotopy (:doc:`retinotopy`) and
 functional localizers (:doc:`localizers`), and predefined train/test
-splits (:doc:`train_test_splits`). The fMRI side is CC0; the stimulus
-images are gated by a short Data Use Agreement
-(:doc:`data_access`).
+splits (:doc:`train_test_splits`).
 
 .. only:: live
 

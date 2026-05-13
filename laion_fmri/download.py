@@ -8,7 +8,7 @@ from laion_fmri._constants import (
     LICENSE_AGREEMENT_TEXT,
     resolve_subject_id,
 )
-from laion_fmri._errors import LicenseNotAcceptedError
+from laion_fmri._errors import LicenseNotAcceptedError, NoMatchingDataError
 from laion_fmri._laion_fmri_fetch import _clamp_n_jobs, fetch_laion_fmri
 from laion_fmri._paths import (
     captions_path,
@@ -317,7 +317,7 @@ def download_embeddings(models="all", data_dir=None, n_jobs=1):
     data_dir : str or Path, optional
         Override the configured data directory.
     n_jobs : int
-        Number of parallel ``aws s3 cp`` workers. ``1`` (default) is
+        Number of parallel AWS CLI copy workers. ``1`` (default) is
         sequential.
 
     Returns
@@ -542,7 +542,7 @@ def download(
         labels to narrow. ``False`` (default) skips the embeddings.
     n_jobs : int
         Number of parallel download workers for fMRI data
-        (``aws s3 cp`` subprocesses). ``1`` (default) is sequential.
+        (AWS CLI copy subprocesses). ``1`` (default) is sequential.
         Does not affect stimulus downloads.
 
     Raises
@@ -568,6 +568,11 @@ def download(
 
     if subject == "all":
         subjects = get_subjects()
+        if not subjects:
+            raise NoMatchingDataError(
+                "No LAION-fMRI subjects were found in the public S3 "
+                "bucket. Check network access and the bucket layout."
+            )
     else:
         subjects = [resolve_subject_id(subject)]
 

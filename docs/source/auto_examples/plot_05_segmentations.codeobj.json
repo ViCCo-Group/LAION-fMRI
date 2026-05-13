@@ -1,22 +1,4 @@
 {
- "LICENSE_AGREEMENT_BODY": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri._constants",
-   "module_short": "laion_fmri._constants",
-   "name": "LICENSE_AGREEMENT_BODY"
-  }
- ],
- "accept_license": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.download",
-   "module_short": "laion_fmri.download",
-   "name": "accept_license"
-  }
- ],
  "dataset_initialize": [
   {
    "is_class": false,
@@ -26,40 +8,40 @@
    "name": "dataset_initialize"
   }
  ],
- "describe": [
+ "laion_fmri.load_stimuli": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.discovery",
+   "module": "laion_fmri",
    "module_short": "laion_fmri",
-   "name": "describe"
+   "name": "load_stimuli"
   }
  ],
- "get_data_dir": [
+ "laion_fmri.load_subject": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.config",
+   "module": "laion_fmri",
    "module_short": "laion_fmri",
-   "name": "get_data_dir"
+   "name": "load_subject"
   }
  ],
- "get_subjects": [
+ "np.array": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri",
-   "name": "get_subjects"
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "array"
   }
  ],
- "laion_fmri.download.download": [
+ "np.uint8": [
   {
    "is_class": false,
-   "is_explicit": true,
-   "module": "laion_fmri.download",
-   "module_short": "laion_fmri.download",
-   "name": "download"
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "uint8"
   }
  ],
  "os.environ.get": [
@@ -96,6 +78,33 @@
    "module": "os.path",
    "module_short": "os.path",
    "name": "join"
+  }
+ ],
+ "plt.show": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.pyplot",
+   "module_short": "matplotlib.pyplot",
+   "name": "show"
+  }
+ ],
+ "plt.subplots": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.pyplot",
+   "module_short": "matplotlib.pyplot",
+   "name": "subplots"
+  }
+ ],
+ "plt.tight_layout": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.pyplot",
+   "module_short": "matplotlib.pyplot",
+   "name": "tight_layout"
   }
  ]
 }

@@ -173,23 +173,35 @@ respective sections below.
 Stimulus Metadata
 =================
 
-For details on how the metadata was collected and computed (visual properties,
-semantic annotations, model-derived features), see
+Stimulus-level metadata lives in ``stimuli/task-images_metadata.csv``.
+Rows are aligned to ``task-images_stimuli.h5`` and use ``image_name``
+as the join key for embeddings, captions, segmentations, and events
+TSVs.
+
+Core columns include:
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Column
+     - Meaning
+   * - ``image_name``
+     - Filename-style stimulus identifier and primary join key.
+   * - ``dataset``
+     - Source pool, e.g. LAION-natural, NSD, THINGS / THINGS+, or OOD.
+   * - ``participant``
+     - Participant assignment for subject-unique images; shared images
+       are marked accordingly.
+   * - ``unique_or_shared``
+     - Whether the image belongs to the cross-subject shared set or to
+       one participant's unique set.
+   * - ``n_reps``
+     - Number of planned experiment repetitions for the image.
+
+For details on how the metadata was collected and computed (visual
+properties, semantic annotations, model-derived features), see
 :doc:`metadata_acquisition`.
-
-.. only:: live
-
-   *Full documentation of the* ``task-images_metadata.csv`` *columns
-   will be added with the final release.*
-
-.. only:: dev
-
-   .. todo::
-
-      Document the ``task-images_metadata.csv`` file:
-
-      - List every column and what it contains
-      - Show a few example rows (copy from the actual file)
 
 Stimulus Embeddings
 ===================
@@ -264,7 +276,7 @@ Loading them with the package:
    )                                         # one vector
 
    # Trial-aligned access from the subject side:
-   sub = laion_fmri.load_subject(1)
+   sub = laion_fmri.load_subject("sub-01")
    sub01_clip = sub.embeddings.all("CLIP")   # (n_trials, 1024)
 
 Object Segmentations
@@ -327,7 +339,7 @@ in place of the image name:
 
 .. code-block:: python
 
-   sub = laion_fmri.load_subject(1)
+   sub = laion_fmri.load_subject("sub-01")
    sub.segmentations.nouns(42)               # nouns shown on trial 42
    sub.segmentations.has_image(42)           # False for unique-image trials
    sub.segmentations.get(42, "fingers")      # mask for trial 42
@@ -432,13 +444,7 @@ Distribution of Stimuli
 To visualise where the different source pools sit relative to one
 another in image-feature space, every stimulus was projected to two
 dimensions with t-SNE applied to its OpenCLIP ViT-H/14 embedding
-(perplexity 30, PCA-50 initialisation). LAION-natural fills the space
-broadly thanks to the effective-dimensionality selection procedure.
-The object-centric NSD, THINGS, and THINGS+ pools concentrate in
-sub-regions of the space dominated by isolated-object photographs.
-The OOD set scatters across the periphery, reflecting its
-deliberately heterogeneous mix of illusions, Gabors, shapes, and
-textures.
+(perplexity 30, PCA-50 initialisation).
 
 .. figure:: _static/stimuli_distribution.png
    :align: center
@@ -452,21 +458,43 @@ textures.
 Loading Stimulus Data
 =====================
 
-The :mod:`laion_fmri` package wraps each of the stimulus assets above
-with a small named loader:
+The :mod:`laion_fmri` package separates downloading from loading:
 
-* :func:`laion_fmri.load_stimuli` returns a :class:`~laion_fmri.Stimuli`
-  handle for the image HDF5 and metadata CSV — see
-  :ref:`Stimulus images <load:Stimulus images>` in the load reference.
-* :func:`laion_fmri.load_embeddings` opens one or more embedding files
-  and exposes model-keyed access.
-* The segmentation masks and captions are reached through the same
-  ``Stimuli`` handle (``stim.segmentations``, ``stim.captions``).
+.. code-block:: python
 
-To map stimulus IDs to single-trial beta indices, join
-``Subject.get_trial_info(...)["label"]`` against the stimulus
-metadata's ``image_name`` column — see :doc:`glmsingle_betas` for the
-full mapping convention.
+   import laion_fmri
+
+   # Raw stimulus images + task-images_metadata.csv; requires the DUA.
+   laion_fmri.download_stimuli()
+   stim = laion_fmri.load_stimuli()
+
+   stim.metadata.head()                       # task-images_metadata.csv
+   image = stim.images.get(
+       "shared_12rep_LAION_cluster_1003_i0.jpg",
+   )                                          # PIL.Image
+
+Public stimulus-derived sidecars are downloaded separately:
+
+.. code-block:: python
+
+   laion_fmri.download_embeddings("CLIP")
+   emb = laion_fmri.load_embeddings("CLIP")
+   emb.get("CLIP", "shared_12rep_LAION_cluster_1003_i0.jpg")
+
+   laion_fmri.download_segmentations()
+   laion_fmri.download_captions()
+
+After those files are present, captions and segmentations are also
+reachable through the ``Stimuli`` handle as ``stim.captions`` and
+``stim.segmentations``.
+
+Subject-level accessors provide trial-aligned views. Use
+``Subject.metadata`` for a concatenated trial table with derived
+``image_name``, ``stim_idx``, ``unique_or_shared``, and ``dataset``
+columns. The row index of that table is the global trial index accepted
+by ``sub.images``, ``sub.embeddings``, ``sub.segmentations``, and
+``sub.captions``. See :doc:`glmsingle_betas` for the beta-to-stimulus
+mapping convention.
 
 See also :doc:`train_test_splits` for how stimuli are partitioned into
 training and test sets.

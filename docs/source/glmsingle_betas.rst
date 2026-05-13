@@ -6,8 +6,6 @@ Single-trial betas are voxelwise estimates of the BOLD response to each
 individual stimulus presentation. They are a compact summary of the
 stimulus-driven activity in the dataset and the usual starting point for
 encoding models, decoding, and representational similarity analyses (RSA).
-If you want to relate brain activity to a specific image, you are at the
-right place to start.
 
 .. figure:: _static/glmsingle_beta_carpet.png
    :align: center
@@ -216,14 +214,6 @@ sessions.
 
       Add figures: ``sub-03_ses-01_nc`` (per-session NC) and ``sub-03_ses-all_nc``
       (cross-session NC).
-
-   .. figure:: _static/placeholder_noise_ceilings.png
-      :align: center
-      :width: 70%
-      :alt: Noise ceiling map
-
-      Noise ceiling map for an example subject. *(placeholder — replace with
-      actual figure)*
 
 Relation to Stimuli
 ===================

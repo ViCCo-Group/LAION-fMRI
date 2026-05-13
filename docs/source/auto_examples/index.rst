@@ -103,6 +103,23 @@ For a complete reference of the package's public API, see
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Every shared stimulus image is accompanied by object-level segmentation masks: for each noun that the upstream detector found in the image, there is one binary (1000, 1000) mask per detected instance of that noun. For example, an image of a person playing piano carries masks for &quot;hand&quot; (4 instances), &quot;piano&quot; (1 instance), and so on.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_plot_05_segmentations_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/plot_05_segmentations`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Object Segmentations</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -117,6 +134,7 @@ For a complete reference of the package's public API, see
    /auto_examples/plot_02_initialization
    /auto_examples/plot_03_querying
    /auto_examples/plot_04_loading
+   /auto_examples/plot_05_segmentations
 
 
 .. only:: html

@@ -25,14 +25,6 @@ Functional Localizers
       brain (e.g., category-selective regions highlighted on an inflated
       surface or anatomical slice).
 
-   .. figure:: _static/placeholder_localizer_overview.png
-      :align: center
-      :width: 80%
-      :alt: Example localizer activation maps
-
-      Category-selective regions identified by the functional localizer.
-      *(placeholder — replace with actual figure)*
-
    Localizer Contrasts
    ====================
 
@@ -51,26 +43,12 @@ Functional Localizers
       - Target region(s) (e.g., FFA, OFA, STS)
       - Brief note on thresholding if ROIs were derived
 
-   .. figure:: _static/placeholder_localizer_contrast1.png
-      :align: center
-      :width: 60%
-      :alt: Example activation map for contrast 1
-
-      *(placeholder — replace with actual figure)*
-
    Contrast 2: (placeholder)
    ---------------------------
 
    .. todo::
 
       Same as above for the next contrast.
-
-   .. figure:: _static/placeholder_localizer_contrast2.png
-      :align: center
-      :width: 60%
-      :alt: Example activation map for contrast 2
-
-      *(placeholder — replace with actual figure)*
 
    *(Add more contrasts as needed.)*
 

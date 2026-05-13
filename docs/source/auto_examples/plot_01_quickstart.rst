@@ -63,18 +63,6 @@ other examples without re-prompting or re-downloading.
     print(f"Data directory: {get_data_dir()}")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Data directory: /path/to/laion-fmri-data
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 42-48
 
 Query the dataset
@@ -95,23 +83,7 @@ can see what is available before downloading anything.
     describe()
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Available subjects: ['sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
-    LAION-fMRI Dataset
-      Bucket:    s3://laion-fmri
-      Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
-      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 55-86
+.. GENERATED FROM PYTHON SOURCE LINES 55-84
 
 Download one subject -- but just one session, in parallel
 ----------------------------------------------------------
@@ -129,23 +101,21 @@ noise-ceiling variants, the mean-R^2 summaries, etc.) are
 mask is the one exception -- it's automatically included with any
 ``ses`` filter, since the loader needs it to mask voxels.
 
-``n_jobs`` runs that many ``aws s3 cp`` workers in parallel. The
+``n_jobs`` runs that many AWS CLI copy workers in parallel. The
 call is also idempotent -- re-running after an interrupted
 transfer skips files that already match the bucket size, so you
 only fetch what's missing.
 
-The neuroimaging data and the stimuli are covered by two separate
-licenses. On the first download you will be prompted **twice** --
-once for each -- and you must type ``I AGREE`` each time:
+The neuroimaging data, metadata, and public stimulus-derived files
+are CC0. The raw stimulus image HDF5 is gated by a short Data Use
+Agreement and is requested separately with ``download_stimuli()`` or
+``include_stimuli=True``:
 
-1. **Neuroimaging data** (CC0 1.0) -- unrestricted use.
-2. **Stimuli** (closed, research-only) -- no redistribution, no
-   commercial or AI/ML-training use.
+1. **Public data** (CC0 1.0) -- unrestricted use after a one-time
+   local acknowledgement.
+2. **Raw stimulus images** -- DUA-gated via the access service.
 
-The acceptances are persisted, so the prompts only appear on the
-first download into a given data directory.
-
-.. GENERATED FROM PYTHON SOURCE LINES 86-106
+.. GENERATED FROM PYTHON SOURCE LINES 84-104
 
 .. code-block:: Python
 
@@ -170,21 +140,7 @@ first download into a given data directory.
     )
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Downloading sub-01 / ses-01
-    /path/to/laion-fmri/laion_fmri/download.py:217: UserWarning: No objects matching the requested filters under s3://laion-fmri/stimuli/.
-      fetch_laion_fmri(
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 107-115
+.. GENERATED FROM PYTHON SOURCE LINES 105-113
 
 Load the subject
 -----------------
@@ -195,7 +151,7 @@ derived on the fly from the subject-level mean-R^2 file
 (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``) -- voxels with
 any non-zero GLMsingle fit are considered "in brain".
 
-.. GENERATED FROM PYTHON SOURCE LINES 115-124
+.. GENERATED FROM PYTHON SOURCE LINES 113-122
 
 .. code-block:: Python
 
@@ -209,22 +165,7 @@ any non-zero GLMsingle fit are considered "in brain".
     print(f"ROIs:      {sub.get_available_rois()}")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Subject:   sub-01
-    Sessions:  ['ses-01']
-    Voxels:    272080
-    ROIs:      ['EBA', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 125-134
+.. GENERATED FROM PYTHON SOURCE LINES 123-132
 
 Single-trial betas
 -------------------
@@ -236,7 +177,7 @@ In practice you should always pass an ``roi=`` filter to keep the
 array small (face-area ROI, e.g. ~1000 voxels, drops the call to
 a few MB).
 
-.. GENERATED FROM PYTHON SOURCE LINES 134-147
+.. GENERATED FROM PYTHON SOURCE LINES 132-145
 
 .. code-block:: Python
 
@@ -254,20 +195,7 @@ a few MB).
         print(f"{session} betas (face ROIs): {betas_face.shape}")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    ses-01 betas (full mask): (1044, 272080)
-    ses-01 betas (face ROIs): (1044, 1100)
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 148-157
+.. GENERATED FROM PYTHON SOURCE LINES 146-155
 
 Save a derived map back to NIfTI
 ----------------------------------
@@ -279,7 +207,7 @@ external tools can read it), pass the array to
 ``Subject.to_nifti``: it scatters the values into a
 ``(X, Y, Z)`` volume and writes the file.
 
-.. GENERATED FROM PYTHON SOURCE LINES 157-163
+.. GENERATED FROM PYTHON SOURCE LINES 155-161
 
 .. code-block:: Python
 
@@ -290,19 +218,7 @@ external tools can read it), pass the array to
     print(f"Saved {mean_path}")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Saved /tmp/sub-01_ses-01_trial_mean.nii.gz
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 164-175
+.. GENERATED FROM PYTHON SOURCE LINES 162-173
 
 Visualize the first three trials
 ---------------------------------
@@ -316,7 +232,7 @@ range, signal concentrated in cortex rather than at edges or
 in white matter, and the three trials looking distinct from
 each other rather than suspiciously similar.
 
-.. GENERATED FROM PYTHON SOURCE LINES 175-229
+.. GENERATED FROM PYTHON SOURCE LINES 173-227
 
 .. code-block:: Python
 
@@ -375,18 +291,7 @@ each other rather than suspiciously similar.
     plt.show()
 
 
-
-
-.. image-sg:: /auto_examples/images/sphx_glr_plot_01_quickstart_001.png
-   :alt: Trial 0, Trial 1, Trial 2
-   :srcset: /auto_examples/images/sphx_glr_plot_01_quickstart_001.png
-   :class: sphx-glr-single-img
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 230-240
+.. GENERATED FROM PYTHON SOURCE LINES 228-238
 
 Three category-selective ROIs
 ------------------------------
@@ -399,7 +304,7 @@ EBA in lateral occipitotemporal cortex, PPA in
 parahippocampal cortex -- before relying on them to filter
 downstream analyses.
 
-.. GENERATED FROM PYTHON SOURCE LINES 240-270
+.. GENERATED FROM PYTHON SOURCE LINES 238-268
 
 .. code-block:: Python
 
@@ -434,23 +339,12 @@ downstream analyses.
     plt.show()
 
 
-
-
-.. image-sg:: /auto_examples/images/sphx_glr_plot_01_quickstart_002.png
-   :alt: FFA1, EBA, PPA
-   :srcset: /auto_examples/images/sphx_glr_plot_01_quickstart_002.png
-   :class: sphx-glr-single-img
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 271-273
+.. GENERATED FROM PYTHON SOURCE LINES 269-271
 
 Per-session noise ceiling
 --------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 273-280
+.. GENERATED FROM PYTHON SOURCE LINES 271-278
 
 .. code-block:: Python
 
@@ -462,19 +356,7 @@ Per-session noise ceiling
     )
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    NC: shape=(272080,), range=[0.000, 95.076]
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 281-290
+.. GENERATED FROM PYTHON SOURCE LINES 279-288
 
 Visualize the noise-ceiling map
 --------------------------------
@@ -486,7 +368,7 @@ noise. Looking at this map before any decoding or RSA work
 helps you decide whether to threshold by NC, restrict to
 high-NC voxels, or stay with ROI-based analyses.
 
-.. GENERATED FROM PYTHON SOURCE LINES 290-322
+.. GENERATED FROM PYTHON SOURCE LINES 288-320
 
 .. code-block:: Python
 
@@ -523,18 +405,7 @@ high-NC voxels, or stay with ROI-based analyses.
     plt.show()
 
 
-
-
-.. image-sg:: /auto_examples/images/sphx_glr_plot_01_quickstart_003.png
-   :alt: plot 01 quickstart
-   :srcset: /auto_examples/images/sphx_glr_plot_01_quickstart_003.png
-   :class: sphx-glr-single-img
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 323-330
+.. GENERATED FROM PYTHON SOURCE LINES 321-328
 
 Stimulus images (when uploaded)
 --------------------------------
@@ -544,24 +415,13 @@ images themselves arrive in the bucket later. Until then, the
 call below will raise ``StimuliNotDownloadedError`` -- that's
 the intended signal.
 
-.. GENERATED FROM PYTHON SOURCE LINES 330-333
+.. GENERATED FROM PYTHON SOURCE LINES 328-331
 
 .. code-block:: Python
 
 
-    # images = sub.get_images()
-    # print(f"Images: {len(images)}")
-
-
-
-
-
-
-
-
-.. rst-class:: sphx-glr-timing
-
-   **Total running time of the script:** (8 minutes 49.078 seconds)
+    # img = sub.images.get(0)         # PIL image for the first trial
+    # print(f"First trial image: {img.size}")
 
 
 .. _sphx_glr_download_auto_examples_plot_01_quickstart.py:

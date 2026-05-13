@@ -78,14 +78,15 @@ class _StimulusImages:
     def get(self, key):
         """Decoded :class:`PIL.Image.Image` for one stimulus.
 
-        Requires Pillow (``pip install laion_fmri[images]``).
+        Requires Pillow, which is installed with ``laion-fmri``.
         """
         try:
             from PIL import Image  # type: ignore
         except ImportError as exc:  # pragma: no cover
             raise ImportError(
-                "Decoding stimulus images requires Pillow. "
-                "Install it via `pip install laion_fmri[images]`."
+                "Decoding stimulus images requires Pillow, which is a "
+                "`laion-fmri` dependency. Reinstall the package or install "
+                "Pillow in this environment."
             ) from exc
         return Image.open(BytesIO(self[key]))
 

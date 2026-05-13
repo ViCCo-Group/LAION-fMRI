@@ -35,8 +35,8 @@ class Group:
 
     Parameters
     ----------
-    subjects_dict : dict[str, Subject]
-        Mapping of BIDS ID to Subject.
+    subjects_dict : dict[str, laion_fmri.subject.Subject]
+        Mapping of BIDS ID to loaded subject objects.
     """
 
     def __init__(self, subjects_dict):
