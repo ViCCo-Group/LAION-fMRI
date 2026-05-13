@@ -407,13 +407,13 @@ high-NC voxels, or stay with ROI-based analyses.
 
 .. GENERATED FROM PYTHON SOURCE LINES 321-328
 
-Stimulus images (when uploaded)
---------------------------------
+Stimulus images
+---------------
 
-Stimuli are forward-compatible: the API is in place but the
-images themselves arrive in the bucket later. Until then, the
-call below will raise ``StimuliNotDownloadedError`` -- that's
-the intended signal.
+Once stimulus images have been downloaded, subject image access is
+trial-aligned: index ``0`` refers to the first row of
+``sub.metadata``. The call is commented out so this example can still
+run when you downloaded only neuroimaging files.
 
 .. GENERATED FROM PYTHON SOURCE LINES 328-331
 

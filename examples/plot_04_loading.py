@@ -184,7 +184,8 @@ if roi is not None and sub.has_stimuli():
     print(f"Shared trials:       {betas_shared.shape}")
 else:
     print(
-        "Skipped: stimulus subset filter needs stimuli/stimuli.tsv."
+        "Skipped: stimulus subset filter needs "
+        "stimuli/task-images_metadata.csv."
     )
 
 # %%
@@ -396,7 +397,8 @@ if roi is not None and sub.has_stimuli():
         print(f"  {sub_id}: {arr.shape}")
 else:
     print(
-        "Skipped: shared-stimulus betas need stimuli/stimuli.tsv."
+        "Skipped: shared-stimulus betas need "
+        "stimuli/task-images_metadata.csv."
     )
 
 # %%

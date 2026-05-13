@@ -70,7 +70,8 @@ Metadata Acquisition
 
    .. todo::
 
-      Where does the metadata live? Is it all in ``stimuli/stimuli.tsv``, or
+      Where does the metadata live? Is it all in
+      ``stimuli/task-images_metadata.csv``, or
       are there separate files for different metadata types (e.g., embeddings
       as .npy)? Document file paths and formats.
 

@@ -101,7 +101,8 @@ Next Steps
 
 * :doc:`dataset_at_a_glance` — full dataset overview and "what files do I need"
 * :doc:`glmsingle_betas` — details on the beta estimates and noise ceilings
-* :doc:`stimulus_data` — stimulus images, metadata, and embeddings
+* :doc:`stimulus_data` — stimulus set, image metadata, and image access
+* :doc:`stimulus_derivatives` — embeddings, captions, and segmentations
 * :doc:`train_test_splits` — predefined train/test partitions
 * :doc:`laion_fmri_package/load` — full ``Subject`` API reference
 * :doc:`faq` — common questions

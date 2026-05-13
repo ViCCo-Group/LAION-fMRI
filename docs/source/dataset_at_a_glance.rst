@@ -41,11 +41,12 @@ What's Included
 The dataset contains raw and preprocessed functional MRI data
 (:doc:`fmri_data`, :doc:`preprocessing`), anatomical scans and
 FreeSurfer reconstructions (:doc:`anatomical_data`), single-trial
-GLMsingle beta estimates (:doc:`glmsingle_betas`), stimulus images plus metadata and
-pretrained image embeddings (:doc:`stimulus_data`), ROI masks
-(:doc:`rois`) derived from retinotopy (:doc:`retinotopy`) and
-functional localizers (:doc:`localizers`), and predefined train/test
-splits (:doc:`train_test_splits`).
+GLMsingle beta estimates (:doc:`glmsingle_betas`), the stimulus set
+(:doc:`stimulus_data`) and derived stimulus files
+(:doc:`stimulus_derivatives`), ROI masks (:doc:`rois`) derived from
+retinotopy (:doc:`retinotopy`) and functional localizers
+(:doc:`localizers`), and predefined train/test splits
+(:doc:`train_test_splits`).
 
 .. only:: live
 
@@ -127,6 +128,9 @@ This is the most common use case (e.g. Algonauts challenge participants).
      - ``derivatives/glmsingle/sub-XX/`` — see :doc:`glmsingle_betas`
    * - Stimulus images & metadata
      - ``stimuli/`` — see :doc:`stimulus_data`
+   * - Stimulus derivatives
+     - Embeddings, captions, and object segmentations — see
+       :doc:`stimulus_derivatives`
    * - Train / test splits
      - Predefined splits for model evaluation — see :doc:`train_test_splits`
    * - ROI masks *(optional)*
@@ -144,7 +148,8 @@ RSA / pattern similarity analyses
    * - Single-trial betas
      - ``derivatives/glmsingle/sub-XX/`` — see :doc:`glmsingle_betas`
    * - Stimulus metadata & categories
-     - ``stimuli/stimuli.tsv`` — see :doc:`stimulus_data`
+     - ``stimuli/task-images_metadata.csv`` — see
+       :doc:`stimulus_data`
    * - ROI masks
      - ``derivatives/rois/`` — see :doc:`rois`
 
@@ -214,5 +219,6 @@ Data Formats
      - Single packed file with raw JPEG bytes, indexed by image name. Loaded
        via :func:`laion_fmri.load_stimuli`.
    * - Stimulus metadata
-     - TSV + JSON
-     - Stimulus properties and categories
+     - CSV
+     - ``stimuli/task-images_metadata.csv`` — see
+       :doc:`stimulus_data`

@@ -203,21 +203,25 @@ for sub_id in get_subjects():
     print(f"  {sub_id}: {n_total:>3} ROIs total, {n_face} face")
 
 # %%
-# Stimulus metadata (forward-compat)
-# -----------------------------------
+# Stimulus metadata
+# -----------------
 #
-# The ``stimuli/`` prefix is reserved for the stimulus images and
-# their metadata table; it isn't populated yet. Once it lands, the
-# call below would print the catalogue (commented out for the same
-# offline-by-default reason as the Subject queries above):
+# The stimulus metadata table is available through ``load_stimuli()``
+# for dataset-wide queries and through ``Subject.metadata`` for
+# trial-aligned analyses. The calls below are commented out for the
+# same offline-by-default reason as the Subject queries above:
 #
 # .. code-block:: python
 #
-#     # download(subject="sub-01", include_stimuli=True)
+#     # from laion_fmri import load_stimuli
+#     #
+#     # stim = load_stimuli()
+#     # print(stim.metadata.head())
+#     #
 #     # sub = load_subject("sub-01")
 #     # if sub.has_stimuli():
-#     #     stim = sub.get_stimulus_metadata()
-#     #     print(stim.head())
-#     #     print(f"Total stimuli: {len(stim)}")
-#     #     print(f"Shared:        {stim['shared'].sum()}")
-#     #     print(f"Categories:    {stim['category'].value_counts()}")
+#     #     trials = sub.metadata
+#     #     print(trials[[
+#     #         "session", "session_trial", "image_name",
+#     #         "unique_or_shared", "dataset",
+#     #     ]].head())

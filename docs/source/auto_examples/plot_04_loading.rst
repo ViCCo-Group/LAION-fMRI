@@ -224,7 +224,7 @@ Restrict to trials whose stimulus is in the shared / unique
 subset (relies on the dataset-level stimulus metadata, which
 the bucket doesn't yet expose).
 
-.. GENERATED FROM PYTHON SOURCE LINES 179-190
+.. GENERATED FROM PYTHON SOURCE LINES 179-191
 
 .. code-block:: Python
 
@@ -236,11 +236,12 @@ the bucket doesn't yet expose).
         print(f"Shared trials:       {betas_shared.shape}")
     else:
         print(
-            "Skipped: stimulus subset filter needs stimuli/stimuli.tsv."
+            "Skipped: stimulus subset filter needs "
+            "stimuli/task-images_metadata.csv."
         )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 191-196
+.. GENERATED FROM PYTHON SOURCE LINES 192-197
 
 Custom voxel mask
 ------------------
@@ -248,7 +249,7 @@ Custom voxel mask
 Combine the ROI mask and the noise-ceiling map yourself, then
 pass the result back in via ``mask=``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 196-206
+.. GENERATED FROM PYTHON SOURCE LINES 197-207
 
 .. code-block:: Python
 
@@ -263,7 +264,7 @@ pass the result back in via ``mask=``.
         print(f"Custom betas:       {betas_custom.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 207-213
+.. GENERATED FROM PYTHON SOURCE LINES 208-214
 
 ROI masks (multi-level query)
 ------------------------------
@@ -272,7 +273,7 @@ ROI masks (multi-level query)
 ``"all"``. Pass a list to combine several at once -- overlapping
 voxels appear only once in the resulting mask.
 
-.. GENERATED FROM PYTHON SOURCE LINES 213-226
+.. GENERATED FROM PYTHON SOURCE LINES 214-227
 
 .. code-block:: Python
 
@@ -290,7 +291,7 @@ voxels appear only once in the resulting mask.
         print(f"  all: {union.sum()} voxels")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 227-237
+.. GENERATED FROM PYTHON SOURCE LINES 228-238
 
 Visualize every face-category ROI
 ----------------------------------
@@ -303,7 +304,7 @@ each other, and whether any region looks unexpectedly small
 or empty -- a sign that the localizer underperformed there
 and that ROI may not be reliable to analyse with.
 
-.. GENERATED FROM PYTHON SOURCE LINES 237-268
+.. GENERATED FROM PYTHON SOURCE LINES 238-269
 
 .. code-block:: Python
 
@@ -339,7 +340,7 @@ and that ROI may not be reliable to analyse with.
         plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 269-281
+.. GENERATED FROM PYTHON SOURCE LINES 270-282
 
 Noise ceiling
 --------------
@@ -354,7 +355,7 @@ More repetitions tighten the estimate but include fewer stimuli,
 so the right variant depends on whether you'd rather have a
 stable ceiling or full coverage.
 
-.. GENERATED FROM PYTHON SOURCE LINES 281-295
+.. GENERATED FROM PYTHON SOURCE LINES 282-296
 
 .. code-block:: Python
 
@@ -373,12 +374,12 @@ stable ceiling or full coverage.
     #     nc_subj = sub.get_noise_ceiling(desc="Noiseceiling12rep")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 296-298
+.. GENERATED FROM PYTHON SOURCE LINES 297-299
 
 Trial info and stimulus metadata
 ----------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 298-314
+.. GENERATED FROM PYTHON SOURCE LINES 299-315
 
 .. code-block:: Python
 
@@ -399,7 +400,7 @@ Trial info and stimulus metadata
         print("Stimulus metadata not yet uploaded to the bucket.")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 315-322
+.. GENERATED FROM PYTHON SOURCE LINES 316-323
 
 Stimulus images
 ----------------
@@ -409,7 +410,7 @@ namespace. The trial index is global (rows of ``sub.metadata``).
 Skipped automatically when the bucket's ``stimuli/`` prefix is
 not yet populated.
 
-.. GENERATED FROM PYTHON SOURCE LINES 322-334
+.. GENERATED FROM PYTHON SOURCE LINES 323-335
 
 .. code-block:: Python
 
@@ -426,7 +427,7 @@ not yet populated.
         print("No stimulus images on disk yet.")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 335-347
+.. GENERATED FROM PYTHON SOURCE LINES 336-348
 
 Brain-space mapping: save derived results as NIfTI
 ----------------------------------------------------
@@ -441,7 +442,7 @@ back to disk for downstream tools (``fslview``, ``nilearn``,
 
 Example: trial-mean betas as a 3-D map.
 
-.. GENERATED FROM PYTHON SOURCE LINES 347-371
+.. GENERATED FROM PYTHON SOURCE LINES 348-372
 
 .. code-block:: Python
 
@@ -470,7 +471,7 @@ Example: trial-mean betas as a 3-D map.
     print(f"Voxel coordinates: {coords.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 372-377
+.. GENERATED FROM PYTHON SOURCE LINES 373-378
 
 Multi-subject group loading
 -----------------------------
@@ -478,7 +479,7 @@ Multi-subject group loading
 ``Group`` holds several ``Subject`` instances and exposes
 cross-subject loaders that delegate to each one.
 
-.. GENERATED FROM PYTHON SOURCE LINES 377-402
+.. GENERATED FROM PYTHON SOURCE LINES 378-404
 
 .. code-block:: Python
 
@@ -504,11 +505,12 @@ cross-subject loaders that delegate to each one.
             print(f"  {sub_id}: {arr.shape}")
     else:
         print(
-            "Skipped: shared-stimulus betas need stimuli/stimuli.tsv."
+            "Skipped: shared-stimulus betas need "
+            "stimuli/task-images_metadata.csv."
         )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 403-416
+.. GENERATED FROM PYTHON SOURCE LINES 405-418
 
 PyTorch dataset integration
 ----------------------------
@@ -524,7 +526,7 @@ The PyTorch dependencies are optional -- install them with the
 
     uv pip install "laion-fmri[torch]"
 
-.. GENERATED FROM PYTHON SOURCE LINES 416-439
+.. GENERATED FROM PYTHON SOURCE LINES 418-441
 
 .. code-block:: Python
 

@@ -173,6 +173,7 @@ Getting Started
    :caption: Stimuli & Splits
 
    stimulus_data
+   stimulus_derivatives
    train_test_splits
 
 .. toctree::

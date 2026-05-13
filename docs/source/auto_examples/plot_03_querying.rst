@@ -40,12 +40,6 @@ Pick the subject you want to look at on the line below:
     SUBJECT = "sub-01"
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 20-26
 
 Initialize a data directory
@@ -76,12 +70,6 @@ Discovery and split listings don't need data on disk, but
     )
 
 
-
-
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 43-49
 
 Top-level summary
@@ -97,21 +85,6 @@ the bucket is reachable.
 
 
     describe()
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    LAION-fMRI Dataset
-      Bucket:    s3://laion-fmri
-      Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
-      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 53-60
@@ -131,19 +104,6 @@ subjects with complete data.
 
     print(f"All subjects: {get_subjects()}")
     print(f"Querying subject: {SUBJECT}")
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    All subjects: ['sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
-    Querying subject: sub-01
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 65-72
@@ -174,28 +134,6 @@ functional family (e.g. just the face-area ROIs); call
         print(f"{cat}: {rois}")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    All ROIs (40):
-    ['EBA', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
-
-    body: ['EBA', 'FBA']
-    character: ['VWFA1', 'VWFA2', 'mfswords', 'pSTSwords']
-    face: ['FFA1', 'FFA2', 'OFA', 'pSTSfaces']
-    laion: ['laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral']
-    motion: ['MST', 'MT']
-    object: ['lobjects', 'vobjects']
-    place: ['MPA', 'OPA', 'PPA']
-    retinotopy: ['IPCS', 'IPS0', 'LO1', 'LO2', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'hV4']
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 86-92
 
 Bucket diagnostic listing
@@ -211,22 +149,6 @@ when discovery returns surprises.
 
 
     inspect_bucket()
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Bucket: s3://laion-fmri
-    Top-level prefixes (1):
-      derivatives/
-    derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
-    derivatives/rois/: 5 entries, 5 sub-* entries
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 96-102
@@ -256,20 +178,6 @@ baselines without re-running any clustering or sampling.
     print(f"OOD types: {list_ood_types()}")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Pools:     ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
-    Splits:    ['random_0', 'random_1', 'random_2', 'random_3', 'random_4', 'cluster_k5_0', 'cluster_k5_1', 'cluster_k5_2', 'cluster_k5_3', 'cluster_k5_4', 'tau', 'ood']
-    OOD types: ['cropped', 'gabor', 'gaudy', 'illusion-classic', 'illusion-natural', 'relations', 'selfmade', 'shape', 'unusual']
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 116-123
 
 Inspect one split
@@ -296,23 +204,6 @@ call.
     print(f"Loaded:   {len(train_ids)} train / {len(test_ids)} test ids")
 
 
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Split:    random_0
-    Pool:     shared
-    Family:   random
-    n_train:  897
-    n_test:   224
-    Loaded:   897 train / 224 test ids
-
-
-
-
 .. GENERATED FROM PYTHON SOURCE LINES 135-141
 
 OOD splits with a type filter
@@ -331,18 +222,6 @@ test set.
         "ood", pool="shared", ood_types=["shape"],
     )
     print(f"OOD shape only:  test ids = {len(test_shape)}")
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    OOD shape only:  test ids = 82
-
-
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 148-191
@@ -411,47 +290,30 @@ don't exist for everyone).
         print(f"  {sub_id}: {n_total:>3} ROIs total, {n_face} face")
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 206-228
 
+Stimulus metadata
+-----------------
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-      sub-01:  40 ROIs total, 4 face
-      sub-03:  43 ROIs total, 6 face
-      sub-05:  41 ROIs total, 6 face
-      sub-06:  41 ROIs total, 5 face
-      sub-07:  41 ROIs total, 6 face
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 206-224
-
-Stimulus metadata (forward-compat)
------------------------------------
-
-The ``stimuli/`` prefix is reserved for the stimulus images and
-their metadata table; it isn't populated yet. Once it lands, the
-call below would print the catalogue (commented out for the same
-offline-by-default reason as the Subject queries above):
+The stimulus metadata table is available through ``load_stimuli()``
+for dataset-wide queries and through ``Subject.metadata`` for
+trial-aligned analyses. The calls below are commented out for the
+same offline-by-default reason as the Subject queries above:
 
 .. code-block:: python
 
-    # download(subject="sub-01", include_stimuli=True)
+    # from laion_fmri import load_stimuli
+    #
+    # stim = load_stimuli()
+    # print(stim.metadata.head())
+    #
     # sub = load_subject("sub-01")
     # if sub.has_stimuli():
-    #     stim = sub.get_stimulus_metadata()
-    #     print(stim.head())
-    #     print(f"Total stimuli: {len(stim)}")
-    #     print(f"Shared:        {stim['shared'].sum()}")
-    #     print(f"Categories:    {stim['category'].value_counts()}")
-
-
-.. rst-class:: sphx-glr-timing
-
-   **Total running time of the script:** (0 minutes 42.040 seconds)
+    #     trials = sub.metadata
+    #     print(trials[[
+    #         "session", "session_trial", "image_name",
+    #         "unique_or_shared", "dataset",
+    #     ]].head())
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:
