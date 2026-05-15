@@ -4,7 +4,8 @@ Anatomical Data
 
 .. only:: live
 
-   *Full anatomical documentation will be added with the final release.*
+   *Full anatomical documentation will be added in an upcoming
+   documentation update.*
    For acquisition parameters of the T1w (MP2RAGE) and the MEGRE
    T2*-mapping scans, see :doc:`mri_acquisition`.
 

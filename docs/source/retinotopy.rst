@@ -6,7 +6,8 @@ Retinotopy
 
 .. only:: live
 
-   *Full retinotopy documentation will be added with the final release.*
+   *Full retinotopy documentation will be added in an upcoming
+   documentation update.*
    For the retinotopy experimental paradigm, see
    :doc:`experimental_design`.
 

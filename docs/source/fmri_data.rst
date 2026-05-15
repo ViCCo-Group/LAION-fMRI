@@ -2,96 +2,88 @@
 fMRI Data
 =========
 
-.. only:: live
+LAION-fMRI includes raw multi-echo BOLD data and preprocessed
+optimally-combined BOLD timeseries. Most users will start from the
+single-trial GLMsingle betas documented in :doc:`glmsingle_betas`, but
+the functional data are available for users who want to inspect or
+rerun the preprocessing.
 
-   *Full raw and preprocessed functional data documentation will be
-   added with the final release.* For acquisition parameters, see
-   :doc:`mri_acquisition`; for the preprocessing pipeline (NORDIC +
-   tedana optimal-combination), see :doc:`preprocessing`; and for the
-   single-trial GLMsingle betas users typically start from, see
-   :doc:`glmsingle_betas`.
+For acquisition parameters, see :doc:`mri_acquisition`; for the
+preprocessing pipeline, see :doc:`preprocessing`.
 
-.. only:: dev
+Raw Functional Data
+===================
 
-   .. todo::
+The scanner DICOMs were converted with ``heudiconv`` into BIDS-style
+NIfTI files. Multi-echo BOLD and SBRef files live under ``func/``,
+fieldmaps under ``fmap/``, and the MEGRE anatomical scan under
+``anat/``.
 
-      Introductory narrative (2-3 sentences): What functional data is provided
-      (raw + preprocessed), how many runs/sessions per subject, and what task(s).
+A representative image-viewing run contains magnitude and phase BOLD
+files for all three echoes, one SBRef per echo, JSON sidecars, and the
+trial event file:
 
-   For acquisition parameters, see :doc:`mri_acquisition`. For preprocessing
-   details, see :doc:`preprocessing`.
+.. code-block:: text
 
-   .. todo::
+   sub-01/ses-01/func/
+   ├── sub-01_ses-01_task-images_run-01_echo-1_part-mag_bold.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-1_part-mag_bold.json
+   ├── sub-01_ses-01_task-images_run-01_echo-1_part-phase_bold.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-1_part-phase_bold.json
+   ├── sub-01_ses-01_task-images_run-01_echo-1_sbref.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-1_sbref.json
+   ├── sub-01_ses-01_task-images_run-01_echo-2_part-mag_bold.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-2_part-mag_bold.json
+   ├── sub-01_ses-01_task-images_run-01_echo-2_part-phase_bold.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-2_part-phase_bold.json
+   ├── sub-01_ses-01_task-images_run-01_echo-2_sbref.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-2_sbref.json
+   ├── sub-01_ses-01_task-images_run-01_echo-3_part-mag_bold.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-3_part-mag_bold.json
+   ├── sub-01_ses-01_task-images_run-01_echo-3_part-phase_bold.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-3_part-phase_bold.json
+   ├── sub-01_ses-01_task-images_run-01_echo-3_sbref.nii.gz
+   ├── sub-01_ses-01_task-images_run-01_echo-3_sbref.json
+   └── sub-01_ses-01_task-images_run-01_events.tsv
 
-      Add a figure showing example raw vs preprocessed BOLD data (e.g.,
-      a single slice before and after preprocessing, or a carpet plot).
+Fieldmaps are stored separately:
 
-   Raw Functional Data
-   ===================
+.. code-block:: text
 
-   .. todo::
+   sub-01/ses-01/fmap/
+   ├── sub-01_ses-01_run-01_magnitude1.nii.gz
+   ├── sub-01_ses-01_run-01_magnitude1.json
+   ├── sub-01_ses-01_run-01_magnitude2.nii.gz
+   ├── sub-01_ses-01_run-01_magnitude2.json
+   ├── sub-01_ses-01_run-01_phasediff.nii.gz
+   └── sub-01_ses-01_run-01_phasediff.json
 
-      Brief narrative: What's in the raw data? How many runs per session, how
-      many sessions? Were any runs excluded, and if so, is there a list?
+Preprocessed Functional Data
+============================
 
-   File Organization
-   -----------------
+The final preprocessed BOLD output used for downstream analysis is
+stored under ``derivatives/tedana``. Each run is a single
+T2*-weighted optimally-combined NIfTI in subject-native T1w space,
+sampled on a 1.778 mm isotropic grid with TR = 1.0 s. The sidecar JSON
+links the output back to the three echo BOLD files from which it was
+derived.
 
-   .. todo::
+.. code-block:: text
 
-      Paste the actual file tree for a representative subject. Include all
-      task labels, run numbers, and associated files (BOLD, events, JSON
-      sidecars).
+   derivatives/tedana/sub-01/ses-01/func/
+   ├── sub-01_ses-01_task-images_run-01_space-T1w_desc-optcom_bold.nii.gz
+   └── sub-01_ses-01_task-images_run-01_space-T1w_desc-optcom_bold.json
 
-   .. code-block:: text
+Most main image-viewing sessions contain 12 ``task-images`` runs.
+Session ``ses-31`` is a mixed eyetracking session with fewer
+image-viewing runs plus localizer/deepmreye runs. Sessions ``ses-32``
+to ``ses-34`` are supplemental sessions and are not part of the
+initial launch-release data.
 
-       sub-XX/
-       └── func/
-           └── ... (placeholder — fill with actual file listing)
+Confounds and Behavioral Files
+==============================
 
-   Preprocessed Functional Data
-   =============================
-
-   .. todo::
-
-      Brief narrative: Which pipeline produced these, what's the key output
-      users should grab? Cross-ref :doc:`preprocessing` for pipeline details.
-
-   File Organization
-   -----------------
-
-   .. todo::
-
-      Paste the actual file tree from ``derivatives/fmriprep/sub-XX/func/``.
-
-   .. code-block:: text
-
-       derivatives/fmriprep/
-       └── sub-XX/
-           └── func/
-               └── ... (placeholder — fill with actual file listing)
-
-   Available Spaces
-   ----------------
-
-   .. todo::
-
-      List the output spaces the preprocessed data is available in and the
-      resolution for each.
-
-   Confounds
-   ---------
-
-   .. todo::
-
-      Document the confound columns available in the confounds TSV. Which
-      columns are included? Are there recommended confound strategies, or do
-      you leave that to the user?
-
-   Loading Functional Data
-   =======================
-
-   .. todo::
-
-      Provide minimal, correct code examples for loading raw and preprocessed
-      data. Only add once file paths are finalized.
+The raw BIDS event files and richer confound documentation will be
+expanded in a later documentation update. For the trial table that
+aligns directly with the released GLMsingle beta volumes, see
+:doc:`glmsingle_betas`.

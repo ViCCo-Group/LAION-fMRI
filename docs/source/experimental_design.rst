@@ -18,8 +18,6 @@ sessions. In total, the recording took place over the course of about 1.5
 years (Nov 2024 to Mar 2026) at the Max Planck Institute for Human Cognitive
 and Brain Sciences in Leipzig, Germany.
 
-.. include:: _includes/current_release_stats.inc
-
 Experiments
 ===========
 
@@ -130,7 +128,7 @@ subject are:
 For analyses that require an exact repetition count (across-session
 ``Noiseceiling4rep`` and ``Noiseceiling12rep`` maps), these images were
 excluded. For analyses that average over all available repeats
-(``NoiseceilingAllreps``), they remained. For cross-subject analyses, these
+(``NoiseceilingAllrep``), they remained. For cross-subject analyses, these
 images should be excluded.
 
 Session Structure
@@ -242,7 +240,7 @@ from mirror to eye, plus 161 cm from mirror to screen).
    * - Visual angle (stimulus)
      - ~9.2 × 9.2 degrees
    * - Scanner synchronization
-     - (TODO)
+     - To be documented in an upcoming update
    * - Dummy scans
      - 0
 
@@ -283,8 +281,8 @@ analyses.
 
 .. only:: live
 
-   *A schematic of the localizer paradigm will be added with the final
-   release.*
+   *Localizer paradigm details and a schematic will be added in an
+   upcoming documentation update.*
 
 .. only:: dev
 
@@ -302,8 +300,8 @@ See :doc:`retinotopy` for the paradigm details and resulting maps.
 
 .. only:: live
 
-   *A schematic of the retinotopy paradigm will be added with the final
-   release.*
+   *Retinotopy paradigm details and a schematic will be added in an
+   upcoming documentation update.*
 
 .. only:: dev
 
@@ -330,8 +328,8 @@ responses given during the recognition task, including the response
 
 .. only:: live
 
-   *Full documentation of the behavioural data files and column layout
-   will be added with the final release.*
+   *Behavioral file names and column definitions will be added in an
+   upcoming documentation update.*
 
 .. only:: dev
 

@@ -4,7 +4,8 @@ Functional Localizers
 
 .. only:: live
 
-   *Full localizer documentation will be added with the final release.*
+   *Full localizer documentation will be added in an upcoming
+   documentation update.*
    For the experimental paradigm (categories, timing, task), see
    :doc:`experimental_design`.
 

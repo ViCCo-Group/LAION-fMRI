@@ -6,8 +6,8 @@ Diffusion Data
 
 .. only:: live
 
-   *Full diffusion-MRI documentation will be added with the final
-   release.*
+   *Full diffusion-MRI documentation will be added in an upcoming
+   documentation update.*
 
 .. only:: dev
 

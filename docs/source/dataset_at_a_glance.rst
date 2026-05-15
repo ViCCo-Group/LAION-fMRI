@@ -5,37 +5,12 @@ Dataset at a Glance
 This page gives you a quick overview of everything in LAION-fMRI and helps you
 find the files you need.
 
-At a Glance
-===========
-
-.. grid:: 2 2 4 4
-    :gutter: 2
-
-    .. grid-item-card:: Participants
-        :class-card: sd-border-0
-        :shadow: sm
-
-        5 deeply-sampled subjects
-
-    .. grid-item-card:: Stimuli
-        :class-card: sd-border-0
-        :shadow: sm
-
-        25,052 launch-release images; 1,492 shared
-
-    .. grid-item-card:: Sessions
-        :class-card: sd-border-0
-        :shadow: sm
-
-        165 acquired fMRI sessions; 150 main sessions in launch release
-
-    .. grid-item-card:: Dataset Size
-        :class-card: sd-border-0
-        :shadow: sm
-
-        Reported with the final release
-
-.. include:: _includes/current_release_stats.inc
+The launch release covers **5 participants**, **150 main image-viewing
+fMRI sessions** (30 per participant), **25,052 distinct images**, and
+**1,492 images shared by every participant**. In total, **165 fMRI
+sessions** were acquired (33 per participant); the supplemental sessions
+expand the shared image set to about **2,200 images** and will be released
+later.
 
 What's Included
 ===============
@@ -52,9 +27,8 @@ retinotopy (:doc:`retinotopy`) and functional localizers
 
 .. only:: live
 
-   *A full BIDS directory tree, the complete list of coordinate spaces,
-   and a per-ROI-set summary table will be added with the final
-   release.*
+   *Detailed BIDS file trees, coordinate-space tables, and per-ROI
+   summaries will be added in an upcoming documentation update.*
 
 .. only:: dev
 
@@ -175,7 +149,7 @@ Preprocessing from scratch
 --------------------------
 
 If you want to run your own preprocessing pipeline instead of using the
-fMRIPrep outputs we provide.
+provided NORDIC/tedana outputs.
 
 .. list-table::
    :widths: 40 60
@@ -218,8 +192,9 @@ Data Formats
      - Tab-separated, BIDS-compliant
    * - Stimulus images
      - HDF5 (.h5)
-     - Single packed file with raw JPEG bytes, indexed by image name. Loaded
-       via :func:`laion_fmri.load_stimuli`.
+     - Single packed file with raw JPEG bytes, row-aligned to
+       ``task-images_metadata.csv`` and accessible by image name through
+       :func:`laion_fmri.load_stimuli`.
    * - Stimulus metadata
      - CSV
      - ``stimuli/task-images_metadata.csv`` — see

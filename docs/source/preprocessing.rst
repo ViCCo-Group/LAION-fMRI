@@ -6,22 +6,109 @@ The functional data were preprocessed with NORDIC denoising followed
 by tedana optimal echo combination, and the resulting BOLD timeseries
 were fed to GLMsingle. Both raw and preprocessed data are shipped, so
 you can rerun your own pipeline if you prefer. The choice of pipeline
-is explained below, and a full step-by-step list of parameters will be
-added with the final release.
+is explained below.
 
 For raw-data acquisition parameters, see :doc:`mri_acquisition`.
 
-.. only:: dev
+Pipeline Overview
+=================
 
-   Preprocessing Steps
-   ===================
+The pipeline follows a lazy-resampling design: spatial corrections are
+estimated as transforms on the native grid, and the BOLD data are
+resampled once per volume at the final interpolation step. Spatial
+parameters are estimated on the middle target echo (echo 2, TE =
+28.82 ms) and then applied to echoes 1 and 3 as well, so all three
+echoes enter tedana with identical geometry.
 
-   .. todo::
+Slice timing and temporal upsampling
+------------------------------------
 
-      List the actual preprocessing steps applied, separately for anatomical
-      and functional data. Note any non-default settings. Add a brief narrative
-      on key decisions (e.g., why a particular SDC method, whether slice timing
-      correction was applied, whether smoothing was applied or not).
+Slice timing correction is performed with the bundled ``pyslicetime``
+library, following Kendrick Kay's MATLAB ``tseriesinterp.m``
+implementation. The same step upsamples the data from TR = 1.9 s to
+TR = 1.0 s, giving GLMsingle a cleaner stimulus-onset grid.
+
+Gradient distortion correction
+------------------------------
+
+Gradient nonlinearities at 7T introduce a fixed geometric warp that
+depends on the gradient coil. The warp is estimated once per session
+from a single SBRef using FSL's ``gradient_unwarp.py`` with the
+Siemens ``.grad`` coefficient file for the Terra.X scanner and applied
+to all SBRefs in the session. The BOLD data themselves are not
+resampled at this stage.
+
+Fieldmap preparation
+--------------------
+
+For each fieldmap acquisition, the two magnitude images are averaged,
+brain-extracted with FSL BET (``fracintensity = 0.6``), eroded to drop
+noisy edge voxels, and paired with the phase-difference image converted
+to a B0 deviation map using ``delta_TE = 1.02 ms``. The gradient
+distortion correction warp is applied so the fieldmap and magnitude
+image share the corrected SBRef geometry.
+
+Within a session, the four fieldmaps are co-registered to the first
+fieldmap with FLIRT (``cost = normcorr``). They are then interpolated
+along the session timeline with a first-order B-spline, producing one
+per-run fieldmap whose effective time matches the centre of the
+corresponding functional run.
+
+Susceptibility distortion correction
+------------------------------------
+
+Susceptibility-induced EPI distortions are corrected with FSL FUGUE.
+The interpolated per-run fieldmap is unmasked to avoid edge
+discontinuities, then forward-warped into EPI space with FUGUE
+(``s = 0.5``) to match the distorted SBRef geometry. A rigid FLIRT
+registration (``dof = 6``, ``cost = normcorr``) aligns the
+forward-distorted magnitude image to the SBRef, and FUGUE produces a
+shift map kept as a relative warp for final interpolation.
+
+Motion and session alignment
+----------------------------
+
+The gradient- and susceptibility-distortion warps are composed and
+applied to the SBRef before motion correction. FSL MCFLIRT then
+estimates a six-degree-of-freedom rigid-body transform for each volume
+against this geometrically corrected SBRef.
+
+Runs within a session are registered to the first run with FLIRT
+(``dof = 12``, ``cost = normcorr``, ``interp = spline``) on a
+homogenised, brain-extracted SBRef. Across sessions, each session's
+run-01 SBRef is registered to the reference session's run-01 SBRef
+(``ses-01``), followed by a second FLIRT re-optimisation to refine the
+combined transform.
+
+Structural alignment and final interpolation
+--------------------------------------------
+
+The functional reference is registered to the subject's T2w image with
+ANTs. The T2w image is used because the 7T T2*-weighted EPI contrast
+resembles T2w more closely than T1w; the T2w has already been brought
+into T1w native space, so T1w defines the output coordinate frame. The
+T2w is brain-extracted and resampled to the functional resolution.
+
+For every volume, the gradient-distortion warp, susceptibility warp,
+motion transform, within/across-session transforms, and structural warp
+are composed into a single warp and applied to the original
+slice-time-corrected volume in one spline-interpolated pass. The final
+voxel size is 1.778 mm isotropic, chosen from the smallest acquired
+dimension so no axis is downsampled.
+
+Tedana optimal combination
+--------------------------
+
+The three preprocessed echoes are passed to tedana 25.1.0 using the
+``t2smap`` workflow. Tedana estimates a T2* map and produces a
+T2*-weighted optimal combination of the three echoes using a
+log-linear monoexponential fit.
+
+Tedana ICA denoising is not used in the final pipeline. The
+downstream GLMsingle fit performs its own data-driven denoising and
+fractional ridge regression, and the preprocessing comparison below
+showed that stacking tedana ICA denoising on top of GLMsingle was not
+consistently beneficial across subjects.
 
 Comparing combinations of NORDIC and tedana
 -------------------------------------------

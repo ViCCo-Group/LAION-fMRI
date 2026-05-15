@@ -14,17 +14,17 @@ General
    Five participants viewed over 25,000 unique images across about 165
    sessions, with multi-echo BOLD recorded at 1.8 mm isotropic resolution.
    The image set is drawn from the LAION-natural pool (a curated subset of
-   LAION-5B, Roth & Hebart, 2025) plus shared images from NSD and THINGSplus,
-   and the release includes raw functional data, single-trial GLMsingle
-   betas, retinotopy, functional localizers, and diffusion MRI. See
-   :doc:`dataset_at_a_glance` for the full inventory.
+   LAION-2B, Roth & Hebart, 2025) plus shared images from NSD and THINGSplus.
+   The current documentation focuses on the image-viewing data,
+   single-trial GLMsingle betas, stimulus files, ROIs, and train/test
+   splits; retinotopy, functional-localizer, and diffusion documentation
+   will be added in a later update. See :doc:`dataset_at_a_glance` for
+   the current inventory.
 
 .. dropdown:: How do I cite the dataset?
 
-   The dataset paper is in preparation. A full citation (with BibTeX) and
-   ready-to-use methods-section text will be added with the final
-   release. See :doc:`example_methods_text` for the suggested
-   acknowledgment text you can use today.
+   The dataset paper is in preparation. For now, cite the VSS 2026 talk
+   and use the interim methods text in :doc:`example_methods_text`.
 
 .. dropdown:: What license is the data released under?
 
@@ -62,9 +62,9 @@ Data Access
    Stimulus-side sizes are known: the gated stimulus HDF5 is about
    3.2 GB, the four public embedding files are about 50 MB each, and
    the public object-segmentation masks are about 68 MB. Total raw +
-   derivative sizes will be reported with the final release. For now
-   download one subject and one session first to gauge what your machine
-   can handle.
+   derivative sizes will be added in an upcoming documentation update.
+   For now, download one subject and one session first to gauge what
+   your machine can handle.
 
 .. dropdown:: Can I download only the parts I need?
 
@@ -133,7 +133,7 @@ Working with the Data
    1.778 mm isotropic. Surface ROIs are shipped on fsnative as
    ``.func.gii`` and FreeSurfer ``.label`` files. The full list of
    spaces and resolutions across all derivative streams will be added
-   with the final release.
+   in an upcoming documentation update.
 
 .. dropdown:: How do I extract betas from an ROI?
 
@@ -170,12 +170,13 @@ Acquisition & Preprocessing
 
    The functional data were preprocessed with NORDIC denoising followed
    by tedana optimal echo combination, and the resulting BOLD timeseries
-   was fed to GLMsingle. The choice was based on a 2 × 3 variant
+   were fed to GLMsingle. The choice was based on a 2 × 3 variant
    comparison (NORDIC on/off × no tedana / optcom / ICA-denoised); the
    NORDIC + tedana ``optcom`` combination gave the best ROI-level noise
    ceilings while avoiding redundancy with GLMsingle's own GLMdenoise.
-   Full step-by-step parameters will be added with the final release —
-   see :doc:`preprocessing` for what's available today.
+   See :doc:`preprocessing` for the current step-by-step overview;
+   remaining parameter tables will be added in an upcoming documentation
+   update.
 
 .. dropdown:: Is the raw (unprocessed) data available?
 
@@ -185,7 +186,7 @@ Acquisition & Preprocessing
 
 .. dropdown:: What confound regressors are provided?
 
-   The confound TSV columns will be documented with the final release.
+   The confound TSV columns will be documented in an upcoming update.
    In the meantime, see :doc:`fmri_data` for what's currently shipped.
 
 Quality Control
@@ -194,18 +195,18 @@ Quality Control
 .. dropdown:: Were any subjects or runs excluded?
 
    Exclusion criteria and the list of any dropped runs or sessions will
-   be added with the final release. See :doc:`quality_control`.
+   be added in an upcoming documentation update. See :doc:`quality_control`.
 
 .. dropdown:: What motion thresholds were used for exclusion?
 
    Motion thresholds and the associated framewise-displacement
-   distributions will be added with the final release. See
+   distributions will be added in an upcoming documentation update. See
    :doc:`quality_control`.
 
 .. dropdown:: Where are the QC reports?
 
    Per-subject QC reports and their location in the bucket will be added
-   with the final release. See :doc:`quality_control`.
+   in an upcoming documentation update. See :doc:`quality_control`.
 
 Troubleshooting
 ===============

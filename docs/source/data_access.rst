@@ -141,9 +141,18 @@ Software Requirements
 Citation
 ========
 
-.. todo::
+Until the dataset paper is available, cite the VSS 2026 conference
+presentation:
 
-   Add the full citation once the paper is published. Include BibTeX.
+   Zerbe, J., Roth, J., Mell, M. M., Herholz, P., Knapen, T., &
+   Hebart, M. N. (2026). *LAION-fMRI: A densely sampled 7T-fMRI
+   dataset providing broad coverage of natural image diversity*. Talk
+   25.11, Scene Perception Talk Session, Vision Sciences Society
+   Annual Meeting, May 16, 2026. `VSS abstract
+   <https://www.visionsciences.org/talk-sessions?id=642>`__.
+
+Also cite GLMsingle (Prince et al., 2022) if you use the provided
+single-trial beta estimates.
 
 
 Support

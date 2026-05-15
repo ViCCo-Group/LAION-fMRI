@@ -125,7 +125,7 @@ apply the mask to your betas:
 
    # Load betas and trial info as usual (see laion_fmri_package/load).
    sessions = sub.get_sessions()
-   betas_per_ses  = sub.get_betas(session=sessions, roi="hlvis")
+   betas_per_ses  = sub.get_betas(session=sessions, roi="laion")
    trials_per_ses = sub.get_trial_info(session=sessions)
 
    # Concatenate across sessions (standard idiom).
@@ -250,31 +250,6 @@ For the full :class:`~laion_fmri.splits.Split` object — including
    (897, 224, 'tau')
    >>> sp.params
    {'method': 'min_nn_filter + stochastic_mmd_swap', ...}
-
-Split file schema
-=================
-
-The bundled JSONs live under ``laion_fmri/splits/data/{pool}/`` and
-are accessed transparently by the loaders above. Schema, for
-reference:
-
-.. code-block:: json
-
-    {
-      "name": "random_0",
-      "pool": "sub-01 full pool (unique + LAION non-OOD shared)",
-      "splitter": "min_nn_stochastic",
-      "params": { "method": "uniform_random", "seed": 0 },
-      "n_train": 4666,
-      "n_test":  1167,
-      "variants": [
-        {
-          "variant_id": 0,
-          "train_ids":  ["shared_12rep_LAION_cluster_1003_i0.jpg", "..."],
-          "test_ids":   ["unique_LAION_initial_cluster_2817_i38_p01.jpg", "..."]
-        }
-      ]
-    }
 
 See also
 ========

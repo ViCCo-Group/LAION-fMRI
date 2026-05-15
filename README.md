@@ -2,7 +2,7 @@
 
 **Data loading package and documentation for the LAION-fMRI dataset**
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-yellow.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 LAION-fMRI is a deeply sampled 7T fMRI dataset of brain responses to
@@ -60,5 +60,3 @@ Contributions are welcome! Please see the Contributing Guidelines in the documen
 
 - **Issues**: [GitHub Issues](https://github.com/ViCCo-Group/LAION-fMRI/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/ViCCo-Group/LAION-fMRI/discussions)
-
-## 🙏 Acknowledgments

@@ -104,8 +104,8 @@ Structural MRI
 High-resolution T2* mapping (MEGRE) was recorded at 7T to improve
 across-session alignment, but so far it has not been used for later
 preprocessing. A separate T1w (MP2RAGE) at 3T Siemens Prisma was used for
-structural alignment of the functional sessions and is described under
-:doc:`retinotopy`.
+structural alignment of the functional sessions; its release files are
+described under :doc:`anatomical_data`.
 
 MEGRE (T2*)
 -----------
@@ -187,7 +187,7 @@ over time, which can be substantial at 7T.
 .. only:: live
 
    *Acquisition parameters for the retinotopy, localizer, and diffusion
-   scans will be added with the final release. For the experimental
+   scans will be added in an upcoming documentation update. For the experimental
    paradigms of the retinotopy and localizer tasks, see*
    :doc:`experimental_design` *.*
 

@@ -36,8 +36,6 @@ Supplemental sessions acquired after the main experiment expand the shared
 image set to about **2,200** images; those sessions and images will be
 released later and are not included in the counts below.
 
-.. include:: _includes/current_release_stats.inc
-
 Stimulus Sets
 =============
 
@@ -106,8 +104,9 @@ Image Format
 ============
 
 All stimulus images are **1000 × 1000 px, RGB, JPEG-encoded**. They are
-stored as raw JPEG byte arrays inside ``task-images_stimuli.h5``, keyed
-by image name; :func:`laion_fmri.load_stimuli` decodes them on access.
+stored as raw JPEG byte arrays inside ``task-images_stimuli.h5`` in the
+same row order as ``task-images_metadata.csv``; the package resolves
+image names to rows and decodes images on access.
 
 Where the source image was not already square, the 1000 × 1000 region
 was selected with **DeepGaze** (Kümmerer et al.): for each candidate

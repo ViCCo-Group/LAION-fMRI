@@ -4,8 +4,7 @@ Quality Control
 
 .. only:: live
 
-   *This section will be added in the final release of the LAION-fMRI
-   documentation.*
+   *This section will be added in an upcoming documentation update.*
 
 .. only:: dev
 

@@ -68,8 +68,6 @@ Across all acquired fMRI protocols, the dataset contains 165 fMRI sessions;
 the supplemental image sessions and their additional shared images will be
 released later.
 
-.. include:: _includes/current_release_stats.inc
-
 The images span everything from everyday photographs - drawn from a 120M
 image-text corpus (Roth & Hebart, 2025) - to abstract shapes and visual
 illusions, ensuring the dataset covers the full breadth of human visual
@@ -199,29 +197,8 @@ Getting Started
    :caption: Reference
 
    faq
-   api
    example_methods_text
    contributing
-   release-history
-
-
-Latest Updates
-==============
-
-.. only:: live
-
-   *Release notes will be added as the dataset moves toward its
-   public release. See* :doc:`release-history` *for the full
-   changelog once it's available.*
-
-.. only:: dev
-
-   .. todo::
-
-      Keep this short — 3-5 most recent updates, one line each. Move older
-      entries to :doc:`release-history` when the list gets long.
-
-   * **YYYY-MM-DD** — (placeholder)
 
 
 Contributors
