@@ -122,11 +122,11 @@ The cards below walk through each step in detail.
       :class-card: sd-border-0
       :shadow: sm
 
-      Four hands-on, narrated walkthroughs covering the full
+      Five hands-on, narrated walkthroughs covering the full
       workflow.
 
       +++
-      ``plot_01`` … ``plot_04``
+      ``plot_01`` … ``plot_05``
 
    .. grid-item-card:: API reference
       :link: api

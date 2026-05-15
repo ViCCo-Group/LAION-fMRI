@@ -11,15 +11,13 @@ Template space
    fsavg_L = sub.to_template(per_voxel_array, "fsaverage", hemi="L")
 
 ``Subject.to_template`` projects subject-T1w-space values into
-volume or surface template spaces using the FreeSurfer recon
-that ships with each subject. Two parallel chains cover all
-supported targets, both pure-Python:
+a volume or surface template space using the FreeSurfer recon
+that ships with each subject. Two chains:
 
 * **Volume chain** -- T1w volume to MNI305 via
   ``mri/transforms/talairach.lta`` (FreeSurfer's linear T1w to
   MNI305 affine; the ``talairach`` filename is historical and
-  refers to MNI305, not true Talairach space). Optional second
-  hop to MNI152 / MNIColin27 via published affine + resample.
+  refers to MNI305, not true Talairach space).
 * **Surface chain** -- T1w volume to fsnative surface via
   ``nilearn.surface.vol_to_surf`` on the recon's white / pial
   meshes, then fsnative to fsaverage via
@@ -35,8 +33,8 @@ The template-space module needs an opt-in extra:
 
    uv sync --extra template      # or: pip install laion-fmri[template]
 
-This pulls ``nilearn``, ``nitransforms``, ``neuromaps``, and
-``templateflow``. TemplateFlow caches reference images at
+This pulls ``nilearn``, ``nitransforms``, and ``templateflow``.
+TemplateFlow caches reference images at
 ``~/.cache/templateflow/`` on first use.
 
 The per-subject FreeSurfer recon is *not* fetched by default
@@ -68,17 +66,20 @@ Target                      Type      Mechanism
                                       ``fsaverage6`` (41k), ``fsaverage7`` (164k).
 ``"MNI305"``                volume    Direct affine from the recon's ``talairach.lta``.
                                       Full brain including subcortex.
-``"MNI152NLin6Asym"``       volume    MNI305 first, then the Brett 1999 affine.
-``"MNI152NLin2009cAsym"``   volume    MNI305 to MNI152NLin6Asym (Brett affine), then to
-                                      2009cAsym via the templateflow nonlinear ``.h5`` warp.
-                                      This is fmriprep's default target.
 ==========================  ========  ===========================================================
 
-Other MNI152 variants (``MNI152Lin``, ``MNI152NLin6Sym``, the
-2009a/b families, ``MNI152NLin2009cSym``) and ``MNIColin27`` are
-out of scope: templateflow ships no transform from MNI305 or
-MNI152NLin6Asym to them as of templateflow 24. Run ``fmriprep``
-externally if you need one of those.
+MNI152 variants and ``MNIColin27`` are not supported here. Run
+``fmriprep`` externally if you need them.
+
+Volumetric accuracy
+-------------------
+
+The MNI305 hop is a 12-parameter linear affine from the
+subject's FreeSurfer recon (``mri/transforms/talairach.lta``).
+For sub-millimetre cortical alignment, prefer the
+``"fsaverage"`` surface target -- surface registration via the
+recon's ``sphere.reg`` aligns by cortical topology and is much
+sharper than any volumetric affine at the cortical sheet.
 
 Return shapes
 =============
@@ -112,13 +113,6 @@ Worked example
    # Volume: MNI305 (includes subcortex).
    mni305 = sub.to_template(mean_b, "MNI305")
 
-   # Volume: MNI152NLin6Asym via MNI305 + Brett affine.
-   mni152_fsl = sub.to_template(mean_b, "MNI152NLin6Asym")
-
-   # Volume: MNI152NLin2009cAsym (fmriprep's default), via the
-   # extra MNI152NLin6Asym -> 2009cAsym templateflow warp.
-   mni152_fmriprep = sub.to_template(mean_b, "MNI152NLin2009cAsym")
-
 Explicit per-direction entry points
 ===================================
 
@@ -129,9 +123,8 @@ up front:
 
 .. code-block:: python
 
-   # Volume input -> volume target (MNI*).
+   # Volume input -> volume target.
    sub.volume_to_template(mean_b, "MNI305")
-   sub.volume_to_template(mean_b, "MNI152NLin2009cAsym")
 
    # Volume input -> surface target (fsaverage).
    sub.volume_to_surface(mean_b, hemi="L")
@@ -183,33 +176,3 @@ Concrete examples for the call above:
 When ``hemi=None`` on a surface target, two files are written
 (one per hemisphere) and ``to_template`` returns the matching
 ``{"L": ..., "R": ...}`` dict.
-
-Out of scope
-============
-
-The following targets are *not* supported in this release:
-
-* **fsLR** and **CIVET** -- their fsaverage hand-off in
-  ``neuromaps`` calls Connectome Workbench's ``wb_command``
-  binary, which falls outside the pure-Python install.
-* **MNI152 via the surface chain** -- ``neuromaps`` ships
-  ``mni152_to_fsaverage`` (volume to surface) but no
-  surface-to-MNI152 transform without ``wb_command``. Use
-  the volume route to reach MNI152 from T1w via MNI305.
-* **Other MNI152 variants and MNIColin27** --
-  ``MNI152Lin``, ``MNI152NLin6Sym``,
-  ``MNI152NLin2009{a,b}{Asym,Sym}``,
-  ``MNI152NLin2009cSym``, and ``MNIColin27`` have no
-  templateflow transform from MNI305 or from
-  MNI152NLin6Asym, and no canonical published affine. Run
-  ``fmriprep`` externally if you need one of these.
-* **fsaverage1, fsaverage2, fsaverage3** -- not on
-  templateflow. Supported densities are
-  ``fsaverage5`` / ``fsaverage6`` / ``fsaverage7``.
-
-API
-===
-
-.. currentmodule:: laion_fmri.templates
-
-.. autofunction:: to_template

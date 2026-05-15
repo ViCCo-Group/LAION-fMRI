@@ -1,40 +1,4 @@
 {
- "ROI_CATEGORIES": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "tuple"
-  }
- ],
- "SUBJECT": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "str"
-  }
- ],
- "_": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "list"
-  }
- ],
- "cat": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "str"
-  }
- ],
  "data_dir": [
   {
    "is_class": false,
@@ -60,22 +24,6 @@
    "name": "dataset_initialize"
   }
  ],
- "describe": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
-   "name": "describe"
-  }
- ],
  "df": [
   {
    "is_class": false,
@@ -85,121 +33,7 @@
    "name": "DataFrame"
   }
  ],
- "df.head": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas",
-   "module_short": "pandas",
-   "name": "DataFrame.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core.generic",
-   "module_short": "pandas.core.generic",
-   "name": "NDFrame.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core",
-   "module_short": "pandas.core",
-   "name": "NDFrame.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas",
-   "module_short": "pandas",
-   "name": "NDFrame.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core.arraylike",
-   "module_short": "pandas.core.arraylike",
-   "name": "OpsMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core",
-   "module_short": "pandas.core",
-   "name": "OpsMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas",
-   "module_short": "pandas",
-   "name": "OpsMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core.base",
-   "module_short": "pandas.core.base",
-   "name": "PandasObject.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core",
-   "module_short": "pandas.core",
-   "name": "PandasObject.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas",
-   "module_short": "pandas",
-   "name": "PandasObject.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core.indexing",
-   "module_short": "pandas.core.indexing",
-   "name": "IndexingMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core",
-   "module_short": "pandas.core",
-   "name": "IndexingMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas",
-   "module_short": "pandas",
-   "name": "IndexingMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core.accessor",
-   "module_short": "pandas.core.accessor",
-   "name": "DirNamesMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas.core",
-   "module_short": "pandas.core",
-   "name": "DirNamesMixin.head"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "pandas",
-   "module_short": "pandas",
-   "name": "DirNamesMixin.head"
-  }
- ],
- "get_rois": [
+ "download_segmentations": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -210,69 +44,39 @@
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
-   "name": "get_rois"
-  }
- ],
- "get_subjects": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
-   "name": "get_subjects"
-  }
- ],
- "get_train_test_ids": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "get_train_test_ids"
-  }
- ],
- "inspect_bucket": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
-   "name": "inspect_bucket"
-  }
- ],
- "laion_fmri.subject.Subject": [
-  {
-   "is_class": false,
-   "is_explicit": true,
-   "module": "laion_fmri.subject",
+   "module": "laion_fmri.download",
    "module_short": "laion_fmri",
-   "name": "Subject"
+   "name": "download_segmentations"
   }
  ],
- "list_ood_types": [
+ "image_name": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  }
+ ],
+ "img": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "img.copy": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
+ "laion_fmri.load_stimuli": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -283,12 +87,12 @@
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "list_ood_types"
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "load_stimuli"
   }
  ],
- "list_pools": [
+ "laion_fmri.load_subject": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -299,60 +103,55 @@
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "list_pools"
-  }
- ],
- "list_splits": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "list_splits"
-  }
- ],
- "load_split": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "load_split"
-  }
- ],
- "load_subject": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "function"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.subject",
+   "module": "laion_fmri",
    "module_short": "laion_fmri",
    "name": "load_subject"
   }
  ],
- "n_face": [
+ "mask": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "mask.dtype": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.dtypes",
+   "module_short": "numpy.dtypes",
+   "name": "UInt8DType"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "UInt8DType"
+  }
+ ],
+ "mask.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "mask.sum": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
+ "n_covered": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -361,13 +160,73 @@
    "name": "int"
   }
  ],
- "n_total": [
+ "nouns": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "builtins",
    "module_short": "builtins",
-   "name": "int"
+   "name": "list"
+  }
+ ],
+ "np.array": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "array"
+  }
+ ],
+ "np.uint8": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "uint8"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "unsignedinteger"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "integer"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "number"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "generic"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "uint8"
   }
  ],
  "os.environ.get": [
@@ -518,90 +377,93 @@
    "name": "join"
   }
  ],
- "rois": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "list"
-  }
- ],
- "shared": [
+ "overlay": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "numpy",
    "module_short": "numpy",
-   "name": "int64"
+   "name": "ndarray"
   }
  ],
- "split": [
+ "stim": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "Split"
+   "module": "laion_fmri.stimuli",
+   "module_short": "laion_fmri",
+   "name": "Stimuli"
   },
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri",
    "module_short": "laion_fmri",
-   "name": "Split"
+   "name": "Stimuli"
   }
  ],
- "split.n_test": [
+ "stim.images.get": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "int"
-  }
- ],
- "split.n_train": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "int"
-  }
- ],
- "split.name": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "str"
-  }
- ],
- "split.pool": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "str"
-  }
- ],
- "split.split_family": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.splits",
-   "module_short": "laion_fmri.splits",
-   "name": "Split.split_family"
+   "module": "laion_fmri.stimuli",
+   "module_short": "laion_fmri",
+   "name": "Stimuli.images"
   },
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri",
    "module_short": "laion_fmri",
-   "name": "Split.split_family"
+   "name": "Stimuli.images"
+  }
+ ],
+ "stim.segmentations.for_image": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.segmentations",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.for_image"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.for_image"
+  }
+ ],
+ "stim.segmentations.get": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.segmentations",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.get"
+  }
+ ],
+ "stim.segmentations.nouns": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.segmentations",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.nouns"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.nouns"
   }
  ],
  "sub": [
@@ -636,40 +498,45 @@
    "name": "Subject.metadata"
   }
  ],
- "sub_id": [
+ "sub.segmentations.has_image": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "str"
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
   }
  ],
- "test_ids": [
+ "sub.segmentations.nouns": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "list"
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
   }
  ],
- "test_shape": [
+ "trial": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "builtins",
    "module_short": "builtins",
-   "name": "list"
-  }
- ],
- "train_ids": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "list"
+   "name": "int"
   }
  ]
 }

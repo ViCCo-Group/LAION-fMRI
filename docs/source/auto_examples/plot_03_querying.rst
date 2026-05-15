@@ -23,16 +23,19 @@ Querying the Dataset
 
 Discover what is in the dataset without downloading anything.
 
-Every cell in this example either queries the S3 bucket directly
-(``laion_fmri.discovery``) or reads bundled metadata that ships with
-the package (``laion_fmri.splits``). No subject data is fetched.
-Where a query needs locally-downloaded files, the corresponding
-``download(...)`` and Subject-API calls are shown **commented out**,
-so you can copy them without this script triggering a download.
+Most cells in this example query the S3 bucket directly
+(``laion_fmri.discovery``) or read bundled metadata that ships with
+the package (``laion_fmri.splits``) -- no subject data is fetched.
+The stimulus-metadata cell below is the one exception: it reads
+``Subject.metadata`` from a subject already on disk (the quickstart
+example downloads ``sub-01 / ses-01`` into a shared data
+directory). For other Subject-API calls the corresponding
+``download(...)`` invocations are shown **commented out**, so you
+can copy them without this script triggering a download.
 
 Pick the subject you want to look at on the line below:
 
-.. GENERATED FROM PYTHON SOURCE LINES 16-19
+.. GENERATED FROM PYTHON SOURCE LINES 19-22
 
 .. code-block:: Python
 
@@ -46,7 +49,7 @@ Pick the subject you want to look at on the line below:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-26
+.. GENERATED FROM PYTHON SOURCE LINES 23-29
 
 Initialize a data directory
 ----------------------------
@@ -55,7 +58,7 @@ Discovery and split listings don't need data on disk, but
 ``dataset_initialize`` is still required so that any subsequent
 (commented-out) ``download(...)`` would have a destination.
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-42
+.. GENERATED FROM PYTHON SOURCE LINES 29-48
 
 .. code-block:: Python
 
@@ -64,7 +67,10 @@ Discovery and split listings don't need data on disk, but
 
     from laion_fmri.config import dataset_initialize
 
-    data_dir = os.path.join(os.getcwd(), "laion_fmri_quickstart")
+    data_dir = os.environ.get(
+        "LAION_FMRI_EXAMPLE_DATA_DIR",
+        os.path.join(os.getcwd(), "laion_fmri_quickstart"),
+    )
     os.makedirs(data_dir, exist_ok=True)
     dataset_initialize(data_dir)
 
@@ -82,7 +88,7 @@ Discovery and split listings don't need data on disk, but
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-49
+.. GENERATED FROM PYTHON SOURCE LINES 49-55
 
 Top-level summary
 ------------------
@@ -91,7 +97,7 @@ Top-level summary
 count, and the first subject's ROI list. Run it first to confirm
 the bucket is reachable.
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-52
+.. GENERATED FROM PYTHON SOURCE LINES 55-58
 
 .. code-block:: Python
 
@@ -114,7 +120,7 @@ the bucket is reachable.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-60
+.. GENERATED FROM PYTHON SOURCE LINES 59-66
 
 Subjects in the bucket
 -----------------------
@@ -124,7 +130,7 @@ including ones whose data is only partially uploaded -- so the
 count matches the dataset's published size, not just the
 subjects with complete data.
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-64
+.. GENERATED FROM PYTHON SOURCE LINES 66-70
 
 .. code-block:: Python
 
@@ -146,7 +152,7 @@ subjects with complete data.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-72
+.. GENERATED FROM PYTHON SOURCE LINES 71-78
 
 ROI queries: specific / category / all
 ---------------------------------------
@@ -156,7 +162,7 @@ ROIs ship in eight categories on the bucket. Use the
 functional family (e.g. just the face-area ROIs); call
 ``get_rois`` without a filter when you want the full inventory.
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-85
+.. GENERATED FROM PYTHON SOURCE LINES 78-91
 
 .. code-block:: Python
 
@@ -196,7 +202,7 @@ functional family (e.g. just the face-area ROIs); call
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-92
+.. GENERATED FROM PYTHON SOURCE LINES 92-98
 
 Bucket diagnostic listing
 --------------------------
@@ -205,7 +211,7 @@ Bucket diagnostic listing
 count of subject directories under each derivative tree -- useful
 when discovery returns surprises.
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-95
+.. GENERATED FROM PYTHON SOURCE LINES 98-101
 
 .. code-block:: Python
 
@@ -221,15 +227,18 @@ when discovery returns surprises.
  .. code-block:: none
 
     Bucket: s3://laion-fmri
-    Top-level prefixes (1):
+    Top-level prefixes (2):
       derivatives/
+      stimuli/
     derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
     derivatives/rois/: 5 entries, 5 sub-* entries
+    derivatives/freesurfer/: 5 entries, 5 sub-* entries
+    derivatives/anatomical/: 5 entries, 5 sub-* entries
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-102
+.. GENERATED FROM PYTHON SOURCE LINES 102-108
 
 Bundled train/test splits (no download required)
 -------------------------------------------------
@@ -238,7 +247,7 @@ Bundled train/test splits (no download required)
 the stimulus set so callers can compare against the published
 baselines without re-running any clustering or sampling.
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-115
+.. GENERATED FROM PYTHON SOURCE LINES 108-121
 
 .. code-block:: Python
 
@@ -270,7 +279,7 @@ baselines without re-running any clustering or sampling.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 116-123
+.. GENERATED FROM PYTHON SOURCE LINES 122-129
 
 Inspect one split
 ------------------
@@ -280,7 +289,7 @@ split's sizes and family. ``get_train_test_ids`` is the
 convenience wrapper that gives you the actual ID lists in one
 call.
 
-.. GENERATED FROM PYTHON SOURCE LINES 123-134
+.. GENERATED FROM PYTHON SOURCE LINES 129-140
 
 .. code-block:: Python
 
@@ -313,7 +322,7 @@ call.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 135-141
+.. GENERATED FROM PYTHON SOURCE LINES 141-147
 
 OOD splits with a type filter
 ------------------------------
@@ -322,7 +331,7 @@ The ``ood`` split partitions held-out stimuli by category; the
 ``ood_types=`` argument restricts which categories are kept in the
 test set.
 
-.. GENERATED FROM PYTHON SOURCE LINES 141-147
+.. GENERATED FROM PYTHON SOURCE LINES 147-153
 
 .. code-block:: Python
 
@@ -345,7 +354,7 @@ test set.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-191
+.. GENERATED FROM PYTHON SOURCE LINES 154-197
 
 Per-subject queries that need local data
 -----------------------------------------
@@ -391,7 +400,7 @@ copy the lines you need into your own script after running
     #           "hemi-R": {...}},
     # }
 
-.. GENERATED FROM PYTHON SOURCE LINES 193-199
+.. GENERATED FROM PYTHON SOURCE LINES 199-205
 
 Cross-subject discovery
 ------------------------
@@ -400,7 +409,7 @@ Loop ``get_subjects()`` to ask the same questions of every subject
 in the bucket. ROI counts can differ across subjects (some ROIs
 don't exist for everyone).
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-205
+.. GENERATED FROM PYTHON SOURCE LINES 205-211
 
 .. code-block:: Python
 
@@ -427,31 +436,66 @@ don't exist for everyone).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 206-224
+.. GENERATED FROM PYTHON SOURCE LINES 212-228
 
-Stimulus metadata (forward-compat)
------------------------------------
+Stimulus metadata
+------------------
 
-The ``stimuli/`` prefix is reserved for the stimulus images and
-their metadata table; it isn't populated yet. Once it lands, the
-call below would print the catalogue (commented out for the same
-offline-by-default reason as the Subject queries above):
+Trial-level stimulus metadata is exposed as a
+``pandas.DataFrame`` via the ``Subject.metadata`` property --
+one row per single-trial beta, indexed by global trial index
+(``0 .. n_total_trials-1``). Columns combine the per-session
+events TSV with derived fields like ``image_name``, ``session``,
+``session_trial``, ``stim_idx``, and ``unique_or_shared``. The
+same table is what :doc:`plot_04_loading` uses to align betas
+with images.
 
-.. code-block:: python
+This reads ``sub-01`` from the shared data directory that
+:doc:`plot_01_quickstart` populates; if you're running plot_03
+in isolation, run plot_01 first (or call ``download(...)``
+yourself).
 
-    # download(subject="sub-01", include_stimuli=True)
-    # sub = load_subject("sub-01")
-    # if sub.has_stimuli():
-    #     stim = sub.get_stimulus_metadata()
-    #     print(stim.head())
-    #     print(f"Total stimuli: {len(stim)}")
-    #     print(f"Shared:        {stim['shared'].sum()}")
-    #     print(f"Categories:    {stim['category'].value_counts()}")
+.. GENERATED FROM PYTHON SOURCE LINES 228-238
+
+.. code-block:: Python
+
+
+    from laion_fmri.subject import load_subject
+
+    sub = load_subject(SUBJECT)
+    df = sub.metadata
+    print(df.head())
+    print(f"Total trials: {len(df)}")
+    shared = (df["unique_or_shared"] == "shared").sum()
+    print(f"Shared:       {shared}")
+    print(f"Per session:  {df['session'].value_counts().to_dict()}")
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      session  run  beta_index  ... stim_idx  unique_or_shared dataset
+    0  ses-01    1           0  ...    22187            unique   LAION
+    1  ses-01    1           1  ...    19600            unique   LAION
+    2  ses-01    1           2  ...      259            shared   LAION
+    3  ses-01    1           3  ...    17805            unique   LAION
+    4  ses-01    1           4  ...    13346            unique   LAION
+
+    [5 rows x 9 columns]
+    Total trials: 1044
+    Shared:       469
+    Per session:  {'ses-01': 1044}
+
+
+
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 42.040 seconds)
+   **Total running time of the script:** (0 minutes 53.590 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:

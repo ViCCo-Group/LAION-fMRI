@@ -8,6 +8,64 @@
    "name": "DataLoader"
   }
  ],
+ "InMemoryMesh": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "InMemoryMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "InMemoryMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "InMemoryMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "SurfaceMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "abc",
+   "module_short": "abc",
+   "name": "ABC"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "InMemoryMesh"
+  }
+ ],
  "Line2D": [
   {
    "is_class": true,
@@ -45,6 +103,43 @@
    "name": "Line2D"
   }
  ],
+ "ListedColormap": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "matplotlib.colors",
+   "module_short": "matplotlib.colors",
+   "name": "ListedColormap"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "matplotlib",
+   "module_short": "matplotlib",
+   "name": "ListedColormap"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "matplotlib.colors",
+   "module_short": "matplotlib.colors",
+   "name": "Colormap"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "matplotlib",
+   "module_short": "matplotlib",
+   "name": "Colormap"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.colors",
+   "module_short": "matplotlib.colors",
+   "name": "ListedColormap"
+  }
+ ],
  "Normalize": [
   {
    "is_class": true,
@@ -68,6 +163,66 @@
    "name": "Normalize"
   }
  ],
+ "PolyMesh": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "PolyMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "PolyMesh"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "PolyMesh"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "PolyMesh"
+  }
+ ],
+ "SurfaceImage": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  }
+ ],
  "_": [
   {
    "is_class": false,
@@ -75,6 +230,78 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "float"
+  }
+ ],
+ "_read_pial": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  }
+ ],
+ "_read_sulc": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  }
+ ],
+ "anat_full": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "anat_full.sum": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
+ "anat_mask": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "anat_mask.sum": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
+ "arr": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "arr.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
   }
  ],
  "available_rois": [
@@ -90,26 +317,47 @@
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "matplotlib.axes._axes",
-   "module_short": "matplotlib.axes",
-   "name": "Axes"
+   "module": "mpl_toolkits.mplot3d.axes3d",
+   "module_short": "mpl_toolkits.mplot3d",
+   "name": "Axes3D"
   },
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "matplotlib.axes",
-   "module_short": "matplotlib.axes",
-   "name": "Axes"
+   "module": "mpl_toolkits.mplot3d",
+   "module_short": "mpl_toolkits.mplot3d",
+   "name": "Axes3D"
   },
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "matplotlib",
-   "module_short": "matplotlib",
-   "name": "Axes"
+   "module": "mpl_toolkits",
+   "module_short": "mpl_toolkits",
+   "name": "Axes3D"
   }
  ],
  "ax.set_title": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "mpl_toolkits.mplot3d.axes3d",
+   "module_short": "mpl_toolkits.mplot3d",
+   "name": "Axes3D.set_title"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "mpl_toolkits.mplot3d",
+   "module_short": "mpl_toolkits.mplot3d",
+   "name": "Axes3D.set_title"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "mpl_toolkits",
+   "module_short": "mpl_toolkits",
+   "name": "Axes3D.set_title"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -249,6 +497,24 @@
   }
  ],
  "betas_roi.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "betas_shared": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "betas_shared.shape": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -711,6 +977,22 @@
    "name": "str"
   }
  ],
+ "freesurfer_surf_path": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri._paths",
+   "module_short": "laion_fmri._paths",
+   "name": "freesurfer_surf_path"
+  }
+ ],
  "get_data_dir": [
   {
    "is_class": false,
@@ -798,6 +1080,22 @@
    "module": "matplotlib",
    "module_short": "matplotlib",
    "name": "GridSpec"
+  }
+ ],
+ "importlib.util.find_spec": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "importlib.util",
+   "module_short": "importlib.util",
+   "name": "find_spec"
   }
  ],
  "legend_ax": [
@@ -939,6 +1237,33 @@
    "name": "Artist.legend"
   }
  ],
+ "lh_mask": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "lh_mask.size": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "int"
+  }
+ ],
+ "lh_mask.sum": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
  "load_subject": [
   {
    "is_class": false,
@@ -951,7 +1276,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "load_subject"
   }
  ],
@@ -1007,6 +1332,15 @@
    "name": "int"
   }
  ],
+ "n_session": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "int64"
+  }
+ ],
  "nc": [
   {
    "is_class": false,
@@ -1014,6 +1348,42 @@
    "module": "numpy",
    "module_short": "numpy",
    "name": "ndarray"
+  }
+ ],
+ "nc_anat": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "nc_anat.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "nc_rsq": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "nc_rsq.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
   }
  ],
  "nc_session": [
@@ -1068,6 +1438,38 @@
    "name": "load"
   }
  ],
+ "nib_.freesurfer.read_geometry": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nibabel.freesurfer",
+   "module_short": "nibabel.freesurfer",
+   "name": "read_geometry"
+  }
+ ],
+ "nib_.freesurfer.read_morph_data": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nibabel.freesurfer",
+   "module_short": "nibabel.freesurfer",
+   "name": "read_morph_data"
+  }
+ ],
  "np.abs": [
   {
    "is_class": false,
@@ -1084,6 +1486,22 @@
    "name": "abs"
   }
  ],
+ "np.nan": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "float"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "nan"
+  }
+ ],
  "np.percentile": [
   {
    "is_class": false,
@@ -1098,6 +1516,22 @@
    "module": "numpy",
    "module_short": "numpy",
    "name": "percentile"
+  }
+ ],
+ "np.where": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "_ArrayFunctionDispatcher"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "where"
   }
  ],
  "on_disk": [
@@ -1291,6 +1725,45 @@
    "name": "_ColorPalette"
   }
  ],
+ "pial": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "PolyMesh"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "PolyMesh"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "PolyMesh"
+  }
+ ],
+ "plot_surf_roi": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.plotting",
+   "module_short": "nilearn.plotting",
+   "name": "plot_surf_roi"
+  }
+ ],
  "plotting.plot_anat": [
   {
    "is_class": false,
@@ -1426,20 +1899,31 @@
    "name": "str"
   }
  ],
- "r2mean_path": [
+ "rh_mask": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "rh_mask.size": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "builtins",
    "module_short": "builtins",
-   "name": "function"
-  },
+   "name": "int"
+  }
+ ],
+ "rh_mask.sum": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "laion_fmri._paths",
-   "module_short": "laion_fmri._paths",
-   "name": "r2mean_path"
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
   }
  ],
  "roi": [
@@ -1469,6 +1953,38 @@
    "name": "builtin_function_or_method"
   }
  ],
+ "roi_gii": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "dict"
+  }
+ ],
+ "roi_img": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "SurfaceImage"
+  }
+ ],
  "roi_mask": [
   {
    "is_class": false,
@@ -1496,6 +2012,24 @@
    "name": "dict"
   }
  ],
+ "rsq_mask": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "rsq_mask.sum": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
  "session": [
   {
    "is_class": false,
@@ -1503,6 +2037,24 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "str"
+  }
+ ],
+ "shared": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "dict"
+  }
+ ],
+ "shared.items": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
   }
  ],
  "single": [
@@ -1521,6 +2073,66 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "builtin_function_or_method"
+  }
+ ],
+ "single_img": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL.JpegImagePlugin",
+   "module_short": "PIL.JpegImagePlugin",
+   "name": "JpegImageFile"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL",
+   "module_short": "PIL",
+   "name": "JpegImageFile"
+  }
+ ],
+ "single_img.size": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL.JpegImagePlugin",
+   "module_short": "PIL.JpegImagePlugin",
+   "name": "JpegImageFile.size"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL",
+   "module_short": "PIL",
+   "name": "JpegImageFile.size"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL.ImageFile",
+   "module_short": "PIL.ImageFile",
+   "name": "ImageFile.size"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL",
+   "module_short": "PIL",
+   "name": "ImageFile.size"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL.Image",
+   "module_short": "PIL.Image",
+   "name": "Image.size"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "PIL",
+   "module_short": "PIL",
+   "name": "Image.size"
   }
  ],
  "sm": [
@@ -1585,7 +2197,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject"
   },
   {
@@ -1601,7 +2213,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_available_categories"
   },
   {
@@ -1617,7 +2229,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_available_rois"
   },
   {
@@ -1633,7 +2245,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_betas"
   },
   {
@@ -1644,36 +2256,20 @@
    "name": "Subject.get_betas"
   }
  ],
- "sub.get_image": [
+ "sub.get_brain_mask": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
-   "name": "Subject.get_image"
+   "module_short": "laion_fmri",
+   "name": "Subject.get_brain_mask"
   },
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri",
    "module_short": "laion_fmri",
-   "name": "Subject.get_image"
-  }
- ],
- "sub.get_images": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
-   "name": "Subject.get_images"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri",
-   "module_short": "laion_fmri",
-   "name": "Subject.get_images"
+   "name": "Subject.get_brain_mask"
   }
  ],
  "sub.get_n_voxels": [
@@ -1681,7 +2277,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_n_voxels"
   },
   {
@@ -1697,7 +2293,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_noise_ceiling"
   },
   {
@@ -1706,6 +2302,22 @@
    "module": "laion_fmri",
    "module_short": "laion_fmri",
    "name": "Subject.get_noise_ceiling"
+  }
+ ],
+ "sub.get_roi_data": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_roi_data"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_roi_data"
   }
  ],
  "sub.get_roi_mask": [
@@ -1713,7 +2325,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_roi_mask"
   },
   {
@@ -1724,20 +2336,20 @@
    "name": "Subject.get_roi_mask"
   }
  ],
- "sub.get_stimulus_metadata": [
+ "sub.get_t1w": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
-   "name": "Subject.get_stimulus_metadata"
+   "module_short": "laion_fmri",
+   "name": "Subject.get_t1w"
   },
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri",
    "module_short": "laion_fmri",
-   "name": "Subject.get_stimulus_metadata"
+   "name": "Subject.get_t1w"
   }
  ],
  "sub.get_trial_info": [
@@ -1745,7 +2357,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_trial_info"
   },
   {
@@ -1761,7 +2373,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.get_voxel_coordinates"
   },
   {
@@ -1777,7 +2389,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.has_stimuli"
   },
   {
@@ -1788,12 +2400,44 @@
    "name": "Subject.has_stimuli"
   }
  ],
+ "sub.images.get": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.images"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.images"
+  }
+ ],
+ "sub.metadata": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.metadata"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.metadata"
+  }
+ ],
  "sub.to_nifti": [
   {
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.to_nifti"
   },
   {
@@ -1809,7 +2453,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.subject",
-   "module_short": "laion_fmri.subject",
+   "module_short": "laion_fmri",
    "name": "Subject.to_torch_dataset"
   },
   {
@@ -1820,6 +2464,15 @@
    "name": "Subject.to_torch_dataset"
   }
  ],
+ "sub_id": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  }
+ ],
  "subject_id": [
   {
    "is_class": false,
@@ -1827,6 +2480,54 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "str"
+  }
+ ],
+ "sulc": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn.surface",
+   "module_short": "nilearn.surface",
+   "name": "SurfaceImage"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "nilearn",
+   "module_short": "nilearn",
+   "name": "SurfaceImage"
+  }
+ ],
+ "surf_roi": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  }
+ ],
+ "teal_cmap": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib.colors",
+   "module_short": "matplotlib.colors",
+   "name": "ListedColormap"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "matplotlib",
+   "module_short": "matplotlib",
+   "name": "ListedColormap"
   }
  ],
  "trial_info": [
@@ -1950,6 +2651,15 @@
    "module": "pandas",
    "module_short": "pandas",
    "name": "DirNamesMixin.head"
+  }
+ ],
+ "trials": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "DataFrame"
   }
  ],
  "union": [

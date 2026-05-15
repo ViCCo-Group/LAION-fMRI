@@ -1,4 +1,20 @@
 {
+ "ACCESS_SERVICE_URL": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri._constants",
+   "module_short": "laion_fmri._constants",
+   "name": "ACCESS_SERVICE_URL"
+  }
+ ],
  "LICENSE_AGREEMENT_BODY": [
   {
    "is_class": false,
@@ -15,23 +31,7 @@
    "name": "LICENSE_AGREEMENT_BODY"
   }
  ],
- "STIMULI_LICENSE_BODY": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "builtins",
-   "module_short": "builtins",
-   "name": "str"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri._constants",
-   "module_short": "laion_fmri._constants",
-   "name": "STIMULI_LICENSE_BODY"
-  }
- ],
- "accept_licenses": [
+ "accept_license": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -44,7 +44,7 @@
    "is_explicit": false,
    "module": "laion_fmri.download",
    "module_short": "laion_fmri.download",
-   "name": "accept_licenses"
+   "name": "accept_license"
   }
  ],
  "data_dir": [
@@ -120,6 +120,24 @@
    "name": "get_subjects"
   }
  ],
+ "laion_fmri._stimulus_access.TermsOutdatedError": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri._stimulus_access",
+   "module_short": "laion_fmri._stimulus_access",
+   "name": "TermsOutdatedError"
+  }
+ ],
+ "laion_fmri._stimulus_access.current_terms_version": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri._stimulus_access",
+   "module_short": "laion_fmri._stimulus_access",
+   "name": "current_terms_version"
+  }
+ ],
  "laion_fmri.download.download": [
   {
    "is_class": false,
@@ -127,6 +145,22 @@
    "module": "laion_fmri.download",
    "module_short": "laion_fmri.download",
    "name": "download"
+  }
+ ],
+ "laion_fmri.download.request_stimulus_access": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri",
+   "name": "request_stimulus_access"
+  },
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri",
+   "name": "request_stimulus_access"
   }
  ],
  "os.environ.get": [

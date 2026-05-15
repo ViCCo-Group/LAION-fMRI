@@ -16,6 +16,8 @@ Download
        suffix=None,              # str | list, e.g. "statmap"
        extension=None,           # str | list, e.g. "nii.gz"
        include_stimuli=False,    # also pull the stimuli
+       include_freesurfer=False, # also pull derivatives/freesurfer/
+       include_anatomical=False, # also pull derivatives/anatomical/
        n_jobs=1,                 # parallel `aws s3 cp` workers
    )
 
@@ -33,6 +35,17 @@ Arguments
   single HDF5 covering all subjects), so this just calls
   :func:`download_stimuli` after the per-subject fetch. See
   :doc:`access`.
+* ``include_freesurfer=True`` pulls the per-subject FreeSurfer
+  recon under ``derivatives/freesurfer/{subject}/`` (a few
+  hundred MB per subject). Required by ``Subject.to_template``;
+  see :doc:`template_space`.
+* ``include_anatomical=True`` pulls the per-subject anatomical
+  derivatives under ``derivatives/anatomical/{subject}/
+  ses-PrismaAnat/anat/`` (T1w, T2w, brain mask at two
+  resolutions; tens of MB per subject). Unlocks
+  ``Subject.get_t1w`` / ``get_t2w`` /
+  ``get_anatomical_brain_mask`` and the ``source="anatomical"``
+  brain mask on the voxel-axis accessors; see :doc:`load`.
 
 Filter semantics
 ================
