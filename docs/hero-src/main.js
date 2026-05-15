@@ -239,8 +239,6 @@ function buildHeroDom(opts) {
   return {
     canvas: root.querySelector(".lf-hero__canvas"),
     canvasWrap: root.querySelector(".lf-hero__canvas-wrap"),
-    text: root.querySelector(".lf-hero__text"),
-    logo: root.querySelector(".lf-hero__logo"),
     scrollBtn: root.querySelector(".lf-hero__scroll-hint"),
   };
 }
@@ -400,6 +398,7 @@ function getStackedLayout() {
   return {
     aspect,
     isStacked: window.innerWidth <= 820 || aspect < 1,
+    isShortPhone: window.innerWidth <= 480 && window.innerHeight <= 760,
     isTabletPortrait: window.innerWidth >= 600,
   };
 }
@@ -444,7 +443,7 @@ export async function init(options = {}) {
     document.body.insertBefore(root, document.body.firstElementChild);
   }
 
-  const { canvas, canvasWrap, text, logo, scrollBtn } = buildHeroDom({ root, ...cfg });
+  const { canvas, canvasWrap, scrollBtn } = buildHeroDom({ root, ...cfg });
 
   scrollBtn.addEventListener("click", () => {
     window.scrollTo({
@@ -494,58 +493,18 @@ export async function init(options = {}) {
 
   let width = 1;
   let height = 1;
-  const mobileBand = {
-    isStacked: false,
-    isTabletPortrait: false,
-    aspect: 1,
-    brainHeight: 1,
-  };
 
-  function layoutMobileBrainBand() {
+  function syncLayoutMode() {
     const layout = getStackedLayout();
-    mobileBand.isStacked = layout.isStacked;
-    mobileBand.isTabletPortrait = layout.isTabletPortrait;
-    mobileBand.aspect = layout.aspect;
-
     if (!layout.isStacked) {
       root.style.removeProperty("--lf-hero-brain-top");
       root.style.removeProperty("--lf-hero-brain-height");
-      return mobileBand;
     }
-
-    const heroRect = root.getBoundingClientRect();
-    const logoRect = logo.getBoundingClientRect();
-    const textRect = text.getBoundingClientRect();
-    const vh = Math.max(1, window.innerHeight);
-    const logoTop = logoRect.top - heroRect.top;
-    const textTop = textRect.top - heroRect.top;
-    const anchorY = Number.isFinite(logoTop) && logoTop > 0 ? logoTop : textTop;
-    const gap = clampNumber(vh * 0.055, 42, layout.isTabletPortrait ? 72 : 56);
-    const bottom = Math.max(0, anchorY - gap);
-    const topLimit = clampNumber(vh * 0.075, 42, layout.isTabletPortrait ? 96 : 66);
-    const targetHeight = clampNumber(
-      vh * (layout.isTabletPortrait ? 0.39 : 0.36),
-      layout.isTabletPortrait ? 260 : 210,
-      layout.isTabletPortrait ? 460 : 330,
-    );
-    const available = Math.max(0, bottom - topLimit);
-    const minVisible = layout.isTabletPortrait ? 190 : 140;
-
-    let brainHeight = Math.min(targetHeight, available);
-    if (available >= minVisible) {
-      brainHeight = Math.max(brainHeight, minVisible);
-    }
-    brainHeight = Math.max(1, brainHeight);
-    const top = Math.max(topLimit, bottom - brainHeight);
-
-    root.style.setProperty("--lf-hero-brain-top", `${Math.round(top)}px`);
-    root.style.setProperty("--lf-hero-brain-height", `${Math.round(brainHeight)}px`);
-    mobileBand.brainHeight = brainHeight;
-    return mobileBand;
+    return layout;
   }
 
   function resize() {
-    const layout = layoutMobileBrainBand();
+    const layout = syncLayoutMode();
     const rect = canvasWrap.getBoundingClientRect();
     width = Math.max(1, Math.floor(rect.width));
     height = Math.max(1, Math.floor(rect.height));
@@ -560,19 +519,14 @@ export async function init(options = {}) {
     // can absorb.
     const aspect = layout.aspect;
     if (layout.isStacked) {
-      const scaleFactor = clampNumber(
-        layout.brainHeight / (layout.isTabletPortrait ? 360 : 260),
-        0.84,
-        1.12,
-      );
       setup.group.position.x = 0;
-      setup.group.position.y = layout.isTabletPortrait ? 0.02 : 0.01;
+      setup.group.position.y = 0.01;
       if (layout.isTabletPortrait) {
-        setup.group.scale.setScalar(0.98 * scaleFactor);
-        camera.position.z = 2.24;
+        setup.group.scale.setScalar(0.92);
+        camera.position.z = 2.16;
       } else {
-        setup.group.scale.setScalar(0.70 * scaleFactor);
-        camera.position.z = aspect < 0.68 ? 2.54 : 2.42;
+        setup.group.scale.setScalar(0.88);
+        camera.position.z = 2.16;
       }
     } else {
       const shiftX = Math.max(0.35, Math.min(0.70, 0.40 + (aspect - 1.33) * 0.55));
