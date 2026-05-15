@@ -40,7 +40,7 @@
        </p>
        <p style="text-align:center;">
          A deeply-sampled 7T fMRI dataset of human vision.
-         <a href="quickstart.html">Get started</a>
+         <a href="#home-docs">Get started</a>
        </p>
      </noscript>
    </div>
@@ -52,12 +52,14 @@
          logoSrc: "_static/laion_fmri_logo_mosaic.png",
          title: "A deeply-sampled fMRI dataset of <em>human vision</em>",
          lede: "Five participants. 25,052 launch-release images. 165 acquired 7T BOLD sessions with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.",
-         primaryHref: "quickstart.html",
+         primaryHref: "#home-docs",
          primaryLabel: "Get started",
          meta: ["5 subjects", "25K+ stimuli", "7T multi-echo", "Open access"]
        });
      });
    </script>
+
+.. _home-docs:
 
 **LAION-fMRI** is a deeply-sampled 7T fMRI dataset of brain responses to visual
 images, built to uncover how the human brain sees and understands the world.
