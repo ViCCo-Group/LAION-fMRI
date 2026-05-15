@@ -225,11 +225,11 @@ The following borders are defined via anatomical landmarks and retinotopy.
 
 This yields three broad visual sectors:
 
-- **laion-dorsal** — cortex dorsal to the LO–V3A/B boundary, covering dorsal
+- **laion-dorsal** - cortex dorsal to the LO–V3A/B boundary, covering dorsal
   occipital and parietal regions.
-- **laion-lateral** — cortex between the MTG boundary (dorsal) and the IOG–ITG
+- **laion-lateral** - cortex between the MTG boundary (dorsal) and the IOG–ITG
   boundary (ventral), covering lateral occipitotemporal cortex.
-- **laion-ventral** — cortex ventral to the IOG–ITG boundary, covering the
+- **laion-ventral** - cortex ventral to the IOG–ITG boundary, covering the
   ventral occipitotemporal surface.
 
 Available Spaces
@@ -237,9 +237,9 @@ Available Spaces
 
 Per-subject ROIs are released in two spaces:
 
-- **``fsnative``** — surface masks on each subject's FreeSurfer surface, as
+- **``fsnative``** - surface masks on each subject's FreeSurfer surface, as
   ``.func.gii`` (one value per vertex) and ``.label`` files, per hemisphere.
-- **``T1w`` (1.8 mm)** — volumetric masks resampled to the subject's T1w grid
+- **``T1w`` (1.8 mm)** - volumetric masks resampled to the subject's T1w grid
   at the functional resolution, as ``.nii.gz``.
 
 Both spaces cover the same ROI sets. Surface masks are the canonical
@@ -258,7 +258,7 @@ convenience in volume-based analyses.
    .. code-block:: text
 
        derivatives/rois/
-       └── ... (placeholder — fill with actual file listing)
+       └── ... (placeholder - fill with actual file listing)
 
    Loading ROIs
    ============

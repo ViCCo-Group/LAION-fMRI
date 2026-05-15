@@ -1,4 +1,4 @@
-/* LAION-fMRI Documentation — re:vision theme overrides for Furo */
+/* LAION-fMRI Documentation - re:vision theme overrides for Furo */
 
 /* Google Fonts: Outfit (body), Fira Code (mono) */
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -13,7 +13,7 @@ body {
 
 /* ---- Color tokens per mode ---- */
 
-/* Light mode tokens — default, plus explicit light. Furo treats anything
+/* Light mode tokens - default, plus explicit light. Furo treats anything
  * that isn't ``data-theme="light"`` as eligible for dark mode under
  * ``prefers-color-scheme: dark``, so our selectors must mirror that or
  * the ``auto`` theme renders Furo dark with our light card surfaces. */
@@ -41,7 +41,7 @@ body[data-theme="light"] {
     --rv-noise-opacity: 0;
 }
 
-/* Dark mode tokens — explicit dark always, plus auto + system-dark. */
+/* Dark mode tokens - explicit dark always, plus auto + system-dark. */
 body[data-theme="dark"] {
     --rv-bg: #0a0e1a;
     --rv-surface: #111729;
@@ -440,8 +440,8 @@ button.copybtn:hover {
  *
  * Each card's RST renders both a ``:doc:`` link (text) and a
  * ``<div class="sphx-glr-thumbnail-title">`` (visible title).
- * The link is meant to be invisible -- it just makes the whole
- * card clickable -- but Furo styles it as a regular paragraph
+ * The link is meant to be invisible - it just makes the whole
+ * card clickable - but Furo styles it as a regular paragraph
  * link, so without overrides the title appears twice. These
  * rules collapse the link to a transparent overlay.
  */

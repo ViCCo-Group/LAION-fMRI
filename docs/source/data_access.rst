@@ -65,7 +65,7 @@ Common operations:
    # all subjects (whole-dataset mirror)
    download(subject="all")
 
-   # stimuli — dataset-wide, subject-independent, requires accepting the DUA
+   # stimuli - dataset-wide, subject-independent, requires accepting the DUA
    download_stimuli()
 
    # both at once

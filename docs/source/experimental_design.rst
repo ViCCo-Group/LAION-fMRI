@@ -340,7 +340,7 @@ responses given during the recognition task, including the response
       ``events.tsv`` table here did not match what is on the bucket;
       the GLMsingle derivatives currently ship
       ``..._desc-SingletrialBetas_trials.tsv`` with
-      ``session``, ``run``, ``beta_index``, ``label`` only — confirm
+      ``session``, ``run``, ``beta_index``, ``label`` only - confirm
       whether a richer raw-BIDS ``events.tsv`` is also part of the
       release.
 

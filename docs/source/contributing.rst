@@ -11,10 +11,10 @@ We welcome contributions to the LAION-fMRI documentation and tooling.
 Ways to Contribute
 ==================
 
-- **Improve documentation** — fix typos, add examples, clarify explanations
-- **Report issues** — found something unclear or incorrect? Open a
+- **Improve documentation** - fix typos, add examples, clarify explanations
+- **Report issues** - found something unclear or incorrect? Open a
   `GitHub issue <https://github.com/ViCCo-Group/LAION-fMRI/issues>`_
-- **Share analysis examples** — scripts, notebooks, or visualizations that
+- **Share analysis examples** - scripts, notebooks, or visualizations that
   might help other researchers
 
 Setting Up

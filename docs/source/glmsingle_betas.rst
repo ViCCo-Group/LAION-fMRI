@@ -48,7 +48,7 @@ available at https://github.com/cvnlab/GLMsingle.
    * - Available spaces
      - T1w native (volumetric), 1.778 mm isotropic
    * - Beta versions provided
-     - TYPED (b4) only (``FITHRF_GLMDENOISE_RR`` — full GLMsingle pipeline
+     - TYPED (b4) only (``FITHRF_GLMDENOISE_RR`` - full GLMsingle pipeline
        with HRF fitting, GLMdenoise, and fractional ridge)
    * - Noise ceilings
      - per-voxel, both per-session and cross-session maps

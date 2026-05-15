@@ -190,7 +190,7 @@ However, this limitation applies equally to all six variants.
       * - Output resolution
         - (placeholder)
       * - Slice timing correction
-        - (placeholder — applied or not?)
+        - (placeholder - applied or not?)
       * - SDC method
         - (placeholder)
       * - High-pass filter
@@ -207,5 +207,5 @@ including confound regressors.
 Quality Control
 ===============
 
-For quality control details — MRIQC metrics, motion thresholds, exclusion
-criteria, and known issues — see :doc:`quality_control`.
+For quality control details - MRIQC metrics, motion thresholds, exclusion
+criteria, and known issues - see :doc:`quality_control`.

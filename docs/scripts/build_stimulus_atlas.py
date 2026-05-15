@@ -3,7 +3,7 @@
 
 The hero shows the brain mesh as ~2000 image sprites, each sampling one
 tile from this atlas. Tiles are square center-crops of the natural-image
-stimuli that subjects viewed in the scanner — the brain is literally
+stimuli that subjects viewed in the scanner - the brain is literally
 made of what it saw.
 
 Run once and commit the output PNG. Re-run only when the stimulus set

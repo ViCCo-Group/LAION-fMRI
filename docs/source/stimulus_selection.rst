@@ -75,6 +75,11 @@ selected prototype using approximate nearest-neighbour search. These
 candidate pools made it possible to replace rejected images while
 preserving the same broad feature-space coverage.
 
+Images assigned to the shared set were the feature-space slots chosen
+for repeated measurement in every participant; the remaining accepted
+prototype-centred pools supplied the unique set by contributing one
+quality-approved, non-overlapping candidate image per participant.
+
 NSD and THINGSplus images were integrated by assigning them to nearby
 LAION feature-space slots. When an NSD or THINGSplus image filled a
 slot, it replaced the corresponding LAION shared image so that the

@@ -3,7 +3,7 @@ FAQ
 ===
 
 Frequently asked questions about the LAION-fMRI dataset. Answers stay
-short on purpose — they point you to the doc page that goes deeper.
+short on purpose - they point you to the doc page that goes deeper.
 
 General
 =======
@@ -29,7 +29,7 @@ General
 .. dropdown:: What license is the data released under?
 
    The fMRI data, derivatives, anatomical scans, and metadata are released
-   under **CC0 1.0** — you can use them for any purpose, including
+   under **CC0 1.0** - you can use them for any purpose, including
    commercial, without permission. The **stimulus images** are an
    exception: they come from third-party web sources and are gated by a
    short Data Use Agreement that forbids redistribution, commercial use,
@@ -52,7 +52,7 @@ Data Access
    and run ``mkdir -p <path>`` followed by
    ``laion-fmri config --data-dir <path>`` once, then
    ``laion-fmri download --subject sub-01`` to pull one participant. The
-   data lives in an AWS Open Data S3 bucket and downloads anonymously —
+   data lives in an AWS Open Data S3 bucket and downloads anonymously -
    no AWS credentials required. See :doc:`quickstart` for a five-minute
    walkthrough, or :doc:`data_access` for every download path (Python,
    CLI, raw AWS CLI, web form).
@@ -69,7 +69,7 @@ Data Access
 .. dropdown:: Can I download only the parts I need?
 
    Yes. Both the Python ``download(...)`` function and the
-   ``laion-fmri download`` CLI accept BIDS-entity filters — narrow by
+   ``laion-fmri download`` CLI accept BIDS-entity filters - narrow by
    subject, session, task, space, desc, stat, suffix, and extension. So
    you can grab a single session, only the noise-ceiling maps, only the
    ROI masks, etc. See :doc:`data_access` and
@@ -96,12 +96,12 @@ Working with the Data
 
 .. dropdown:: Which GLMsingle beta version should I use?
 
-   Only the TYPED stage is shipped (``FITHRF_GLMDENOISE_RR`` — the full
+   Only the TYPED stage is shipped (``FITHRF_GLMDENOISE_RR`` - the full
    pipeline with HRF fitting, GLMdenoise, and fractional ridge), so the
    choice is made for you. Keep in mind that the ridge step shrinks
    magnitudes toward zero, so betas are reliable in a relative sense
    (good for encoding, decoding, RSA, contrasts) but should not be read
-   as raw percent signal change — z-score within session before
+   as raw percent signal change - z-score within session before
    averaging when you need cross-voxel comparability. Details:
    :doc:`glmsingle_betas`.
 
@@ -147,7 +147,7 @@ Working with the Data
 
 .. dropdown:: Are there shared stimuli across subjects?
 
-   Yes — 1,492 images were shown to every subject. Of those, 881 are
+   Yes - 1,492 images were shown to every subject. Of those, 881 are
    the 12-repeat set used for cross-subject noise-ceiling estimation,
    and 611 are a 4-repeat shared set. The remaining ~4,712 images per
    subject are subject-unique. The exact counts and how the repeats are
@@ -180,7 +180,7 @@ Acquisition & Preprocessing
 
 .. dropdown:: Is the raw (unprocessed) data available?
 
-   Yes — raw BOLD, anatomical, fieldmap, and event files ship in
+   Yes - raw BOLD, anatomical, fieldmap, and event files ship in
    standard BIDS layout alongside the derivatives, so you can rerun your
    own preprocessing if you prefer. Details: :doc:`fmri_data`.
 
@@ -222,7 +222,7 @@ Troubleshooting
 
 .. dropdown:: The download is slow or keeps failing
 
-   The package downloader is idempotent — re-running ``download(...)``
+   The package downloader is idempotent - re-running ``download(...)``
    only fetches files whose local size doesn't match S3, so interrupted
    transfers just resume. For faster pulls, pass ``n_jobs=4`` (or more)
    to run several AWS CLI copy workers in parallel. If a single file

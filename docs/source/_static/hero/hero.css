@@ -1,4 +1,4 @@
-/* LAION-fMRI homepage hero — full-viewport landing.
+/* LAION-fMRI homepage hero - full-viewport landing.
  *
  * The element is lifted out of the Sphinx article column at runtime and
  * inserted as document.body's first child. CSS here assumes that final
@@ -153,7 +153,7 @@
     vertical-align: middle;
 }
 
-/* Canvas spans the full hero — the brain is shifted right in world space.
+/* Canvas spans the full hero - the brain is shifted right in world space.
  * A left-side gradient overlay fades it behind the text column so there's
  * no hard seam between the two. */
 .lf-hero__canvas-wrap {

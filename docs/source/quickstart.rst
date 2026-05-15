@@ -32,7 +32,7 @@ needed.
 
    laion-fmri download --subject sub-01
 
-Re-running is safe — the downloader is idempotent and only fetches
+Re-running is safe - the downloader is idempotent and only fetches
 files whose local size doesn't match the bucket. Pass ``--n-jobs 4``
 for faster parallel transfers, or ``--ses ses-01`` to narrow to a
 single session.
@@ -59,8 +59,8 @@ metadata. Restrict by ROI in the same call:
    betas_face = sub.get_betas(session="ses-01", roi="face")  # union of face ROIs
    betas_lo = sub.get_betas(session="ses-01", roi="all", nc_threshold=0.2)
 
-The full accessor grammar — categories, mask combinations, surface
-ROIs, streaming mode for memory-tight machines — is in
+The full accessor grammar - categories, mask combinations, surface
+ROIs, streaming mode for memory-tight machines - is in
 :doc:`laion_fmri_package/load`.
 
 Get the stimulus images
@@ -100,10 +100,10 @@ public and do not need the DUA:
 Next Steps
 ==========
 
-* :doc:`dataset_at_a_glance` — full dataset overview and "what files do I need"
-* :doc:`glmsingle_betas` — details on the beta estimates and noise ceilings
-* :doc:`stimulus_data` — stimulus set, image metadata, and image access
-* :doc:`stimulus_derivatives` — embeddings, captions, and segmentations
-* :doc:`train_test_splits` — predefined train/test partitions
-* :doc:`laion_fmri_package/load` — full ``Subject`` API reference
-* :doc:`faq` — common questions
+* :doc:`dataset_at_a_glance` - full dataset overview and "what files do I need"
+* :doc:`glmsingle_betas` - details on the beta estimates and noise ceilings
+* :doc:`stimulus_data` - stimulus set, image metadata, and image access
+* :doc:`stimulus_derivatives` - embeddings, captions, and segmentations
+* :doc:`train_test_splits` - predefined train/test partitions
+* :doc:`laion_fmri_package/load` - full ``Subject`` API reference
+* :doc:`faq` - common questions

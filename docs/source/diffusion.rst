@@ -47,4 +47,4 @@ Diffusion Data
 
        derivatives/diffusion/
        └── sub-XX/
-           └── ... (placeholder — fill with actual file listing)
+           └── ... (placeholder - fill with actual file listing)

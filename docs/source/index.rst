@@ -1,4 +1,4 @@
-:og:title: LAION-fMRI — a 7T fMRI dataset of human vision
+:og:title: LAION-fMRI - a 7T fMRI dataset of human vision
 :og:description: LAION-fMRI (LfMRI / LAION MRI dataset): 5 subjects, 25,052 launch-release natural images, 165 acquired 7T fMRI sessions with single-trial GLMsingle betas, retinotopy, localizers, and diffusion.
 
 .. meta::

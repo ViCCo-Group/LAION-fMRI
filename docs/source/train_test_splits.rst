@@ -7,21 +7,21 @@ encoding-model and representation-similarity analyses can
 report comparable generalization scores. The splits implement all
 three methods of the `re:vision initiative <https://re-vision-initiative.org/generalization/>`_:
 
-* **Method 1 — Independent within-distribution.** An 80/20 split
+* **Method 1 - Independent within-distribution.** An 80/20 split
   that covers the image distribution as fully as possible while
   penalising train/test pairs that are too close in feature
   space. Use the ``tau`` split.
-* **Method 2 — Out-of-distribution clusters.** Five-fold
+* **Method 2 - Out-of-distribution clusters.** Five-fold
   CLIP-feature cluster holdout. Use the ``cluster_k5_0`` …
   ``cluster_k5_4`` splits and average results across folds.
-* **Method 3 — Out-of-distribution images.** Train on the pool's
+* **Method 3 - Out-of-distribution images.** Train on the pool's
   regular images, test on the 371 held-out OOD stimuli. Use the
   ``ood`` split. Optionally restrict the test set to specific
   OOD categories with the ``ood_types=`` keyword on
   :func:`~laion_fmri.splits.get_train_test_ids` /
   :func:`~laion_fmri.splits.get_split_masks`.
 * **Random** baselines (``random_0`` … ``random_4``) are also
-  bundled — comparing them against ``tau`` quantifies how much
+  bundled - comparing them against ``tau`` quantifies how much
   of a model's score depends on train/test similarity.
 
 .. figure:: _static/splits_summary_panel.png
@@ -50,11 +50,11 @@ Every split is bundled for **six pools**. Pick the pool whose stimulus
 subset matches your analysis; use
 :func:`~laion_fmri.splits.list_pools` to inspect the available pools.
 
-* ``"shared"`` — the **1,121 cross-subject shared images** (non-OOD
+* ``"shared"`` - the **1,121 cross-subject shared images** (non-OOD
   subset of the shared block). Use this when the original study
   used only stimuli that every subject saw.
 * ``"sub-01"``, ``"sub-03"``, ``"sub-05"``, ``"sub-06"``, ``"sub-07"``
-  — the per-subject pools (1,121 shared + 4,712 subject-unique
+  - the per-subject pools (1,121 shared + 4,712 subject-unique
   images = **5,833 images each**). Use a subject's pool when the
   original analysis was per-subject and used that subject's full
   stimulus set.
@@ -62,7 +62,7 @@ subset matches your analysis; use
 Split names
 ===========
 
-Twelve names exist in every pool — see
+Twelve names exist in every pool - see
 :func:`~laion_fmri.splits.list_splits`.
 
 .. list-table::
@@ -98,7 +98,7 @@ Twelve names exist in every pool — see
 
 Split sizes:
 
-* ``random_*`` and ``tau`` are fixed at 80/20 of the pool — that's
+* ``random_*`` and ``tau`` are fixed at 80/20 of the pool - that's
   897 / 224 for the shared pool and 4666 / 1167 per subject.
 * ``cluster_k5_*`` test sizes vary with cluster population; train
   + test always equals the pool size.
@@ -154,7 +154,7 @@ collapses those last three lines:
    train_mask, test_mask = get_split_masks(trials, "tau", pool="shared")
    X_train, X_test = betas[train_mask], betas[test_mask]
 
-Method 2 — five-fold cluster average
+Method 2 - five-fold cluster average
 ====================================
 
 .. code-block:: python
@@ -173,7 +173,7 @@ Method 2 — five-fold cluster average
 
 .. _splits-ood-section:
 
-Method 3 — OOD images
+Method 3 - OOD images
 =====================
 
 The ``ood`` split holds out **371 OOD stimuli** as a test set, with
@@ -213,7 +213,7 @@ type                      n  what's in it
 Pass ``ood_types=`` to
 :func:`~laion_fmri.splits.get_train_test_ids` or
 :func:`~laion_fmri.splits.get_split_masks` to restrict the test
-set to specific categories — useful when only some OOD types
+set to specific categories - useful when only some OOD types
 make sense for the original study (e.g. an object-recognition
 finding probably shouldn't be evaluated on Gabor patches):
 
@@ -234,8 +234,8 @@ finding probably shouldn't be evaluated on Gabor patches):
 Inspection
 ==========
 
-For the full :class:`~laion_fmri.splits.Split` object — including
-``splitter`` / ``params`` / variant metadata — use
+For the full :class:`~laion_fmri.splits.Split` object - including
+``splitter`` / ``params`` / variant metadata - use
 :func:`~laion_fmri.splits.load_split`:
 
 .. code-block:: python
@@ -254,7 +254,7 @@ For the full :class:`~laion_fmri.splits.Split` object — including
 See also
 ========
 
-* :doc:`stimulus_data` — how stimulus filenames map to dataset labels.
-* :doc:`glmsingle_betas` — per-trial beta estimates the splits slice into.
-* :doc:`laion_fmri_package/load` — the
+* :doc:`stimulus_data` - how stimulus filenames map to dataset labels.
+* :doc:`glmsingle_betas` - per-trial beta estimates the splits slice into.
+* :doc:`laion_fmri_package/load` - the
   :class:`~laion_fmri.subject.Subject` accessors used above.

@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../.."))
 
 
-# -- Sphinx-gallery is opt-in -------------------------------------------
+# - Sphinx-gallery is opt-in -------------------------------------------
 #
 # Executing the example scripts on every build is brittle: it
 # downloads ~GB of data, depends on AWS reachability, and can OOM
@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 _BUILD_EXAMPLES = bool(os.environ.get("LAION_FMRI_BUILD_EXAMPLES"))
 
 
-# -- General configuration ------------------------------------------------
+# - General configuration ------------------------------------------------
 #
 # sphinx-gallery is loaded unconditionally so the ``image-sg``
 # directive in committed gallery RST is always recognized when CI
@@ -91,7 +91,7 @@ sphinx_gallery_conf = {
     "within_subsection_order": FileNameSortKey,
     # Branded fallback for examples that don't render figures
     # (plot_02 prints license text, plot_03 prints discovery
-    # output) -- avoids sphinx-gallery's stock pinwheel.
+    # output) - avoids sphinx-gallery's stock pinwheel.
     "default_thumb_file": os.path.join(
         os.path.dirname(__file__),
         "_static",
@@ -135,7 +135,7 @@ if not tags.has("dev"):
     tags.add("live")
 
 
-# -- Options for HTML output ----------------------------------------------
+# - Options for HTML output ----------------------------------------------
 
 html_theme = "furo"
 
@@ -187,7 +187,7 @@ html_theme_options = {
         "font-stack--headings": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
     },
     "light_css_variables": {
-        # Light mode — clean white with re:vision accent colors
+        # Light mode - clean white with re:vision accent colors
         "color-brand-primary": "#0090b0",
         "color-brand-content": "#0090b0",
         "color-background-primary": "#ffffff",
@@ -236,7 +236,7 @@ html_theme_options = {
     "source_branch": "main",
     "source_directory": "docs/source/",
     "navigation_with_keys": True,
-    # Funding acknowledgements — rendered in the bottom-of-page right slot
+    # Funding acknowledgements - rendered in the bottom-of-page right slot
     # so they sit inline with the copyright line. The empty ``html`` is
     # intentional: each link is given a background-image via custom.css
     # (using a class), so paths stay relative to the CSS file and resolve
@@ -298,11 +298,11 @@ def _inject_extra_icons(app, pagename, templatename, context, doctree):
 def setup(app):
     app.connect("html-page-context", _inject_extra_icons)
 
-# Anything under html_extra_path is copied verbatim to the build root —
+# Anything under html_extra_path is copied verbatim to the build root -
 # we use it to ship robots.txt so search engines can discover sitemap.xml.
 html_extra_path = ["_extra"]
 
-# -- SEO ------------------------------------------------------------------
+# - SEO ------------------------------------------------------------------
 #
 # Canonical site root. Trailing slash is required by sphinx-sitemap, and
 # Sphinx's githubpages extension reuses it to emit per-page canonical
@@ -333,7 +333,7 @@ html_meta = {
 ogp_site_url = html_baseurl
 ogp_site_name = "LAION-fMRI"
 ogp_image = f"{html_baseurl}_static/og-image.png"
-ogp_image_alt = "LAION-fMRI — a 7T fMRI dataset of human vision"
+ogp_image_alt = "LAION-fMRI - a 7T fMRI dataset of human vision"
 ogp_description_length = 300
 ogp_type = "website"
 ogp_enable_meta_description = True
@@ -344,7 +344,7 @@ ogp_social_cards = {
     "enable": False,
 }
 
-# -- Other output formats -------------------------------------------------
+# - Other output formats -------------------------------------------------
 
 latex_elements = {}
 latex_documents = [

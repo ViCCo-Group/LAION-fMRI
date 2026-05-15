@@ -43,7 +43,7 @@ retinotopy (:doc:`retinotopy`) and functional localizers
    .. code-block:: text
 
        LAION-fMRI/
-       └── ... (placeholder — fill with actual directory tree)
+       └── ... (placeholder - fill with actual directory tree)
 
    Available Spaces
    ================
@@ -101,16 +101,16 @@ This is the most common use case (e.g. Algonauts challenge participants).
    * - What you need
      - Details
    * - Single-trial beta estimates
-     - ``derivatives/glmsingle-tedana/sub-XX/`` — see :doc:`glmsingle_betas`
+     - ``derivatives/glmsingle-tedana/sub-XX/`` - see :doc:`glmsingle_betas`
    * - Stimulus images & metadata
-     - ``stimuli/`` — see :doc:`stimulus_data`
+     - ``stimuli/`` - see :doc:`stimulus_data`
    * - Stimulus derivatives
-     - Embeddings, captions, and object segmentations — see
+     - Embeddings, captions, and object segmentations - see
        :doc:`stimulus_derivatives`
    * - Train / test splits
-     - Predefined splits for model evaluation — see :doc:`train_test_splits`
+     - Predefined splits for model evaluation - see :doc:`train_test_splits`
    * - ROI masks *(optional)*
-     - ``derivatives/rois/`` — see :doc:`rois`
+     - ``derivatives/rois/`` - see :doc:`rois`
 
 RSA / pattern similarity analyses
 ---------------------------------
@@ -122,12 +122,12 @@ RSA / pattern similarity analyses
    * - What you need
      - Details
    * - Single-trial betas
-     - ``derivatives/glmsingle-tedana/sub-XX/`` — see :doc:`glmsingle_betas`
+     - ``derivatives/glmsingle-tedana/sub-XX/`` - see :doc:`glmsingle_betas`
    * - Stimulus metadata & categories
-     - ``stimuli/task-images_metadata.csv`` — see
+     - ``stimuli/task-images_metadata.csv`` - see
        :doc:`stimulus_data`
    * - ROI masks
-     - ``derivatives/rois/`` — see :doc:`rois`
+     - ``derivatives/rois/`` - see :doc:`rois`
 
 Retinotopic or localizer analyses
 ---------------------------------
@@ -139,11 +139,11 @@ Retinotopic or localizer analyses
    * - What you need
      - Details
    * - Retinotopic maps
-     - ``derivatives/retinotopy/`` — see :doc:`retinotopy`
+     - ``derivatives/retinotopy/`` - see :doc:`retinotopy`
    * - Functional localizer contrasts
-     - ``derivatives/localizers/`` — see :doc:`localizers`
+     - ``derivatives/localizers/`` - see :doc:`localizers`
    * - ROI masks
-     - ``derivatives/rois/`` — see :doc:`rois`
+     - ``derivatives/rois/`` - see :doc:`rois`
 
 Preprocessing from scratch
 --------------------------
@@ -158,13 +158,13 @@ provided NORDIC/tedana outputs.
    * - What you need
      - Details
    * - Raw BOLD data
-     - ``sub-XX/func/`` — see :doc:`fmri_data`
+     - ``sub-XX/func/`` - see :doc:`fmri_data`
    * - T1w anatomical scans
-     - ``sub-XX/anat/`` — see :doc:`anatomical_data`
+     - ``sub-XX/anat/`` - see :doc:`anatomical_data`
    * - Event timing files
-     - ``sub-XX/func/*_events.tsv`` — see :doc:`experimental_design`
+     - ``sub-XX/func/*_events.tsv`` - see :doc:`experimental_design`
    * - Diffusion data *(if needed)*
-     - ``sub-XX/dwi/`` — see :doc:`diffusion`
+     - ``sub-XX/dwi/`` - see :doc:`diffusion`
 
 .. tip::
 
@@ -197,5 +197,5 @@ Data Formats
        :func:`laion_fmri.load_stimuli`.
    * - Stimulus metadata
      - CSV
-     - ``stimuli/task-images_metadata.csv`` — see
+     - ``stimuli/task-images_metadata.csv`` - see
        :doc:`stimulus_data`

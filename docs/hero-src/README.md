@@ -1,4 +1,4 @@
-# Homepage hero — source
+# Homepage hero - source
 
 Self-contained Three.js bundle for the LAION-fMRI docs landing page. Source
 lives here; the built artifact is committed under

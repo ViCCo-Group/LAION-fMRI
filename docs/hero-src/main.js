@@ -93,7 +93,7 @@ const FRAGMENT_SHADER = `
     vec4 c = texture2D(uAtlas, atlasUv);
 
     // Depth fade: front sprites bright + warm, back sprites slightly dimmed
-    // but never crushed — wireframe carries depth perception now.
+    // but never crushed - wireframe carries depth perception now.
     float depthT = clamp((vDepth - uNear) / (uFar - uNear), 0.0, 1.0);
     float dim = mix(1.25, 0.78, depthT);
     vec3 tint = mix(uTintWarm, uTintCool, depthT);
@@ -105,7 +105,7 @@ const FRAGMENT_SHADER = `
     col3 = mix(col3, min(col3 * 1.18 + 0.04, vec3(1.0)), vPop);
 
     // Soft circular vignette inside each tile so they feel like glyphs not
-    // hard squares — keeps the brain shape visible at sprite boundaries.
+    // hard squares - keeps the brain shape visible at sprite boundaries.
     vec2 d = vUv - 0.5;
     float r = dot(d, d);
     float edge = 1.0 - smoothstep(0.18, 0.245, r);
@@ -484,7 +484,7 @@ export async function init(options = {}) {
   scene.add(setup.group);
 
   // The brain coords come in with the back of the head along +z. Rotate so
-  // the lateral profile faces the camera initially — more recognizable.
+  // the lateral profile faces the camera initially - more recognizable.
   setup.group.rotation.y = -Math.PI * 0.35;
 
   const reduceMotion =
@@ -511,7 +511,7 @@ export async function init(options = {}) {
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
 
-    // Stack triggers in CSS (max-width 820px OR portrait orientation) —
+    // Stack triggers in CSS (max-width 820px OR portrait orientation) -
     // mirror that here so the brain sits centered above the text on
     // phones AND iPad portrait. In landscape, shift the brain to the
     // right; the shift scales with aspect so iPad landscape (1.33)

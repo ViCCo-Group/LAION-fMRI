@@ -4,9 +4,9 @@ Stimulus Set
 
 The launch-release LAION-fMRI stimulus set is a deduplicated collection of
 25,052 distinct natural images shown across all five participants. The
-majority were drawn from LAION-natural — a curated 120-million-image
+majority were drawn from LAION-natural - a curated 120-million-image
 subset of LAION-2B filtered to natural photographs (Roth & Hebart,
-2025) — and were chosen by an effective-dimensionality optimisation
+2025) - and were chosen by an effective-dimensionality optimisation
 procedure that promotes uniform coverage of CLIP feature space.
 Selection was anchored in two established neuroimaging benchmarks by
 incorporating images from the Natural Scenes Dataset (NSD;
@@ -15,13 +15,13 @@ Stoinski et al., 2024). The THINGS / THINGSplus images additionally
 overlap with the THINGS-data EEG + fMRI release (Hebart et al., 2023),
 so analyses on the LAION-fMRI shared set can be compared against
 results from that dataset as well. The shared set is supplemented with
-a 371-image out-of-distribution (OOD) test set — visual illusions,
+a 371-image out-of-distribution (OOD) test set - visual illusions,
 Gabor patches, shape stimuli, cropped textures, and similarly unusual
-configurations — intended as a stress test for encoding and decoding
+configurations - intended as a stress test for encoding and decoding
 models trained on the natural-image pool.
 
 "Natural images" here means real-world photographs of scenes, objects,
-and events — illustrations, graphic designs, images with applied
+and events - illustrations, graphic designs, images with applied
 filters, and not-safe-for-work content were excluded during manual
 quality review (see :doc:`stimulus_selection` for the full screening
 criteria).
@@ -116,7 +116,7 @@ visually salient image content rather than risking truncation through a
 naïve centre crop.
 
 On the projector during scanning, the 1000 × 1000 px stimulus subtended
-**roughly 9.2 × 9.2 degrees of visual angle** — see
+**roughly 9.2 × 9.2 degrees of visual angle** - see
 :doc:`experimental_design` for the full presentation geometry.
 
 OOD Test Set
@@ -129,16 +129,16 @@ distribution and are intended as a held-out test set for measuring how
 well encoding and decoding models generalise beyond the training
 distribution. The set covers several visually distinct subcategories:
 
-* **Classical visual illusions** — Müller-Lyer, Ebbinghaus,
+* **Classical visual illusions** - Müller-Lyer, Ebbinghaus,
   Kanizsa-style, and similar geometric/perceptual illusions.
-* **Gabor patches** — at different orientations, spatial frequencies,
+* **Gabor patches** - at different orientations, spatial frequencies,
   and contrasts.
-* **Shape stimuli** — simple coloured shapes on plain backgrounds.
-* **Cropped textures** — repetitive patterns and material textures
+* **Shape stimuli** - simple coloured shapes on plain backgrounds.
+* **Cropped textures** - repetitive patterns and material textures
   with no scene context.
-* **Unusual spatial configurations** — objects in implausible
+* **Unusual spatial configurations** - objects in implausible
   positions, scale violations, etc.
-* **Gaudy / high-saturation patterns** — strongly chromatic
+* **Gaudy / high-saturation patterns** - strongly chromatic
   geometric patterns far from the natural-image colour statistics.
 
 .. figure:: _static/oodA_images.png

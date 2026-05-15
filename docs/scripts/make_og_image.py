@@ -133,7 +133,7 @@ def main() -> int:
         "DejaVuSans-Bold.ttf",
     ], 26)
 
-    # Logo (earth) inline with the wordmark — same horizontal centerline.
+    # Logo (earth) inline with the wordmark - same horizontal centerline.
     brand_text = "LAION-fMRI"
     brand_bbox = draw.textbbox((0, 0), brand_text, font=f_brand)
     brand_w = brand_bbox[2] - brand_bbox[0]

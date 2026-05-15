@@ -16,7 +16,7 @@ Retinotopy
    .. todo::
 
       Introductory narrative (2-3 sentences): Were retinotopic mapping
-      experiments conducted? What is provided — pRF parameter maps, visual area
+      experiments conducted? What is provided - pRF parameter maps, visual area
       definitions, or both?
 
       For the retinotopy experimental paradigm, see :doc:`experimental_design`.
@@ -49,10 +49,10 @@ Retinotopy
 
    The following maps are provided per subject:
 
-   - **Polar angle** — (placeholder)
-   - **Eccentricity** — (placeholder)
-   - **pRF size** — (placeholder)
-   - **R-squared** — (placeholder)
+   - **Polar angle** - (placeholder)
+   - **Eccentricity** - (placeholder)
+   - **pRF size** - (placeholder)
+   - **R-squared** - (placeholder)
    - *(add or remove as needed)*
 
    Visual Area Definitions
@@ -64,7 +64,7 @@ Retinotopy
       boundaries drawn (automatic, manual, threshold-based)?
       Add a figure showing visual area boundaries.
 
-   These ROI definitions are also available under ``derivatives/rois/`` — see
+   These ROI definitions are also available under ``derivatives/rois/`` - see
    :doc:`rois`.
 
    File Organization
@@ -78,4 +78,4 @@ Retinotopy
 
        derivatives/retinotopy/
        └── sub-XX/
-           └── ... (placeholder — fill with actual file listing)
+           └── ... (placeholder - fill with actual file listing)

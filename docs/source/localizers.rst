@@ -60,7 +60,7 @@ Functional Localizers
 
       Were category-selective ROIs derived from the localizer contrasts?
       If so, describe how (individual-subject thresholding, group-level, etc.).
-      These are also available under ``derivatives/rois/`` — see :doc:`rois`.
+      These are also available under ``derivatives/rois/`` - see :doc:`rois`.
 
    File Organization
    =================
@@ -73,4 +73,4 @@ Functional Localizers
 
        derivatives/localizers/
        └── sub-XX/
-           └── ... (placeholder — fill with actual file listing)
+           └── ... (placeholder - fill with actual file listing)

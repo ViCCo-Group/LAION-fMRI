@@ -15,7 +15,7 @@ Anatomical Data
 
       Introductory narrative (1-2 sentences): What structural data is provided
       (raw T1w, FreeSurfer outputs, tissue segmentations)? How many T1w scans
-      per subject — were they averaged?
+      per subject - were they averaged?
 
    For acquisition parameters, see :doc:`mri_acquisition`.
 
@@ -31,7 +31,7 @@ Anatomical Data
 
        sub-XX/
        └── anat/
-           └── ... (placeholder — fill with actual file listing)
+           └── ... (placeholder - fill with actual file listing)
 
    FreeSurfer Reconstructions
    ==========================
@@ -42,14 +42,14 @@ Anatomical Data
 
       - FreeSurfer version used
       - Which outputs are actually shipped (not every FS output needs to be
-        distributed — list what's included)
+        distributed - list what's included)
       - Paste the actual file tree from ``derivatives/freesurfer/sub-XX/``
 
    .. code-block:: text
 
        derivatives/freesurfer/
        └── sub-XX/
-           └── ... (placeholder — fill with actual file listing)
+           └── ... (placeholder - fill with actual file listing)
 
    Tissue Segmentations
    ====================
@@ -68,7 +68,7 @@ Anatomical Data
        derivatives/fmriprep/
        └── sub-XX/
            └── anat/
-               └── ... (placeholder — fill with actual file listing)
+               └── ... (placeholder - fill with actual file listing)
 
    Loading Anatomical Data
    =======================
