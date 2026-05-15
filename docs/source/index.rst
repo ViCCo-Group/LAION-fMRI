@@ -228,29 +228,36 @@ Contributors
      <a class="lf-contributor-card" href="https://www.cbs.mpg.de/mitarbeitende/zerbe" target="_blank" rel="noopener noreferrer" aria-label="Josefine Zerbe website">
        <img src="_static/contributors/josefine-zerbe.jpg" alt="Josefine Zerbe" class="lf-contributor-photo">
        <h2>Josefine Zerbe</h2>
+       <p>MPI CBS / JLU Giessen</p>
      </a>
      <a class="lf-contributor-card" href="https://jroth.space/" target="_blank" rel="noopener noreferrer" aria-label="Johannes Roth website">
        <img src="_static/contributors/johannes-roth.jpg" alt="Johannes Roth" class="lf-contributor-photo">
        <h2>Johannes Roth</h2>
+       <p>MPI CBS / JLU Giessen</p>
      </a>
      <a class="lf-contributor-card" href="https://www.cbs.mpg.de/publication-search/1730732?person=%2Fpersons%2Fresource%2Fpersons305549" target="_blank" rel="noopener noreferrer" aria-label="Robert Satzger website">
        <img src="_static/contributors/robert-satzger.jpg" alt="Robert Satzger" class="lf-contributor-photo">
        <h2>Robert Satzger</h2>
+       <p>MPI CBS</p>
      </a>
      <a class="lf-contributor-card" href="https://peerherholz.github.io/" target="_blank" rel="noopener noreferrer" aria-label="Peer Herholz website">
        <img src="_static/contributors/peer-herholz.jpg" alt="Peer Herholz" class="lf-contributor-photo">
        <h2>Peer Herholz</h2>
+       <p>MPI CBS / JLU Giessen</p>
      </a>
      <a class="lf-contributor-card" href="https://lucakaemmer.github.io" target="_blank" rel="noopener noreferrer" aria-label="Luca Kämmer website">
        <img src="_static/contributors/luca-kaemmer.jpg" alt="Luca Kämmer" class="lf-contributor-photo">
        <h2>Luca Kämmer</h2>
+       <p>Hebart Lab</p>
      </a>
      <a class="lf-contributor-card" href="https://hebartlab.com/" target="_blank" rel="noopener noreferrer" aria-label="Vinzent Jakob website">
        <img src="_static/contributors/vinzent-jakob.jpg" alt="Vinzent Jakob" class="lf-contributor-photo">
        <h2>Vinzent Jakob</h2>
+       <p>Hebart Lab</p>
      </a>
      <a class="lf-contributor-card" href="http://martin-hebart.de/" target="_blank" rel="noopener noreferrer" aria-label="Martin Hebart website">
        <img src="_static/contributors/martin-hebart.jpg" alt="Martin Hebart" class="lf-contributor-photo">
        <h2>Martin Hebart</h2>
+       <p>MPI CBS / JLU Giessen</p>
      </a>
    </div>
