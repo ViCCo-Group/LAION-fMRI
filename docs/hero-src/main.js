@@ -239,6 +239,8 @@ function buildHeroDom(opts) {
   return {
     canvas: root.querySelector(".lf-hero__canvas"),
     canvasWrap: root.querySelector(".lf-hero__canvas-wrap"),
+    text: root.querySelector(".lf-hero__text"),
+    logo: root.querySelector(".lf-hero__logo"),
     scrollBtn: root.querySelector(".lf-hero__scroll-hint"),
   };
 }
@@ -389,6 +391,19 @@ function detectThemeIsDark() {
   return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function getStackedLayout() {
+  const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+  return {
+    aspect,
+    isStacked: window.innerWidth <= 820 || aspect < 1,
+    isTabletPortrait: window.innerWidth >= 600,
+  };
+}
+
 export async function init(options = {}) {
   const root =
     options.root ||
@@ -429,7 +444,7 @@ export async function init(options = {}) {
     document.body.insertBefore(root, document.body.firstElementChild);
   }
 
-  const { canvas, canvasWrap, scrollBtn } = buildHeroDom({ root, ...cfg });
+  const { canvas, canvasWrap, text, logo, scrollBtn } = buildHeroDom({ root, ...cfg });
 
   scrollBtn.addEventListener("click", () => {
     window.scrollTo({
@@ -473,9 +488,64 @@ export async function init(options = {}) {
   // the lateral profile faces the camera initially — more recognizable.
   setup.group.rotation.y = -Math.PI * 0.35;
 
+  const reduceMotion =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   let width = 1;
   let height = 1;
+  const mobileBand = {
+    isStacked: false,
+    isTabletPortrait: false,
+    aspect: 1,
+    brainHeight: 1,
+  };
+
+  function layoutMobileBrainBand() {
+    const layout = getStackedLayout();
+    mobileBand.isStacked = layout.isStacked;
+    mobileBand.isTabletPortrait = layout.isTabletPortrait;
+    mobileBand.aspect = layout.aspect;
+
+    if (!layout.isStacked) {
+      root.style.removeProperty("--lf-hero-brain-top");
+      root.style.removeProperty("--lf-hero-brain-height");
+      return mobileBand;
+    }
+
+    const heroRect = root.getBoundingClientRect();
+    const logoRect = logo.getBoundingClientRect();
+    const textRect = text.getBoundingClientRect();
+    const vh = Math.max(1, window.innerHeight);
+    const logoTop = logoRect.top - heroRect.top;
+    const textTop = textRect.top - heroRect.top;
+    const anchorY = Number.isFinite(logoTop) && logoTop > 0 ? logoTop : textTop;
+    const gap = clampNumber(vh * 0.055, 42, layout.isTabletPortrait ? 72 : 56);
+    const bottom = Math.max(0, anchorY - gap);
+    const topLimit = clampNumber(vh * 0.075, 42, layout.isTabletPortrait ? 96 : 66);
+    const targetHeight = clampNumber(
+      vh * (layout.isTabletPortrait ? 0.39 : 0.36),
+      layout.isTabletPortrait ? 260 : 210,
+      layout.isTabletPortrait ? 460 : 330,
+    );
+    const available = Math.max(0, bottom - topLimit);
+    const minVisible = layout.isTabletPortrait ? 190 : 140;
+
+    let brainHeight = Math.min(targetHeight, available);
+    if (available >= minVisible) {
+      brainHeight = Math.max(brainHeight, minVisible);
+    }
+    brainHeight = Math.max(1, brainHeight);
+    const top = Math.max(topLimit, bottom - brainHeight);
+
+    root.style.setProperty("--lf-hero-brain-top", `${Math.round(top)}px`);
+    root.style.setProperty("--lf-hero-brain-height", `${Math.round(brainHeight)}px`);
+    mobileBand.brainHeight = brainHeight;
+    return mobileBand;
+  }
+
   function resize() {
+    const layout = layoutMobileBrainBand();
     const rect = canvasWrap.getBoundingClientRect();
     width = Math.max(1, Math.floor(rect.width));
     height = Math.max(1, Math.floor(rect.height));
@@ -488,24 +558,21 @@ export async function init(options = {}) {
     // right; the shift scales with aspect so iPad landscape (1.33)
     // doesn't push the brain off-screen the way wide desktop (1.78+)
     // can absorb.
-    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
-    const isStacked = window.innerWidth <= 820 || aspect < 1;
-    if (isStacked) {
-      // Tablet portrait (iPad) gets a noticeably larger brain than phone.
-      const isTabletPortrait = window.innerWidth >= 600;
+    const aspect = layout.aspect;
+    if (layout.isStacked) {
+      const scaleFactor = clampNumber(
+        layout.brainHeight / (layout.isTabletPortrait ? 360 : 260),
+        0.84,
+        1.12,
+      );
       setup.group.position.x = 0;
-      // Lift the brain up within its canvas so the bottom of the mesh
-      // clears the text block on short viewports. Scales with how
-      // cramped the viewport is — taller screens need less lift.
-      const vh = window.innerHeight;
-      if (isTabletPortrait) {
-        setup.group.position.y = vh < 900 ? 0.30 : 0.18;
-        setup.group.scale.setScalar(0.92);
-        camera.position.z = 2.3;
+      setup.group.position.y = layout.isTabletPortrait ? 0.02 : 0.01;
+      if (layout.isTabletPortrait) {
+        setup.group.scale.setScalar(0.98 * scaleFactor);
+        camera.position.z = 2.24;
       } else {
-        setup.group.position.y = vh < 700 ? 0.45 : (vh < 850 ? 0.32 : 0.22);
-        setup.group.scale.setScalar(0.62);
-        camera.position.z = aspect < 0.7 ? 2.7 : 2.5;
+        setup.group.scale.setScalar(0.70 * scaleFactor);
+        camera.position.z = aspect < 0.68 ? 2.54 : 2.42;
       }
     } else {
       const shiftX = Math.max(0.35, Math.min(0.70, 0.40 + (aspect - 1.33) * 0.55));
@@ -533,8 +600,40 @@ export async function init(options = {}) {
   const targetMouseWorld = new Vector3(999, 999, 999);
   let mouseStrength = 0;
   let targetMouseStrength = 0;
+  let tiltX = 0;
+  let tiltZ = 0;
+  let targetTiltX = 0;
+  let targetTiltZ = 0;
+
+  function resetTilt() {
+    targetTiltX = 0;
+    targetTiltZ = 0;
+  }
+
+  function tiltEnabled() {
+    return !reduceMotion && getStackedLayout().isStacked;
+  }
+
+  function updatePointerTilt(e) {
+    if (!tiltEnabled()) {
+      resetTilt();
+      return;
+    }
+    const rect = root.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / Math.max(1, rect.width) - 0.5) * 2;
+    const y = ((e.clientY - rect.top) / Math.max(1, rect.height) - 0.5) * 2;
+    targetTiltZ = clampNumber(x * 0.06, -0.06, 0.06);
+    targetTiltX = clampNumber(y * 0.05, -0.05, 0.05);
+  }
+
+  function onDeviceOrientation(e) {
+    if (!tiltEnabled() || e.beta == null || e.gamma == null) return;
+    targetTiltZ = clampNumber(e.gamma / 55, -1, 1) * 0.08;
+    targetTiltX = clampNumber((e.beta - 45) / 60, -1, 1) * 0.06;
+  }
 
   function onPointerMove(e) {
+    updatePointerTilt(e);
     const rect = canvas.getBoundingClientRect();
     ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -546,9 +645,19 @@ export async function init(options = {}) {
   }
   function onPointerLeave() {
     targetMouseStrength = 0.0;
+    resetTilt();
   }
   root.addEventListener("pointermove", onPointerMove);
   root.addEventListener("pointerleave", onPointerLeave);
+  root.addEventListener("pointerdown", () => {
+    if (
+      typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function"
+    ) {
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+  }, { once: true, passive: true });
+  window.addEventListener("deviceorientation", onDeviceOrientation, { passive: true });
 
   // Theme switch: re-derive tints when Furo's data-theme attribute changes
   const themeObserver = new MutationObserver(() => {
@@ -579,16 +688,18 @@ export async function init(options = {}) {
   io.observe(root);
 
   let lastT = performance.now();
-  const reduceMotion =
-    window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const ROT_SPEED = reduceMotion ? 0.0 : 0.06; // rad/sec
 
   function frame(now) {
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
     if (visible) {
+      if (!getStackedLayout().isStacked) resetTilt();
       setup.group.rotation.y += ROT_SPEED * dt;
+      tiltX += (targetTiltX - tiltX) * Math.min(1, dt * 7);
+      tiltZ += (targetTiltZ - tiltZ) * Math.min(1, dt * 7);
+      setup.group.rotation.x = tiltX;
+      setup.group.rotation.z = tiltZ;
       mouseStrength += (targetMouseStrength - mouseStrength) * Math.min(1, dt * 18);
       mouseWorld.lerp(targetMouseWorld, Math.min(1, dt * 28));
       setup.material.uniforms.uMouseWorld.value.copy(mouseWorld);

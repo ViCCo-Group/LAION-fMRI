@@ -93,7 +93,6 @@ neuroimaging resources assembled to date.
   behavioral responses
 * **Open** - freely available for research
 
-
 Getting Started
 ===============
 
@@ -223,3 +222,40 @@ Latest Updates
       entries to :doc:`release-history` when the list gets long.
 
    * **YYYY-MM-DD** — (placeholder)
+
+
+Contributors
+============
+
+.. raw:: html
+
+   <div class="lf-contributors" aria-label="LAION-fMRI contributors">
+     <a class="lf-contributor-card" href="https://www.cbs.mpg.de/mitarbeitende/zerbe" target="_blank" rel="noopener noreferrer" aria-label="Josefine Zerbe website">
+       <img src="_static/contributors/josefine-zerbe.jpg" alt="Josefine Zerbe" class="lf-contributor-photo">
+       <h2>Josefine Zerbe</h2>
+     </a>
+     <a class="lf-contributor-card" href="https://jroth.space/" target="_blank" rel="noopener noreferrer" aria-label="Johannes Roth website">
+       <img src="_static/contributors/johannes-roth.jpg" alt="Johannes Roth" class="lf-contributor-photo">
+       <h2>Johannes Roth</h2>
+     </a>
+     <a class="lf-contributor-card" href="https://www.cbs.mpg.de/publication-search/1730732?person=%2Fpersons%2Fresource%2Fpersons305549" target="_blank" rel="noopener noreferrer" aria-label="Robert Satzger website">
+       <img src="_static/contributors/robert-satzger.jpg" alt="Robert Satzger" class="lf-contributor-photo">
+       <h2>Robert Satzger</h2>
+     </a>
+     <a class="lf-contributor-card" href="https://peerherholz.github.io/" target="_blank" rel="noopener noreferrer" aria-label="Peer Herholz website">
+       <img src="_static/contributors/peer-herholz.jpg" alt="Peer Herholz" class="lf-contributor-photo">
+       <h2>Peer Herholz</h2>
+     </a>
+     <a class="lf-contributor-card" href="https://lucakaemmer.github.io" target="_blank" rel="noopener noreferrer" aria-label="Luca Kämmer website">
+       <img src="_static/contributors/luca-kaemmer.jpg" alt="Luca Kämmer" class="lf-contributor-photo">
+       <h2>Luca Kämmer</h2>
+     </a>
+     <a class="lf-contributor-card" href="https://hebartlab.com/" target="_blank" rel="noopener noreferrer" aria-label="Vinzent Jakob website">
+       <div class="lf-contributor-photo lf-contributor-placeholder" role="img" aria-label="Vinzent Jakob">VJ</div>
+       <h2>Vinzent Jakob</h2>
+     </a>
+     <a class="lf-contributor-card" href="http://martin-hebart.de/" target="_blank" rel="noopener noreferrer" aria-label="Martin Hebart website">
+       <img src="_static/contributors/martin-hebart.jpg" alt="Martin Hebart" class="lf-contributor-photo">
+       <h2>Martin Hebart</h2>
+     </a>
+   </div>

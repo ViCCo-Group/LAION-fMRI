@@ -14,7 +14,7 @@ General
    Five participants viewed over 25,000 unique images across about 165
    sessions, with multi-echo BOLD recorded at 1.8 mm isotropic resolution.
    The image set is drawn from the LAION-natural pool (a curated subset of
-   LAION-5B, Roth & Hebart, 2025) plus shared images from NSD and THINGS+,
+   LAION-5B, Roth & Hebart, 2025) plus shared images from NSD and THINGSplus,
    and the release includes raw functional data, single-trial GLMsingle
    betas, retinotopy, functional localizers, and diffusion MRI. See
    :doc:`dataset_at_a_glance` for the full inventory.

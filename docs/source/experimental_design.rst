@@ -4,10 +4,10 @@ Experimental Design
 
 The LAION-fMRI dataset uses a dense-sampling design: a small number of
 participants are scanned across many sessions, each seeing on the order of
-6,000 unique natural images. The general logic follows NSD-style designs (few
+6,000 unique natural images. The general logic follows dense sampling designs (few
 subjects, many sessions, controlled image repetitions for noise ceiling
 estimation), but with a broader image set based on LAION-natural (derived from
-LAION-5B, Roth & Hebart, 2025) that goes beyond standard scene or object
+LAION-2B, Roth & Hebart, 2025) that goes beyond standard scene or object
 datasets. Each of the 5 participants completed 30 main sessions of image
 viewing, one eyetracking session (ses-31), and 3 supplemental fMRI sessions
 after a time gap of about half a year. The launch release focuses on the 30

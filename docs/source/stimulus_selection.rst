@@ -6,7 +6,7 @@ Stimuli for LAION-fMRI were explicitly designed to maximise visual-semantic
 diversity and coverage of the natural image space. The majority of stimuli
 were selected from `LAION-natural`_ using an effective-dimensionality
 optimisation procedure that promotes uniform coverage of the CLIP feature
-space, supplemented by images from NSD and THINGS+ for cross-study
+space, supplemented by images from NSD and THINGSplus for cross-study
 comparability. The launch-release stimulus set comprises 25,052 distinct
 images across the five participants, with 1,492 shared stimuli enabling
 cross-participant analyses. Supplemental sessions expand the shared set to
@@ -18,10 +18,9 @@ Source Pool
 ===========
 
 The experimental design required two classes of stimuli: a *shared set*
-presented identically to all participants — enabling cross-participant
-comparison and noise-ceiling estimation through repeated presentations —
-and a *unique set* assigned per participant to maximise the total number of
-distinct images sampled across the experiment. Both classes needed to broadly
+presented identically to all participants and a *unique set* assigned per
+participant to maximise the total number of distinct images sampled across
+the experiment. Both classes needed to broadly
 and uniformly cover the space of natural images, depicting scenes, objects,
 and events rather than synthetic graphics or other non-photographic content.
 
@@ -32,7 +31,7 @@ cross-study comparisons, we additionally
 incorporated images from the Natural Scenes Dataset (NSD; Allen et al., 2022)
 and from two related object-image databases: THINGS, a collection of 1,854
 object concepts with over 26,000 naturalistic images (Hebart et al., 2019),
-and THINGS+, an extension that provides additional metadata and one
+and THINGSplus, an extension that provides additional metadata and one
 copyright-free (CC0) image per concept (Stoinski et al., 2024).
 
 Selection Criteria
@@ -67,34 +66,30 @@ images as a *prototype* in the following.
 Candidate retrieval
 -------------------
 
-Because the experimental design required multiple images per region of the
-feature space (one shared stimulus plus one unique stimulus per
-participant), we next retrieved visually similar alternatives for each
-prototype. We built an approximate nearest-neighbour index (Annoy; 50 trees,
+To expand the prototype pool into the full set of shared and unique images,
+we next retrieved visually similar alternatives for each prototype. We built
+an approximate nearest-neighbour index (Annoy; 50 trees,
 Euclidean metric) over up to 100 million LAION-natural images in the
 original (non-PCA-reduced) CLIP embedding space, and retrieved the 200
 nearest neighbours for each of the 5,499 prototypes. Near-exact duplicates
 (pairwise distance ``< 0.01`` in the original embedding space) were removed.
-Note that this deduplication threshold is not directly comparable to the
-0.1 threshold used during ED selection, as the two operate in different
-feature spaces: the former in the original CLIP embedding space, the latter
-in PCA-reduced space. From the resulting neighbour lists, up to the 25
-closest candidates per prototype were written out as image pools for manual
-quality review (see :ref:`stim-screening`); the remaining ~175 neighbours
+From the resulting neighbour lists, up to the 25 closest candidates per
+prototype were written out as image pools for manual quality review (see
+:ref:`stim-screening`); the remaining ~175 neighbours
 were held in reserve for later supplementation if needed.
 
-Integrating NSD and THINGS+
----------------------------
+Integrating NSD and THINGSplus
+------------------------------
 
 To incorporate stimuli from established neuroimaging datasets without
 changing the size or overall coverage of the shared set, we treated the
 1,121 LAION-derived shared representatives as feature-space "slots".
 Specifically, we re-clustered the 5,499 LAION prototypes into 1,121 groups
 and took the prototype nearest each group centroid as that group's default
-shared representative. We then selected 240 THINGS+ representatives and
+shared representative. We then selected 240 THINGSplus representatives and
 240 NSD representatives in the same CLIP embedding space and assigned each
 of them to the nearest still-unclaimed LAION group. Whenever an NSD or
-THINGS+ image was assigned to a group, it replaced the default LAION shared
+THINGSplus image was assigned to a group, it replaced the default LAION shared
 image for that slot. To keep the total number of stimuli fixed, one LAION
 prototype from that group was removed entirely, preferentially choosing
 prototypes that were among the original :math:`K`-means seeds or had been
@@ -103,7 +98,7 @@ LAION candidates wherever possible. The remaining LAION prototypes in those
 groups stayed available for participant-specific unique-image selection.
 After excluding rejected images and replacing any rejected LAION shared
 representatives with the nearest acceptable alternatives, the final non-OOD
-shared set comprised 641 LAION images, 240 NSD images, and 240 THINGS+
+shared set comprised 641 LAION images, 240 NSD images, and 240 THINGSplus
 images (1,121 total; OOD additions are described in
 :ref:`stim-final-set`).
 
@@ -173,7 +168,7 @@ LAION images per participant.
 Final Stimulus Set
 ==================
 
-The 1,121 shared prototypes (641 LAION, 240 NSD, 240 THINGS+) each
+The 1,121 shared prototypes (641 LAION, 240 NSD, 240 THINGSplus) each
 contributed a single shared stimulus. For the unique set, each of the
 remaining LAION prototype pools contributed one image per participant:
 from the quality-approved candidates in each pool, five images were
@@ -183,7 +178,7 @@ LAION images were assigned as participant-specific, non-overlapping sets.
 
 In addition to the LAION-derived stimuli, each participant received 144
 unique THINGS images (from the original THINGS database) and 322 unique
-THINGS+ images (from the CC0 extension), assigned as participant-specific,
+THINGSplus images (from the CC0 extension), assigned as participant-specific,
 non-overlapping sets. The shared set was further supplemented with 371
 out-of-distribution (OOD) images — including visual illusions, Gabor
 patches, unusual spatial configurations, cropped textures, shape stimuli,
@@ -202,7 +197,7 @@ In total, the shared set comprised:
    * - LAION
      - 641
      - 12
-   * - THINGS+
+   * - THINGSplus
      - 240
      - 12
    * - NSD
@@ -216,7 +211,7 @@ In total, the shared set comprised:
      -
 
 Each participant additionally viewed 4,712 unique stimuli (4,246 LAION +
-144 THINGS + 322 THINGS+), yielding 6,204 stimuli per participant. Across
+144 THINGS + 322 THINGSplus), yielding 6,204 stimuli per participant. Across
 all five participants, the experiment encompassed 25,052 distinct images.
 All images were resized to 1,000 × 1,000 pixels and stored in HDF5 format.
 

@@ -214,6 +214,66 @@ article .caption-text code.literal {
     font-size: 0.85em !important;
 }
 
+/* ---- Contributors ---- */
+.lf-contributors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 0.8rem;
+    margin: 1.4rem 0 0.5rem;
+}
+
+.lf-contributor-card {
+    align-items: center;
+    background: var(--rv-surface);
+    border: 1px solid var(--rv-slate);
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-height: 150px;
+    padding: 0.85rem 0.75rem;
+    text-align: center;
+    text-decoration: none !important;
+    transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.lf-contributor-card:hover,
+.lf-contributor-card:focus-visible {
+    border-color: var(--rv-cyan);
+    transform: translateY(-2px);
+}
+
+.lf-contributor-photo {
+    aspect-ratio: 1 / 1;
+    background: var(--rv-surface-light);
+    border: 1px solid var(--rv-slate);
+    border-radius: 50%;
+    display: block;
+    height: auto;
+    object-fit: cover;
+    width: min(92px, 72%);
+}
+
+.lf-contributor-placeholder {
+    align-items: center;
+    color: var(--rv-cyan);
+    display: flex;
+    font-family: var(--rv-font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    justify-content: center;
+}
+
+.lf-contributor-card h2 {
+    border: 0 !important;
+    color: var(--rv-heading-fg) !important;
+    font-size: 0.92rem !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 /* ---- Admonitions ---- */
 .admonition {
     background: var(--rv-surface) !important;

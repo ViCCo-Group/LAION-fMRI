@@ -10,8 +10,8 @@ subset of LAION-2B filtered to natural photographs (Roth & Hebart,
 procedure that promotes uniform coverage of CLIP feature space.
 Selection was anchored in two established neuroimaging benchmarks by
 incorporating images from the Natural Scenes Dataset (NSD;
-Allen et al., 2022) and from THINGS / THINGS+ (Hebart et al., 2019;
-Stoinski et al., 2024). The THINGS / THINGS+ images additionally
+Allen et al., 2022) and from THINGS / THINGSplus (Hebart et al., 2019;
+Stoinski et al., 2024). The THINGS / THINGSplus images additionally
 overlap with the THINGS-data EEG + fMRI release (Hebart et al., 2023),
 so analyses on the LAION-fMRI shared set can be compared against
 results from that dataset as well. The shared set is supplemented with
@@ -58,10 +58,10 @@ the main experiment; the full selection procedure is in
      - 641
      - 12
      - Diversity-optimised photographs from the 120M LAION-natural pool
-   * - THINGS+
+   * - THINGSplus
      - 240
      - 12
-     - CC0 object photographs from the THINGS+ extension; the same images
+     - CC0 object photographs from the THINGSplus extension; the same images
        appear in the THINGS-data EEG + fMRI release
    * - NSD
      - 240
@@ -90,10 +90,10 @@ the main experiment; the full selection procedure is in
      - 4
      - Object photographs from the original THINGS database; also
        present in the THINGS-data EEG + fMRI release
-   * - THINGS+
+   * - THINGSplus
      - 322
      - 4
-     - Additional CC0 object photographs from THINGS+; also present in
+     - Additional CC0 object photographs from THINGSplus; also present in
        the THINGS-data EEG + fMRI release
 
 Across all five participants the experiment encompasses **25,052
@@ -204,7 +204,7 @@ Core Columns
    * - ``image_name``
      - Filename-style stimulus identifier and primary join key.
    * - ``dataset``
-     - Source pool, e.g. LAION-natural, NSD, THINGS / THINGS+, or OOD.
+     - Source pool, e.g. LAION-natural, NSD, THINGS / THINGSplus, or OOD.
    * - ``participant``
      - Participant assignment for subject-unique images; shared images
        are marked accordingly.
