@@ -201,6 +201,24 @@ Getting Started
    contributing
 
 
+Citation
+========
+
+Until the dataset paper is available, please cite the VSS 2026
+conference presentation:
+
+   Zerbe, J., Roth, J., Mell, M. M., Herholz, P., Knapen, T., &
+   Hebart, M. N. (2026). *LAION-fMRI: A densely sampled 7T-fMRI
+   dataset providing broad coverage of natural image diversity*. Talk
+   25.11, Scene Perception Talk Session, Vision Sciences Society
+   Annual Meeting, May 16, 2026. `VSS abstract
+   <https://www.visionsciences.org/talk-sessions?id=642>`__.
+
+If you use the provided GLMsingle beta estimates, also cite
+GLMsingle. See :doc:`example_methods_text` for BibTeX and suggested
+methods wording.
+
+
 Contributors
 ============
 
@@ -228,7 +246,7 @@ Contributors
        <h2>Luca Kämmer</h2>
      </a>
      <a class="lf-contributor-card" href="https://hebartlab.com/" target="_blank" rel="noopener noreferrer" aria-label="Vinzent Jakob website">
-       <div class="lf-contributor-photo lf-contributor-placeholder" role="img" aria-label="Vinzent Jakob">VJ</div>
+       <img src="_static/contributors/vinzent-jakob.jpg" alt="Vinzent Jakob" class="lf-contributor-photo">
        <h2>Vinzent Jakob</h2>
      </a>
      <a class="lf-contributor-card" href="http://martin-hebart.de/" target="_blank" rel="noopener noreferrer" aria-label="Martin Hebart website">
