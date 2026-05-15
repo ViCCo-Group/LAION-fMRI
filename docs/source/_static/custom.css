@@ -274,13 +274,6 @@ article .caption-text code.literal {
     padding: 0 !important;
 }
 
-.lf-contributor-card p {
-    color: var(--rv-fg-muted);
-    font-size: 0.76rem;
-    line-height: 1.25;
-    margin: -0.4rem 0 0;
-}
-
 /* ---- Admonitions ---- */
 .admonition {
     background: var(--rv-surface) !important;
