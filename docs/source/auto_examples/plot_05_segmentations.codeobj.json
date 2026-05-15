@@ -1,14 +1,89 @@
 {
+ "data_dir": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  }
+ ],
  "dataset_initialize": [
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri",
+   "module_short": "laion_fmri.config",
    "name": "dataset_initialize"
   }
  ],
+ "df": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "DataFrame"
+  }
+ ],
+ "download_segmentations": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri",
+   "name": "download_segmentations"
+  }
+ ],
+ "image_name": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  }
+ ],
+ "img": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "img.copy": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
  "laion_fmri.load_stimuli": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -21,12 +96,87 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri",
    "module_short": "laion_fmri",
    "name": "load_subject"
   }
  ],
+ "mask": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "mask.dtype": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.dtypes",
+   "module_short": "numpy.dtypes",
+   "name": "UInt8DType"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "UInt8DType"
+  }
+ ],
+ "mask.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "mask.sum": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
+ "n_covered": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "int"
+  }
+ ],
+ "nouns": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "list"
+  }
+ ],
  "np.array": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -36,6 +186,41 @@
   }
  ],
  "np.uint8": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "uint8"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "unsignedinteger"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "integer"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "number"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "generic"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -48,12 +233,110 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "os",
+   "module_short": "os",
+   "name": "_Environ.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "MutableMapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "MutableMapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Mapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Mapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Collection.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Collection.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Sized.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Sized.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Iterable.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Iterable.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Container.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Container.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "os.environ",
    "module_short": "os.environ",
    "name": "get"
   }
  ],
  "os.getcwd": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -66,6 +349,13 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "os",
    "module_short": "os",
    "name": "makedirs"
@@ -75,36 +365,178 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "os.path",
    "module_short": "os.path",
    "name": "join"
   }
  ],
- "plt.show": [
+ "overlay": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "matplotlib.pyplot",
-   "module_short": "matplotlib.pyplot",
-   "name": "show"
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
   }
  ],
- "plt.subplots": [
+ "stim": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "matplotlib.pyplot",
-   "module_short": "matplotlib.pyplot",
-   "name": "subplots"
+   "module": "laion_fmri.stimuli",
+   "module_short": "laion_fmri",
+   "name": "Stimuli"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Stimuli"
   }
  ],
- "plt.tight_layout": [
+ "stim.images.get": [
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "matplotlib.pyplot",
-   "module_short": "matplotlib.pyplot",
-   "name": "tight_layout"
+   "module": "laion_fmri.stimuli",
+   "module_short": "laion_fmri",
+   "name": "Stimuli.images"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Stimuli.images"
+  }
+ ],
+ "stim.segmentations.for_image": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.segmentations",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.for_image"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.for_image"
+  }
+ ],
+ "stim.segmentations.get": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.segmentations",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.get"
+  }
+ ],
+ "stim.segmentations.nouns": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.segmentations",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.nouns"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Segmentations.nouns"
+  }
+ ],
+ "sub": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject"
+  }
+ ],
+ "sub.metadata": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.metadata"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.metadata"
+  }
+ ],
+ "sub.segmentations.has_image": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
+  }
+ ],
+ "sub.segmentations.nouns": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.segmentations"
+  }
+ ],
+ "trial": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "int"
   }
  ]
 }

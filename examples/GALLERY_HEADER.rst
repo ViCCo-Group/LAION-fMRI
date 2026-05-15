@@ -17,6 +17,8 @@ Recommended reading order:
 4. :doc:`plot_04_loading` -- the full load API: betas,
    noise-ceiling maps, ROI masks, brain-space mapping, group
    loading, and PyTorch.
+5. :doc:`plot_05_segmentations` -- per-image object-level
+   segmentation masks for the shared stimulus set.
 
 For a complete reference of the package's public API, see
 :doc:`/laion_fmri_package/index`.

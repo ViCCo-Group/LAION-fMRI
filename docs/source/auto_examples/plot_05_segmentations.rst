@@ -36,12 +36,18 @@ instance), and so on.
    check before retrieval; ``nouns()`` and ``for_image()`` safely
    return empty results for uncovered images.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-24
+.. GENERATED FROM PYTHON SOURCE LINES 22-30
 
 Bind the quickstart's data directory
 -------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 24-36
+This script reuses the same data directory as
+:doc:`plot_01_quickstart`; no functional data is needed beyond
+the stimulus images. ``download_segmentations()`` pulls the
+dataset-wide segmentation HDF5 + metadata CSV (a few MB total)
+the first time it runs and is a no-op afterwards.
+
+.. GENERATED FROM PYTHON SOURCE LINES 30-48
 
 .. code-block:: Python
 
@@ -49,6 +55,7 @@ Bind the quickstart's data directory
     import os
 
     from laion_fmri.config import dataset_initialize
+    from laion_fmri.download import download_segmentations
 
     data_dir = os.environ.get(
         "LAION_FMRI_EXAMPLE_DATA_DIR",
@@ -57,13 +64,38 @@ Bind the quickstart's data directory
     os.makedirs(data_dir, exist_ok=True)
     dataset_initialize(data_dir)
 
+    # Segmentations are a dataset-wide derivative; pull them on the
+    # first run. Idempotent -- a no-op once the local files are
+    # already present.
+    download_segmentations()
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-39
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    [laion-fmri] segmentations already up to date.
+
+    {'h5': PosixPath('/path/to/laion-fmri-data/stimuli/task-images_desc-segmentations.h5'), 'metadata': PosixPath('/path/to/laion-fmri-data/stimuli/task-images_desc-segmentations_metadata.csv')}
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 49-58
 
 Browsing masks from the stimulus side
 --------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-59
+``stim.segmentations`` exposes three accessors for an image:
+``nouns(image)`` returns the noun list, ``for_image(image)``
+returns the per-mask metadata rows (one row per detected
+instance, with score and bounding info), and
+``get(image, noun)`` returns a single binary ``(1000, 1000)``
+``uint8`` mask. The cell below exercises each in turn.
+
+.. GENERATED FROM PYTHON SOURCE LINES 58-78
 
 .. code-block:: Python
 
@@ -88,36 +120,70 @@ Browsing masks from the stimulus side
           f"covered pixels={int(mask.sum())}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-62
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Nouns in shared_12rep_LAION_cluster_1003_i0.jpg: ['delicate floral nail art', 'fingers', 'hand', 'short , pale pink polished nails']
+                           noun  instance_id     score  localized
+    0  delicate floral nail art            0  0.772657          1
+    1  delicate floral nail art            2  0.795340          1
+    2                   fingers            0  0.889126          1
+    3                   fingers            2  0.751304          1
+    4                   fingers            4  0.917879          1
+
+    'delicate floral nail art' mask: shape=(1000, 1000), dtype=uint8, covered pixels=12499
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 79-87
 
 Overlaying a mask on the image
 -------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-81
+The block below tints mask pixels with a soft red, then renders
+the original image and the tinted overlay side-by-side. The
+matplotlib render is commented out so the gallery doesn't
+redistribute stimulus content -- uncomment it to inspect the
+overlay locally.
+
+.. GENERATED FROM PYTHON SOURCE LINES 87-108
 
 .. code-block:: Python
 
 
-    import matplotlib.pyplot as plt
     import numpy as np
 
     img = np.array(stim.images.get(image_name))
     overlay = img.copy()
     # Soft red tint where the mask is set.
-    overlay[mask == 1] = (0.55 * img[mask == 1] + 0.45 * np.array([230, 25, 75])).astype(np.uint8)
+    overlay[mask == 1] = (
+        0.55 * img[mask == 1] + 0.45 * np.array([230, 25, 75])
+    ).astype(np.uint8)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    axes[0].imshow(img)
-    axes[0].set_title("original")
-    axes[0].axis("off")
-    axes[1].imshow(overlay)
-    axes[1].set_title(f"'{nouns[0]}' mask overlay")
-    axes[1].axis("off")
-    plt.tight_layout()
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    # axes[0].imshow(img)
+    # axes[0].set_title("original")
+    # axes[0].axis("off")
+    # axes[1].imshow(overlay)
+    # axes[1].set_title(f"'{nouns[0]}' mask overlay")
+    # axes[1].axis("off")
+    # plt.tight_layout()
+    # plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 82-89
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 109-116
 
 Subject-level access: masks per trial
 --------------------------------------
@@ -127,7 +193,7 @@ On the subject side, segmentations are addressed by **trial index**
 stimulus set, ``nouns()`` returns ``[]`` for any trial whose image
 was a subject-unique stimulus.
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-100
+.. GENERATED FROM PYTHON SOURCE LINES 116-127
 
 .. code-block:: Python
 
@@ -142,6 +208,28 @@ was a subject-unique stimulus.
     # What nouns did sub-01 see across their first 5 trials?
     for trial in range(5):
         print(f"  trial {trial}: {sub.segmentations.nouns(trial)}")
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Trials whose image carries masks: 469 / 1044
+      trial 0: []
+      trial 1: []
+      trial 2: ['sky', 'palm trees']
+      trial 3: []
+      trial 4: []
+
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** (0 minutes 2.194 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_05_segmentations.py:

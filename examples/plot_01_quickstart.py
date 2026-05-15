@@ -25,6 +25,9 @@ For deeper dives into each step, see the focused examples on
 # Examples 1, 2, and 4 share one data directory so the licenses
 # accepted here, and the data downloaded below, are reused by the
 # other examples without re-prompting or re-downloading.
+#
+# See also :doc:`plot_02_initialization` for first-time setup and
+# license-acceptance details.
 
 import os
 
@@ -45,6 +48,9 @@ print(f"Data directory: {get_data_dir()}")
 # The bucket is public, so no AWS credentials are needed.
 # Discovery functions read directly from the S3 bucket, so you
 # can see what is available before downloading anything.
+#
+# See also :doc:`plot_03_querying` for the full discovery API:
+# subjects, ROIs, splits, OOD partitions, bucket inspection.
 
 from laion_fmri.discovery import describe, get_subjects
 
@@ -68,19 +74,24 @@ describe()
 # mask is the one exception -- it's automatically included with any
 # ``ses`` filter, since the loader needs it to mask voxels.
 #
-# ``n_jobs`` runs that many AWS CLI copy workers in parallel. The
+# ``n_jobs`` runs that many ``aws s3 cp`` workers in parallel. The
 # call is also idempotent -- re-running after an interrupted
 # transfer skips files that already match the bucket size, so you
 # only fetch what's missing.
 #
-# The neuroimaging data, metadata, and public stimulus-derived files
-# are CC0. The raw stimulus image HDF5 is gated by a short Data Use
-# Agreement and is requested separately with ``download_stimuli()`` or
-# ``include_stimuli=True``:
+# The neuroimaging data and the stimuli are covered by two separate
+# licenses. On the first download you will be prompted **twice** --
+# once for each -- and you must type ``I AGREE`` each time:
 #
-# 1. **Public data** (CC0 1.0) -- unrestricted use after a one-time
-#    local acknowledgement.
-# 2. **Raw stimulus images** -- DUA-gated via the access service.
+# 1. **Neuroimaging data** (CC0 1.0) -- unrestricted use.
+# 2. **Stimuli** (closed, research-only) -- no redistribution, no
+#    commercial or AI/ML-training use.
+#
+# The acceptances are persisted, so the prompts only appear on the
+# first download into a given data directory.
+#
+# See also :doc:`plot_04_loading` for the full set of brain-mask,
+# ROI, and noise-ceiling kwargs plus surface ROI loading.
 
 from laion_fmri.download import download
 
@@ -92,12 +103,17 @@ print(f"Downloading {subject_id} / {session_id}")
 # subset below keeps a session pull around a few hundred MB
 # instead of the multi-GB you'd get pulling everything; drop
 # ``suffix`` if you also want the raw GLMsingle model dump or
-# the JSON sidecars.
+# the JSON sidecars. ``include_anatomical=True`` brings in the
+# anatomical T1w used as the backdrop for the visualizations
+# below; ``include_freesurfer=True`` pulls the per-subject
+# FreeSurfer recon needed by surface / template projections.
 download(
     subject=subject_id,
     ses=session_id,
     suffix=["statmap", "trials", "mask"],
     include_stimuli=True,
+    include_freesurfer=True,
+    include_anatomical=True,
     n_jobs=4,
 )
 
@@ -109,14 +125,20 @@ download(
 # and inspect its sessions and available ROIs. The brain mask is
 # derived on the fly from the subject-level mean-R^2 file
 # (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``) -- voxels with
-# any non-zero GLMsingle fit are considered "in brain".
+# any non-zero GLMsingle fit are considered "in brain". Pass
+# ``source="anatomical"`` to switch to the wider anatomically-
+# derived mask instead (see :doc:`plot_04_loading` for the full
+# cascading-kwarg story).
 
 from laion_fmri.subject import load_subject
 
 sub = load_subject(subject_id)
 print(f"Subject:   {sub.subject_id}")
 print(f"Sessions:  {sub.get_sessions()}")
-print(f"Voxels:    {sub.get_n_voxels()}")
+print(
+    f"Voxels:    {sub.get_n_voxels()} "
+    f"(anatomical: {sub.get_n_voxels(source='anatomical')})"
+)
 print(f"ROIs:      {sub.get_available_rois()}")
 
 # %%
@@ -132,14 +154,19 @@ print(f"ROIs:      {sub.get_available_rois()}")
 
 session = "ses-01"
 
-# Without ROI: heavy but works.
-betas_all = sub.get_betas(session=session)
+# Without ROI: heavier, so pass streaming=True to keep peak
+# memory at ~50 MB instead of materializing the full 4-D file.
+betas_all = sub.get_betas(session=session, streaming=True)
 print(f"{session} betas (full mask): {betas_all.shape}")
 
-# Recommended: use an ROI filter.
+# Recommended: use an ROI filter. ``streaming=True`` keeps peak
+# memory low even when an ROI is set, since the underlying nii.gz
+# is otherwise materialized in full before masking.
 rois_face = sub.get_available_rois(category="face")
 if rois_face:
-    betas_face = sub.get_betas(session=session, roi="face")
+    betas_face = sub.get_betas(
+        session=session, roi="face", streaming=True,
+    )
     print(f"{session} betas (face ROIs): {betas_face.shape}")
 
 # %%
@@ -179,8 +206,6 @@ import seaborn as sns
 from matplotlib.colors import Normalize
 from nilearn import plotting
 
-from laion_fmri._paths import r2mean_path
-
 # Nilearn warns about NaN / inf voxels from GLMsingle non-fits;
 # they're outside the brain mask and don't affect the rendering.
 warnings.filterwarnings(
@@ -189,7 +214,7 @@ warnings.filterwarnings(
     category=UserWarning,
 )
 
-bg_img = str(r2mean_path(get_data_dir(), subject_id))
+bg_img = str(sub.get_t1w())
 stat_cmap = sns.diverging_palette(220, 20, as_cmap=True)
 
 trial_paths = []
@@ -198,7 +223,7 @@ for i in range(3):
     sub.to_nifti(betas_all[i], p)
     trial_paths.append(p)
 
-vmax = float(np.percentile(np.abs(betas_all[:3]), 99))
+vmax = float(np.nanpercentile(np.abs(betas_all[:3]), 99))
 
 fig = plt.figure(figsize=(16, 4.3))
 gs = fig.add_gridspec(2, 1, height_ratios=[1, 0.05], hspace=0.1)
@@ -220,7 +245,7 @@ sm = plt.cm.ScalarMappable(
 )
 fig.colorbar(
     sm, cax=cbar_ax, orientation="horizontal",
-    label=f"{session} trial β",
+    label=f"{session} trial β (% signal change)",
 )
 plt.show()
 
@@ -235,6 +260,10 @@ plt.show()
 # EBA in lateral occipitotemporal cortex, PPA in
 # parahippocampal cortex -- before relying on them to filter
 # downstream analyses.
+#
+# See also :doc:`plot_04_loading` for the multi-format ROI
+# accessor (volume ``.nii.gz`` / surface ``.func.gii`` /
+# FreeSurfer ``.label``).
 
 import nibabel as nib
 from nilearn.plotting import find_xyz_cut_coords
@@ -313,18 +342,31 @@ sm = plt.cm.ScalarMappable(
 )
 fig.colorbar(
     sm, cax=cbar_ax, orientation="horizontal",
-    label=f"{session} noise ceiling",
+    label=f"{session} noise ceiling (% var. expl.)",
 )
 plt.show()
 
 # %%
 # Stimulus images
-# ---------------
+# ----------------
 #
-# Once stimulus images have been downloaded, subject image access is
-# trial-aligned: index ``0`` refers to the first row of
-# ``sub.metadata``. The call is commented out so this example can still
-# run when you downloaded only neuroimaging files.
+# ``include_stimuli=True`` on the download above already pulled the
+# stimulus images; ``sub.images`` exposes them by global trial
+# index (``0 .. n_total_trials-1``, matching the rows of
+# ``sub.metadata``). The returned object is a ``PIL.Image``.
+#
+# The matplotlib render below is commented out so the gallery
+# doesn't redistribute stimulus content -- uncomment it to
+# inspect the image locally.
+#
+# See also :doc:`plot_05_segmentations` for per-image object-level
+# segmentation masks.
 
-# img = sub.images.get(0)         # PIL image for the first trial
-# print(f"First trial image: {img.size}")
+img = sub.images.get(0)
+print(f"First trial image: {img.size}")
+
+# fig, ax = plt.subplots(figsize=(4, 4))
+# ax.imshow(img)
+# ax.set_title("First trial stimulus")
+# ax.axis("off")
+# plt.show()

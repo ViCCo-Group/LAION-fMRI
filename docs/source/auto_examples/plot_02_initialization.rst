@@ -27,7 +27,7 @@ This example walks through the steps a new user takes the first
 time they use the package:
 
 1. Configure the local data directory.
-2. Read the CC0 license you'll be asked to accept on first public download.
+2. Read the licenses you'll be asked to accept on first download.
 3. Confirm you can reach the bucket and see what it contains.
 
 Downloads themselves are covered by the
@@ -51,7 +51,7 @@ to call ``dataset_initialize`` again from the same machine.
 
     from laion_fmri.config import dataset_initialize, get_data_dir
 
-    # If you already accepted the license in another example, the
+    # If you already accepted the licenses in another example, the
     # following cells just confirm the configuration -- you won't be
     # re-prompted.
     data_dir = os.environ.get(
@@ -63,47 +63,100 @@ to call ``dataset_initialize`` again from the same machine.
     print(f"Configured: {get_data_dir()}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-54
 
-Inspect the public-data license
--------------------------------
 
-Two access rules apply:
 
-* The **CC0 dataset license** covers the fMRI data, metadata, and
-  public stimulus-derived files such as captions, embeddings, and
-  segmentations.
-* The **Data Use Agreement** covers the raw stimulus image HDF5.
+.. rst-class:: sphx-glr-script-out
 
-Below we print the CC0 body so you can read it in advance. The
-actual ``Type "I AGREE"`` prompt happens in the next cell.
+ .. code-block:: none
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-59
+    Configured: /path/to/laion-fmri-data
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 42-59
+
+Inspect the license text
+-------------------------
+
+Two licenses apply, handled differently:
+
+* The **dataset license** (CC0 1.0) covers the brain and
+  participant data. It is accepted locally on first
+  ``download(...)`` call and the acceptance is persisted under
+  ``{data_dir}/.laion_fmri/``.
+* The **stimulus license** covers the stimulus images and is
+  gated by an external access service. The full terms are read
+  and accepted on the service's web form, not locally; approved
+  requests then unlock per-trial image downloads via the
+  dataloader.
+
+The dataset-license body prints below; the stimulus terms are
+available at the access-service URL.
+
+.. GENERATED FROM PYTHON SOURCE LINES 59-69
 
 .. code-block:: Python
 
 
-    from laion_fmri._constants import LICENSE_AGREEMENT_BODY
+    from laion_fmri._constants import (
+        ACCESS_SERVICE_URL,
+        LICENSE_AGREEMENT_BODY,
+    )
 
     print(LICENSE_AGREEMENT_BODY)
+    print("---")
+    print(f"Stimulus terms: {ACCESS_SERVICE_URL}/terms")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-72
 
-Accept the public-data license
-------------------------------
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    === LAION-fMRI Dataset License (CC0 1.0) ===
+
+    The brain imaging and participant data in the LAION-fMRI dataset are
+    released under the Creative Commons Zero (CC0 1.0) Public Domain
+    Dedication. You are free to copy, modify, distribute, and use the
+    data for any purpose, including commercial, without asking permission.
+
+    Full license text: https://creativecommons.org/publicdomain/zero/1.0/
+
+    NOTE: Stimulus images are NOT covered by CC0. They are gated by a
+    separate Data Use Agreement enforced by the access service at
+    https://laion-fmri.hebartlab.com/terms — see
+    ``laion-fmri request-access`` to obtain a download.
+
+    ---
+    Stimulus terms: https://laion-fmri.hebartlab.com/terms
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 70-86
+
+Accept the dataset license
+---------------------------
 
 This is the same prompt-and-write-marker flow that
 :func:`laion_fmri.download.download` triggers internally on its
-first call. ``accept_license()`` prompts you to type ``I AGREE``
-once, then records your acceptance under ``{data_dir}/.laion_fmri/``
-so future public ``download(...)`` calls don't ask again.
-
-If you decline, the helper raises -- the exception is the signal
-that you opted out and that downstream public ``download(...)`` calls
+first call. ``accept_license()`` shows the CC0 text, prompts you
+to type ``I AGREE``, and records the acceptance under
+``{data_dir}/.laion_fmri/`` so future ``download(...)`` calls
+don't ask again. If you decline, the helper raises -- the
+exception is the signal that downstream ``download(...)`` calls
 would refuse to run.
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-77
+Stimulus access is requested separately: run
+``laion-fmri request-access`` from the shell, or call
+:func:`laion_fmri.download.request_stimulus_access` from Python.
+The access service approves requests asynchronously.
+
+.. GENERATED FROM PYTHON SOURCE LINES 86-91
 
 .. code-block:: Python
 
@@ -113,17 +166,83 @@ would refuse to run.
     accept_license()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-85
 
-Raw stimulus-image access
--------------------------
 
-Raw stimulus images are requested separately through the access
-service. Use ``request_stimulus_access()`` to submit the form without
-downloading, or ``download_stimuli()`` to request access and download
-any missing image files in one step.
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-96
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 92-120
+
+Request stimulus access
+------------------------
+
+Stimulus images are gated by a Data Use Agreement that lives on
+an external access service. There are two equivalent entry
+points for submitting a request:
+
+* **CLI (recommended for first use):** ``laion-fmri request-access``
+  walks an interactive form (full name, institutional email,
+  institution, optional PI, research purpose, signed DUA
+  confirmation) and caches the resulting ``request_id`` under
+  ``{data_dir}/.laion_fmri/`` once approved.
+* **Python:**
+  :func:`laion_fmri.download.request_stimulus_access` runs the
+  same form from a script or notebook.
+
+Approval is asynchronous: you submit the request, the service
+vets it, and your cached ``request_id`` then unlocks signed URLs
+the dataloader requests on demand. Two related helpers are worth
+knowing:
+
+* :func:`laion_fmri._stimulus_access.current_terms_version`
+  reports the ToU version the server currently expects in
+  submissions -- handy if you want to print the version before
+  filling out the form.
+* :class:`laion_fmri._stimulus_access.TermsOutdatedError` is
+  raised when a cached ``request_id`` predates a ToU update;
+  re-run ``request-access`` to refresh.
+
+.. GENERATED FROM PYTHON SOURCE LINES 120-141
+
+.. code-block:: Python
+
+
+    from laion_fmri._constants import ACCESS_SERVICE_URL
+    from laion_fmri._stimulus_access import (  # noqa: F401
+        current_terms_version,
+    )
+
+    print(
+        "Access service: "
+        f"{ACCESS_SERVICE_URL}\n"
+        "Current ToU version (fetched on demand): "
+        "use current_terms_version() to print before submitting."
+    )
+    # Uncomment to fetch the live ToU version:
+    # print(f"Current ToU: {current_terms_version()}")
+
+    # Uncomment to run the interactive form (this prints prompts and
+    # waits for user input -- skipped here so the gallery build
+    # stays non-interactive):
+    # from laion_fmri.download import request_stimulus_access
+    # request_stimulus_access()
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Access service: https://laion-fmri.hebartlab.com
+    Current ToU version (fetched on demand): use current_terms_version() to print before submitting.
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 142-151
 
 Confirm bucket access
 ----------------------
@@ -135,7 +254,7 @@ regardless of what you have downloaded -- a quick way to
 confirm that initialization is complete and the bucket is
 reachable from your network.
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-101
+.. GENERATED FROM PYTHON SOURCE LINES 151-156
 
 .. code-block:: Python
 
@@ -144,6 +263,27 @@ reachable from your network.
 
     print(f"Subjects in bucket: {get_subjects()}")
     describe()
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Subjects in bucket: ['sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
+    LAION-fMRI Dataset
+      Bucket:    s3://laion-fmri
+      Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
+      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
+
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** (0 minutes 15.237 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_02_initialization.py:

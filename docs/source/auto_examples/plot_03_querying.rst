@@ -23,16 +23,19 @@ Querying the Dataset
 
 Discover what is in the dataset without downloading anything.
 
-Every cell in this example either queries the S3 bucket directly
-(``laion_fmri.discovery``) or reads bundled metadata that ships with
-the package (``laion_fmri.splits``). No subject data is fetched.
-Where a query needs locally-downloaded files, the corresponding
-``download(...)`` and Subject-API calls are shown **commented out**,
-so you can copy them without this script triggering a download.
+Most cells in this example query the S3 bucket directly
+(``laion_fmri.discovery``) or read bundled metadata that ships with
+the package (``laion_fmri.splits``) -- no subject data is fetched.
+The stimulus-metadata cell below is the one exception: it reads
+``Subject.metadata`` from a subject already on disk (the quickstart
+example downloads ``sub-01 / ses-01`` into a shared data
+directory). For other Subject-API calls the corresponding
+``download(...)`` invocations are shown **commented out**, so you
+can copy them without this script triggering a download.
 
 Pick the subject you want to look at on the line below:
 
-.. GENERATED FROM PYTHON SOURCE LINES 16-19
+.. GENERATED FROM PYTHON SOURCE LINES 19-22
 
 .. code-block:: Python
 
@@ -40,7 +43,13 @@ Pick the subject you want to look at on the line below:
     SUBJECT = "sub-01"
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-26
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 23-29
 
 Initialize a data directory
 ----------------------------
@@ -49,7 +58,7 @@ Discovery and split listings don't need data on disk, but
 ``dataset_initialize`` is still required so that any subsequent
 (commented-out) ``download(...)`` would have a destination.
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-42
+.. GENERATED FROM PYTHON SOURCE LINES 29-48
 
 .. code-block:: Python
 
@@ -58,7 +67,10 @@ Discovery and split listings don't need data on disk, but
 
     from laion_fmri.config import dataset_initialize
 
-    data_dir = os.path.join(os.getcwd(), "laion_fmri_quickstart")
+    data_dir = os.environ.get(
+        "LAION_FMRI_EXAMPLE_DATA_DIR",
+        os.path.join(os.getcwd(), "laion_fmri_quickstart"),
+    )
     os.makedirs(data_dir, exist_ok=True)
     dataset_initialize(data_dir)
 
@@ -70,7 +82,13 @@ Discovery and split listings don't need data on disk, but
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-49
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 49-55
 
 Top-level summary
 ------------------
@@ -79,7 +97,7 @@ Top-level summary
 count, and the first subject's ROI list. Run it first to confirm
 the bucket is reachable.
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-52
+.. GENERATED FROM PYTHON SOURCE LINES 55-58
 
 .. code-block:: Python
 
@@ -87,7 +105,22 @@ the bucket is reachable.
     describe()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-60
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    LAION-fMRI Dataset
+      Bucket:    s3://laion-fmri
+      Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
+      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 59-66
 
 Subjects in the bucket
 -----------------------
@@ -97,7 +130,7 @@ including ones whose data is only partially uploaded -- so the
 count matches the dataset's published size, not just the
 subjects with complete data.
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-64
+.. GENERATED FROM PYTHON SOURCE LINES 66-70
 
 .. code-block:: Python
 
@@ -106,7 +139,20 @@ subjects with complete data.
     print(f"Querying subject: {SUBJECT}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-72
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    All subjects: ['sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
+    Querying subject: sub-01
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 71-78
 
 ROI queries: specific / category / all
 ---------------------------------------
@@ -116,7 +162,7 @@ ROIs ship in eight categories on the bucket. Use the
 functional family (e.g. just the face-area ROIs); call
 ``get_rois`` without a filter when you want the full inventory.
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-85
+.. GENERATED FROM PYTHON SOURCE LINES 78-91
 
 .. code-block:: Python
 
@@ -134,7 +180,29 @@ functional family (e.g. just the face-area ROIs); call
         print(f"{cat}: {rois}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-92
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    All ROIs (40):
+    ['EBA', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
+
+    body: ['EBA', 'FBA']
+    character: ['VWFA1', 'VWFA2', 'mfswords', 'pSTSwords']
+    face: ['FFA1', 'FFA2', 'OFA', 'pSTSfaces']
+    laion: ['laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral']
+    motion: ['MST', 'MT']
+    object: ['lobjects', 'vobjects']
+    place: ['MPA', 'OPA', 'PPA']
+    retinotopy: ['IPCS', 'IPS0', 'LO1', 'LO2', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'hV4']
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 92-98
 
 Bucket diagnostic listing
 --------------------------
@@ -143,7 +211,7 @@ Bucket diagnostic listing
 count of subject directories under each derivative tree -- useful
 when discovery returns surprises.
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-95
+.. GENERATED FROM PYTHON SOURCE LINES 98-101
 
 .. code-block:: Python
 
@@ -151,7 +219,26 @@ when discovery returns surprises.
     inspect_bucket()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-102
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Bucket: s3://laion-fmri
+    Top-level prefixes (2):
+      derivatives/
+      stimuli/
+    derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
+    derivatives/rois/: 5 entries, 5 sub-* entries
+    derivatives/freesurfer/: 5 entries, 5 sub-* entries
+    derivatives/anatomical/: 5 entries, 5 sub-* entries
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 102-108
 
 Bundled train/test splits (no download required)
 -------------------------------------------------
@@ -160,7 +247,7 @@ Bundled train/test splits (no download required)
 the stimulus set so callers can compare against the published
 baselines without re-running any clustering or sampling.
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-115
+.. GENERATED FROM PYTHON SOURCE LINES 108-121
 
 .. code-block:: Python
 
@@ -178,7 +265,21 @@ baselines without re-running any clustering or sampling.
     print(f"OOD types: {list_ood_types()}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 116-123
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Pools:     ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
+    Splits:    ['random_0', 'random_1', 'random_2', 'random_3', 'random_4', 'cluster_k5_0', 'cluster_k5_1', 'cluster_k5_2', 'cluster_k5_3', 'cluster_k5_4', 'tau', 'ood']
+    OOD types: ['cropped', 'gabor', 'gaudy', 'illusion-classic', 'illusion-natural', 'relations', 'selfmade', 'shape', 'unusual']
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 122-129
 
 Inspect one split
 ------------------
@@ -188,7 +289,7 @@ split's sizes and family. ``get_train_test_ids`` is the
 convenience wrapper that gives you the actual ID lists in one
 call.
 
-.. GENERATED FROM PYTHON SOURCE LINES 123-134
+.. GENERATED FROM PYTHON SOURCE LINES 129-140
 
 .. code-block:: Python
 
@@ -204,7 +305,24 @@ call.
     print(f"Loaded:   {len(train_ids)} train / {len(test_ids)} test ids")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 135-141
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Split:    random_0
+    Pool:     shared
+    Family:   random
+    n_train:  897
+    n_test:   224
+    Loaded:   897 train / 224 test ids
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 141-147
 
 OOD splits with a type filter
 ------------------------------
@@ -213,7 +331,7 @@ The ``ood`` split partitions held-out stimuli by category; the
 ``ood_types=`` argument restricts which categories are kept in the
 test set.
 
-.. GENERATED FROM PYTHON SOURCE LINES 141-147
+.. GENERATED FROM PYTHON SOURCE LINES 147-153
 
 .. code-block:: Python
 
@@ -224,7 +342,19 @@ test set.
     print(f"OOD shape only:  test ids = {len(test_shape)}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-191
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    OOD shape only:  test ids = 82
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 154-197
 
 Per-subject queries that need local data
 -----------------------------------------
@@ -270,7 +400,7 @@ copy the lines you need into your own script after running
     #           "hemi-R": {...}},
     # }
 
-.. GENERATED FROM PYTHON SOURCE LINES 193-199
+.. GENERATED FROM PYTHON SOURCE LINES 199-205
 
 Cross-subject discovery
 ------------------------
@@ -279,7 +409,7 @@ Loop ``get_subjects()`` to ask the same questions of every subject
 in the bucket. ROI counts can differ across subjects (some ROIs
 don't exist for everyone).
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-205
+.. GENERATED FROM PYTHON SOURCE LINES 205-211
 
 .. code-block:: Python
 
@@ -290,30 +420,82 @@ don't exist for everyone).
         print(f"  {sub_id}: {n_total:>3} ROIs total, {n_face} face")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 206-228
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      sub-01:  40 ROIs total, 4 face
+      sub-03:  43 ROIs total, 6 face
+      sub-05:  41 ROIs total, 6 face
+      sub-06:  41 ROIs total, 5 face
+      sub-07:  41 ROIs total, 6 face
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 212-228
 
 Stimulus metadata
------------------
+------------------
 
-The stimulus metadata table is available through ``load_stimuli()``
-for dataset-wide queries and through ``Subject.metadata`` for
-trial-aligned analyses. The calls below are commented out for the
-same offline-by-default reason as the Subject queries above:
+Trial-level stimulus metadata is exposed as a
+``pandas.DataFrame`` via the ``Subject.metadata`` property --
+one row per single-trial beta, indexed by global trial index
+(``0 .. n_total_trials-1``). Columns combine the per-session
+events TSV with derived fields like ``image_name``, ``session``,
+``session_trial``, ``stim_idx``, and ``unique_or_shared``. The
+same table is what :doc:`plot_04_loading` uses to align betas
+with images.
 
-.. code-block:: python
+This reads ``sub-01`` from the shared data directory that
+:doc:`plot_01_quickstart` populates; if you're running plot_03
+in isolation, run plot_01 first (or call ``download(...)``
+yourself).
 
-    # from laion_fmri import load_stimuli
-    #
-    # stim = load_stimuli()
-    # print(stim.metadata.head())
-    #
-    # sub = load_subject("sub-01")
-    # if sub.has_stimuli():
-    #     trials = sub.metadata
-    #     print(trials[[
-    #         "session", "session_trial", "image_name",
-    #         "unique_or_shared", "dataset",
-    #     ]].head())
+.. GENERATED FROM PYTHON SOURCE LINES 228-238
+
+.. code-block:: Python
+
+
+    from laion_fmri.subject import load_subject
+
+    sub = load_subject(SUBJECT)
+    df = sub.metadata
+    print(df.head())
+    print(f"Total trials: {len(df)}")
+    shared = (df["unique_or_shared"] == "shared").sum()
+    print(f"Shared:       {shared}")
+    print(f"Per session:  {df['session'].value_counts().to_dict()}")
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      session  run  beta_index  ... stim_idx  unique_or_shared dataset
+    0  ses-01    1           0  ...    22187            unique   LAION
+    1  ses-01    1           1  ...    19600            unique   LAION
+    2  ses-01    1           2  ...      259            shared   LAION
+    3  ses-01    1           3  ...    17805            unique   LAION
+    4  ses-01    1           4  ...    13346            unique   LAION
+
+    [5 rows x 9 columns]
+    Total trials: 1044
+    Shared:       469
+    Per session:  {'ses-01': 1044}
+
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** (0 minutes 53.590 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:

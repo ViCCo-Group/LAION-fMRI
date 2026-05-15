@@ -2,7 +2,13 @@
 ``laion_fmri``
 ==============
 
-A data access package for downloading and loading the LAION-fMRI dataset.
+A data downloader and wrangler for the LAION-fMRI dataset.
+The package mirrors the bucket layout to your local disk via the
+official AWS CLI, keeps every accessor as a one-to-one map onto a
+single file in S3, and applies BIDS-entity filters so you only
+fetch what you need.
+
+A typical session looks like:
 
 .. code-block:: python
 
@@ -17,14 +23,19 @@ A data access package for downloading and loading the LAION-fMRI dataset.
    sub = load_subject("sub-03")
    betas = sub.get_betas(session="ses-01")     # (n_trials, n_voxels), float32
 
-The same three workflow steps *configure*, *inspect*, and *download* are also exposed as a ``laion-fmri`` shell command:
+The same three workflow steps -- *configure*, *inspect*,
+*download* -- are also exposed as a ``laion-fmri`` shell
+command, installed automatically by ``pip``/``uv``:
 
 .. code-block:: bash
 
-   mkdir -p ./laion_fmri_data
    laion-fmri config   --data-dir ./laion_fmri_data
    laion-fmri info
    laion-fmri download --subject sub-03
+
+Loading still happens from Python; the CLI covers configure,
+inspect, and download. See :doc:`download` for full
+``laion-fmri download`` semantics.
 
 The cards below walk through each step in detail.
 
@@ -93,6 +104,18 @@ The cards below walk through each step in detail.
       +++
       ``Subject`` · ``Group``
 
+   .. grid-item-card:: Template space
+      :link: template_space
+      :link-type: doc
+      :class-card: sd-border-0
+      :shadow: sm
+
+      Project T1w-space values onto fsaverage surfaces or MNI
+      volumes via the bundled FreeSurfer recon.
+
+      +++
+      ``Subject.to_template``
+
    .. grid-item-card:: Examples gallery
       :link: /auto_examples/index
       :link-type: doc
@@ -103,7 +126,7 @@ The cards below walk through each step in detail.
       workflow.
 
       +++
-      ``plot_01`` ... ``plot_05``
+      ``plot_01`` … ``plot_05``
 
    .. grid-item-card:: API reference
       :link: api
@@ -128,4 +151,5 @@ The cards below walk through each step in detail.
    discover
    download
    load
+   template_space
    api

@@ -13,13 +13,50 @@ maps to exactly one file on disk**, returned as raw arrays;
 combining sessions, averaging, or rebinning is the caller's
 responsibility.
 
-The "brain mask" is **derived on the fly** from the
-subject-level mean-R^2 map
-(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``): voxels with
-any non-zero GLMsingle fit are considered "in brain". The
-bucket does not ship a separate brain-mask file. This is
-consistent across sessions for a given subject, so betas
-stacked along the trial axis stay aligned on the voxel axis.
+Two brain masks are available; the default is unchanged:
+
+* ``source="rsquare"`` *(default)* -- derived on the fly from
+  the subject-level mean-R^2 map
+  (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``). Voxels
+  with any non-zero GLMsingle fit are considered "in brain".
+  No extra download required.
+* ``source="anatomical"`` -- the anatomically-derived brain
+  mask shipped under
+  ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/
+  ..._res-1pt8_desc-brain_mask.nii.gz``. Wider than the
+  rsquare-derived mask (it includes voxels with no GLMsingle
+  signal too). Requires
+  ``download(include_anatomical=True)``.
+
+Both masks are consistent across sessions for a given subject,
+so betas stacked along the trial axis stay aligned on the
+voxel axis (within one ``source``).
+
+.. code-block:: python
+
+   sub.get_brain_mask()                       # rsquare-derived
+   sub.get_brain_mask(source="anatomical")    # anat-derived, res-1pt8
+   sub.get_brain_mask(source="anatomical",
+                      res=None)               # full-resolution anat mask
+   sub.get_n_voxels(source="anatomical")      # n voxels under that mask
+
+``res`` defaults to ``"1pt8"`` -- the functional grid -- so the
+returned mask aligns with the voxel axis of ``get_betas`` and
+``get_noise_ceiling`` and with the rsquare-derived mask. Pass
+``res=None`` to read the full-resolution anatomical mask
+instead; the returned 1-D array is much larger and is meant
+for callers working with full-resolution data outside the
+loader cascade. ``res`` is ignored for ``source="rsquare"``
+(the rsquare-derived mask is published at one resolution only).
+
+Several voxel-axis accessors take a matching ``mask_source``
+kwarg so the choice flows through downstream:
+``get_betas(..., mask_source="anatomical")``,
+``get_noise_ceiling(..., mask_source="anatomical")``,
+``to_nifti(..., mask_source="anatomical")``,
+``get_voxel_coordinates(mask_source="anatomical")``. These all
+pin the mask at ``res="1pt8"`` internally, since their data is
+on the functional grid.
 
 Core accessors
 ==============
@@ -158,6 +195,33 @@ Brain-space mapping
 
    sub.to_nifti(per_voxel_array, "/tmp/out.nii.gz")
    sub.get_voxel_coordinates()                 # (n_voxels, 3)
+
+For projecting subject-T1w-space values onto fsaverage or MNI
+templates, see :doc:`template_space`.
+
+Anatomical derivatives
+======================
+
+Per-subject T1w / T2w volumes and a dedicated brain mask are
+published under ``derivatives/anatomical/sub-XX/ses-PrismaAnat/
+anat/``. Each modality ships at full resolution and at
+``res-1pt8`` (the functional grid). Pull them with
+``download(include_anatomical=True)`` and access via:
+
+.. code-block:: python
+
+   sub.has_anatomical()                       # bool: are the files local?
+   sub.get_anatomical_dir()                   # Path to the subject's anat tree
+   sub.get_t1w()                              # full-resolution T1w path
+   sub.get_t1w(res="1pt8")                    # functional-grid T1w path
+   sub.get_t2w()                              # full-resolution T2w path
+   sub.get_anatomical_brain_mask(res="1pt8")  # anat brain mask path
+
+Each accessor returns a ``pathlib.Path``; load with
+``nibabel.load(...)`` when you need the voxel data. The
+``res-1pt8`` mask is the same file ``source="anatomical"``
+reads in :meth:`get_brain_mask` and the voxel-axis accessors,
+so the voxel axis stays aligned.
 
 PyTorch integration
 ===================
@@ -417,11 +481,11 @@ Bundled train / test splits (re:vision Method 1 / 2 / 3)
 ========================================================
 
 The :mod:`laion_fmri.splits` subpackage layers on top of the
-accessors above without changing them.
+accessors above without changing them. Splits are label matches
+against the ``label`` column of the trial table, so the same
 :meth:`~laion_fmri.subject.Subject.get_betas` and
-:meth:`~laion_fmri.subject.Subject.get_trial_info` stay
-one-file-per-call; splits are pure label matches against the
-``label`` column of the trial table:
+:meth:`~laion_fmri.subject.Subject.get_trial_info` calls feed
+both train and test slices:
 
 .. code-block:: python
 

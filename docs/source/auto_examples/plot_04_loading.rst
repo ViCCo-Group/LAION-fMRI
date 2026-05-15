@@ -28,10 +28,15 @@ Every accessor maps to one file in the bucket: it returns the raw
 contents of the file you pick. Combining sessions, averaging
 across trials, or rebinning is the caller's responsibility.
 
-The "brain mask" is **derived on the fly** from the subject-level
-mean-R^2 map (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``):
-voxels with any non-zero GLMsingle fit are considered "in brain".
-The bucket does not ship a separate brain-mask file.
+Two brain-mask sources are available. The default is **derived
+on the fly** from the subject-level mean-R^2 map
+(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``): voxels with
+any non-zero GLMsingle fit are considered "in brain". An
+anatomically-derived alternative ships under
+``derivatives/anatomical/`` and is selected with
+``source="anatomical"`` on the brain-mask accessor (or
+``mask_source="anatomical"`` on the loader accessors that
+filter on the voxel axis).
 
 .. note::
 
@@ -41,12 +46,12 @@ The bucket does not ship a separate brain-mask file.
    voxels × 4 bytes ≈ 1 GB``; pass an ``roi=`` filter to keep
    per-call memory in the tens of MB.
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-29
+.. GENERATED FROM PYTHON SOURCE LINES 32-34
 
 Bind the quickstart's data directory
 -------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-41
+.. GENERATED FROM PYTHON SOURCE LINES 34-46
 
 .. code-block:: Python
 
@@ -63,12 +68,18 @@ Bind the quickstart's data directory
     dataset_initialize(data_dir)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-44
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 47-49
 
 Load a subject and pick a session
 ----------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 44-58
+.. GENERATED FROM PYTHON SOURCE LINES 49-63
 
 .. code-block:: Python
 
@@ -87,7 +98,90 @@ Load a subject and pick a session
     print(f"Primary ROI: {roi}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-65
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Subject: sub-01 | session: ses-01
+    Voxels in brain mask: 271557
+    Primary ROI: FFA1
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 64-80
+
+Two brain-mask sources
+-----------------------
+
+Every voxel-axis accessor exposes a ``mask_source`` choice with
+the same default:
+
+* ``mask_source="rsquare"`` (default) -- voxels with any non-zero
+  GLMsingle fit. Smaller, functional-only.
+* ``mask_source="anatomical"`` -- the anatomically-derived brain
+  mask shipped under ``derivatives/anatomical/``. Usually wider,
+  since brain voxels with no functional fit come along.
+
+The same kwarg cascades through ``get_betas``,
+``get_noise_ceiling``, ``to_nifti``, and
+``get_voxel_coordinates`` -- pick once at the loader and the
+voxel axis stays consistent.
+
+.. GENERATED FROM PYTHON SOURCE LINES 80-109
+
+.. code-block:: Python
+
+
+    rsq_mask = sub.get_brain_mask(source="rsquare")
+    anat_mask = sub.get_brain_mask(source="anatomical")
+    print(f"rsquare-derived voxels: {rsq_mask.sum()}")
+    print(f"anatomical voxels:      {anat_mask.sum()}")
+
+    # Resolution: ``res="1pt8"`` (default) matches the functional
+    # voxel grid -- a 1-D mask of length ``X*Y*Z`` indexes the beta
+    # arrays voxel-for-voxel. Pass ``res=None`` for the full-resolution
+    # anatomical mask (same T1w coordinate space, finer voxel grid);
+    # useful for working with the full-res T1w/T2w volumes directly,
+    # but the array is larger and no longer indexes the per-voxel
+    # loaders below.
+    anat_full = sub.get_brain_mask(source="anatomical", res=None)
+    print(f"anatomical full-res voxels: {anat_full.sum()}")
+
+    # Pick a mask once at any voxel-axis loader and the rest of the
+    # pipeline follows. The loaders pin ``res="1pt8"`` internally so
+    # the returned voxel axis is always 1-D over the functional voxel
+    # grid regardless of which ``mask_source`` you chose.
+    nc_rsq = sub.get_noise_ceiling(
+        session=session, mask_source="rsquare",
+    )
+    nc_anat = sub.get_noise_ceiling(
+        session=session, mask_source="anatomical",
+    )
+    print(f"NC shape (rsquare):    {nc_rsq.shape}")
+    print(f"NC shape (anatomical): {nc_anat.shape}")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    rsquare-derived voxels: 271557
+    anatomical voxels:      272080
+    anatomical full-res voxels: 2987111
+    NC shape (rsquare):    (271557,)
+    NC shape (anatomical): (272080,)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 110-116
 
 Single-trial betas for one session
 ------------------------------------
@@ -96,7 +190,7 @@ Returns ``(n_trials, n_voxels)``. **Always pass an ROI filter
 unless you really want the full brain-masked array** -- the
 ``roi=`` form drops memory by 1-2 orders of magnitude.
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-79
+.. GENERATED FROM PYTHON SOURCE LINES 116-130
 
 .. code-block:: Python
 
@@ -115,7 +209,21 @@ unless you really want the full brain-masked array** -- the
         print(f"ROI + NC > 0.3:      {betas_both.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-91
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    FFA1 ROI:           (1044, 222)
+    NC > 0.2:            (1044, 132612)
+    ROI + NC > 0.3:      (1044, 189)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 131-142
 
 Visualize the first trial with ROI contour overlays
 -----------------------------------------------------
@@ -129,7 +237,7 @@ at least see plausible signal somewhere near the contours
 rather than uniform noise. The betas are rendered in
 greyscale so the colored contours stay visually dominant.
 
-.. GENERATED FROM PYTHON SOURCE LINES 91-172
+.. GENERATED FROM PYTHON SOURCE LINES 142-221
 
 .. code-block:: Python
 
@@ -139,11 +247,9 @@ greyscale so the colored contours stay visually dominant.
     import numpy as np
     import matplotlib.pyplot as plt
     import seaborn as sns
-    from matplotlib.colors import Normalize
+    from matplotlib.colors import ListedColormap, Normalize
     from matplotlib.lines import Line2D
     from nilearn import plotting
-
-    from laion_fmri._paths import r2mean_path
 
     # Nilearn warns about NaN / inf voxels from GLMsingle non-fits;
     # they're outside the brain mask and don't affect the rendering.
@@ -153,14 +259,14 @@ greyscale so the colored contours stay visually dominant.
         category=UserWarning,
     )
 
-    bg_img = str(r2mean_path(get_data_dir(), subject_id))
+    bg_img = str(sub.get_t1w())
     stat_cmap = "gray"
     overlay_rois = ("FFA1", "OFA", "PPA", "EBA", "FBA", "MT")
     roi_colors = dict(
         zip(overlay_rois, sns.color_palette("colorblind")),
     )
 
-    first_beta = sub.get_betas(session=session)[0]
+    first_beta = sub.get_betas(session=session, streaming=True)[0]
     beta_path = f"/tmp/{subject_id}_{session}_trial0_full.nii.gz"
     sub.to_nifti(first_beta, beta_path)
 
@@ -215,7 +321,18 @@ greyscale so the colored contours stay visually dominant.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 173-179
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_04_loading_001.png
+   :alt: plot 04 loading
+   :srcset: /auto_examples/images/sphx_glr_plot_04_loading_001.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 222-228
 
 Single-trial filtering by stimulus type
 -----------------------------------------
@@ -224,7 +341,7 @@ Restrict to trials whose stimulus is in the shared / unique
 subset (relies on the dataset-level stimulus metadata, which
 the bucket doesn't yet expose).
 
-.. GENERATED FROM PYTHON SOURCE LINES 179-191
+.. GENERATED FROM PYTHON SOURCE LINES 228-239
 
 .. code-block:: Python
 
@@ -236,12 +353,23 @@ the bucket doesn't yet expose).
         print(f"Shared trials:       {betas_shared.shape}")
     else:
         print(
-            "Skipped: stimulus subset filter needs "
-            "stimuli/task-images_metadata.csv."
+            "Skipped: stimulus subset filter needs stimuli/stimuli.tsv."
         )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 192-197
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Shared trials:       (469, 183)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 240-245
 
 Custom voxel mask
 ------------------
@@ -249,7 +377,7 @@ Custom voxel mask
 Combine the ROI mask and the noise-ceiling map yourself, then
 pass the result back in via ``mask=``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 197-207
+.. GENERATED FROM PYTHON SOURCE LINES 245-255
 
 .. code-block:: Python
 
@@ -264,7 +392,20 @@ pass the result back in via ``mask=``.
         print(f"Custom betas:       {betas_custom.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 208-214
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Custom mask voxels: 152
+    Custom betas:       (1044, 152)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 256-262
 
 ROI masks (multi-level query)
 ------------------------------
@@ -273,7 +414,7 @@ ROI masks (multi-level query)
 ``"all"``. Pass a list to combine several at once -- overlapping
 voxels appear only once in the resulting mask.
 
-.. GENERATED FROM PYTHON SOURCE LINES 214-227
+.. GENERATED FROM PYTHON SOURCE LINES 262-275
 
 .. code-block:: Python
 
@@ -291,7 +432,21 @@ voxels appear only once in the resulting mask.
         print(f"  all: {union.sum()} voxels")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 228-238
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+      MT: 183 voxels
+      body (category): 1539 voxels
+      all: 16569 voxels
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 276-286
 
 Visualize every face-category ROI
 ----------------------------------
@@ -304,7 +459,7 @@ each other, and whether any region looks unexpectedly small
 or empty -- a sign that the localizer underperformed there
 and that ROI may not be reliable to analyse with.
 
-.. GENERATED FROM PYTHON SOURCE LINES 238-269
+.. GENERATED FROM PYTHON SOURCE LINES 286-317
 
 .. code-block:: Python
 
@@ -340,7 +495,116 @@ and that ROI may not be reliable to analyse with.
         plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 270-282
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_04_loading_002.png
+   :alt: FFA1, FFA2, OFA, pSTSfaces
+   :srcset: /auto_examples/images/sphx_glr_plot_04_loading_002.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 318-327
+
+Surface ROI files (.func.gii)
+------------------------------
+
+Every ROI also ships as a per-hemisphere ``.func.gii`` surface
+mask in fsnative space (plus a FreeSurfer ``.label`` file).
+``Subject.get_roi_data`` reads them straight from disk -- no
+resampling from the volume. The same accessor also returns the
+volumetric ``.nii.gz`` and the ``.label`` when you ask for them;
+here we pull just the surface variant per hemisphere.
+
+.. GENERATED FROM PYTHON SOURCE LINES 327-391
+
+.. code-block:: Python
+
+
+    import nibabel as nib_
+
+    from laion_fmri._paths import freesurfer_surf_path
+    from nilearn.plotting import plot_surf_roi
+    from nilearn.surface import InMemoryMesh, PolyMesh, SurfaceImage
+
+    surf_roi = "FFA1"
+    roi_gii = sub.get_roi_data(surf_roi, format="func.gii")[surf_roi]
+    lh_mask = roi_gii["gii"]["hemi-L"]["func.gii"]
+    rh_mask = roi_gii["gii"]["hemi-R"]["func.gii"]
+    print(
+        f"{surf_roi}: L={lh_mask.sum()} / {lh_mask.size} vertices, "
+        f"R={rh_mask.sum()} / {rh_mask.size}"
+    )
+
+
+    def _read_pial(hemi):
+        path = freesurfer_surf_path(
+            get_data_dir(), subject_id, hemi, "pial",
+        )
+        coords, faces = nib_.freesurfer.read_geometry(str(path))
+        return InMemoryMesh(coordinates=coords, faces=faces)
+
+
+    def _read_sulc(hemi):
+        return nib_.freesurfer.read_morph_data(
+            str(
+                freesurfer_surf_path(
+                    get_data_dir(), subject_id, hemi, "sulc",
+                ),
+            ),
+        )
+
+
+    # Combine both hemispheres into a single PolyMesh so nilearn can
+    # render them side-by-side in one ventral view.
+    pial = PolyMesh(left=_read_pial("L"), right=_read_pial("R"))
+    sulc = SurfaceImage(
+        mesh=pial, data={"left": _read_sulc("L"), "right": _read_sulc("R")},
+    )
+    roi_img = SurfaceImage(
+        mesh=pial,
+        data={
+            "left": np.where(lh_mask, 1.0, np.nan),
+            "right": np.where(rh_mask, 1.0, np.nan),
+        },
+    )
+
+    # Single-color teal overlay; non-ROI vertices are NaN so only ROI
+    # vertices get colored and the rest of the surface keeps the gray
+    # sulcal-depth shading from ``bg_map``.
+    teal_cmap = ListedColormap(["#1f9d8d"])
+    fig = plt.figure(figsize=(9, 5))
+    ax = fig.add_subplot(111, projection="3d")
+    plot_surf_roi(
+        surf_mesh=pial, roi_map=roi_img,
+        bg_map=sulc, hemi="both", view="ventral",
+        axes=ax, colorbar=False,
+        cmap=teal_cmap, bg_on_data=True,
+    )
+    ax.set_title(f"{surf_roi} (ventral view, both hemispheres)")
+    plt.show()
+
+
+
+
+.. image-sg:: /auto_examples/images/sphx_glr_plot_04_loading_003.png
+   :alt: FFA1 (ventral view, both hemispheres)
+   :srcset: /auto_examples/images/sphx_glr_plot_04_loading_003.png
+   :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    FFA1: L=339 / 148371 vertices, R=356 / 146299
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 392-404
 
 Noise ceiling
 --------------
@@ -355,7 +619,7 @@ More repetitions tighten the estimate but include fewer stimuli,
 so the right variant depends on whether you'd rather have a
 stable ceiling or full coverage.
 
-.. GENERATED FROM PYTHON SOURCE LINES 282-296
+.. GENERATED FROM PYTHON SOURCE LINES 404-418
 
 .. code-block:: Python
 
@@ -374,12 +638,24 @@ stable ceiling or full coverage.
     #     nc_subj = sub.get_noise_ceiling(desc="Noiseceiling12rep")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 297-299
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Per-session NC: shape=(271557,), range=[0.000, 95.076]
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 419-421
 
 Trial info and stimulus metadata
 ----------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 299-315
+.. GENERATED FROM PYTHON SOURCE LINES 421-437
 
 .. code-block:: Python
 
@@ -400,7 +676,32 @@ Trial info and stimulus metadata
         print("Stimulus metadata not yet uploaded to the bucket.")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 316-323
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Trials in ses-01: 1044
+      session  run  beta_index                                          label
+    0  ses-01    1           0       unique_LAION_new_cluster_475_i49_p01.jpg
+    1  ses-01    1           1  unique_LAION_initial_cluster_5192_i30_p01.jpg
+    2  ses-01    1           2         shared_12rep_LAION_cluster_2677_i5.jpg
+    3  ses-01    1           3   unique_LAION_initial_cluster_4651_i2_p01.jpg
+    4  ses-01    1           4   unique_LAION_initial_cluster_3457_i4_p01.jpg
+    Trial table rows: 1044 (across all sessions)
+      session  session_trial                                     image_name unique_or_shared
+    0  ses-01              0       unique_LAION_new_cluster_475_i49_p01.jpg           unique
+    1  ses-01              1  unique_LAION_initial_cluster_5192_i30_p01.jpg           unique
+    2  ses-01              2         shared_12rep_LAION_cluster_2677_i5.jpg           shared
+    3  ses-01              3   unique_LAION_initial_cluster_4651_i2_p01.jpg           unique
+    4  ses-01              4   unique_LAION_initial_cluster_3457_i4_p01.jpg           unique
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 438-445
 
 Stimulus images
 ----------------
@@ -410,7 +711,7 @@ namespace. The trial index is global (rows of ``sub.metadata``).
 Skipped automatically when the bucket's ``stimuli/`` prefix is
 not yet populated.
 
-.. GENERATED FROM PYTHON SOURCE LINES 323-335
+.. GENERATED FROM PYTHON SOURCE LINES 445-457
 
 .. code-block:: Python
 
@@ -427,7 +728,20 @@ not yet populated.
         print("No stimulus images on disk yet.")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 336-348
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    ses-01 has 1044 trial-image pairs
+    First trial image: (1000, 1000)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 458-470
 
 Brain-space mapping: save derived results as NIfTI
 ----------------------------------------------------
@@ -442,12 +756,14 @@ back to disk for downstream tools (``fslview``, ``nilearn``,
 
 Example: trial-mean betas as a 3-D map.
 
-.. GENERATED FROM PYTHON SOURCE LINES 348-372
+.. GENERATED FROM PYTHON SOURCE LINES 470-496
 
 .. code-block:: Python
 
 
-    mean_betas = sub.get_betas(session=session).mean(axis=0)
+    mean_betas = sub.get_betas(
+        session=session, streaming=True,
+    ).mean(axis=0)
     print(f"per-voxel mean shape: {mean_betas.shape}")
 
     mean_path = f"/tmp/{subject_id}_{session}_mean_betas.nii.gz"
@@ -471,7 +787,21 @@ Example: trial-mean betas as a 3-D map.
     print(f"Voxel coordinates: {coords.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 373-378
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    per-voxel mean shape: (271557,)
+    Saved /tmp/sub-01_ses-01_mean_betas.nii.gz
+    Voxel coordinates: (271557, 3)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 497-502
 
 Multi-subject group loading
 -----------------------------
@@ -479,7 +809,7 @@ Multi-subject group loading
 ``Group`` holds several ``Subject`` instances and exposes
 cross-subject loaders that delegate to each one.
 
-.. GENERATED FROM PYTHON SOURCE LINES 378-404
+.. GENERATED FROM PYTHON SOURCE LINES 502-527
 
 .. code-block:: Python
 
@@ -505,12 +835,24 @@ cross-subject loaders that delegate to each one.
             print(f"  {sub_id}: {arr.shape}")
     else:
         print(
-            "Skipped: shared-stimulus betas need "
-            "stimuli/task-images_metadata.csv."
+            "Skipped: shared-stimulus betas need stimuli/stimuli.tsv."
         )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 405-419
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Group size: 1
+      sub-01: (469, 289)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 528-541
 
 PyTorch dataset integration
 ----------------------------
@@ -524,17 +866,25 @@ The PyTorch dependencies are optional -- install them with the
 
 .. code-block:: bash
 
-    python -m pip install \
-      "laion-fmri[torch] @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
+    uv pip install "laion-fmri[torch]"
 
-.. GENERATED FROM PYTHON SOURCE LINES 419-442
+.. GENERATED FROM PYTHON SOURCE LINES 541-573
 
 .. code-block:: Python
 
 
     # The PyTorch dataset pairs each beta with a stimulus image, so it
-    # requires the stimuli/ prefix to be populated.
-    if sub.has_stimuli():
+    # requires the stimuli/ prefix to be populated **and** the
+    # ``[torch]`` extra installed. Both conditions are checked here so
+    # the example renders cleanly when either is missing.
+    import importlib.util
+
+    if importlib.util.find_spec("torch") is None:
+        print(
+            "PyTorch not installed; install with `[torch]` extra to "
+            "see the dataloader demo."
+        )
+    elif sub.has_stimuli():
         from torch.utils.data import DataLoader
 
         dataset = sub.to_torch_dataset(session=session, roi=roi)
@@ -554,6 +904,23 @@ The PyTorch dependencies are optional -- install them with the
             "PyTorch dataset needs stimulus images; skipping until "
             "the bucket's stimuli/ is populated."
         )
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    PyTorch not installed; install with `[torch]` extra to see the dataloader demo.
+
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** (10 minutes 59.426 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_04_loading.py:

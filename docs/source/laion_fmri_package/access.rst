@@ -4,17 +4,24 @@ Licenses & access
 
 LAION-fMRI has two release tracks with different rules:
 
-* The **fMRI data, derivatives, dataset metadata, and stimulus-derived
-  annotations** are released under **CC0 1.0**. You can download them
-  anonymously; we just ask you to acknowledge the licence once.
-  Public stimulus-derived files include stimulus metadata, captions,
-  pretrained embeddings, and object segmentations.
-* The **raw stimulus image HDF5** comes from third-party web sources and
-  is not CC0. For these, you will need to accept a **Data Use
-  Agreement** (DUA).
+* The **fMRI data, derivatives, and metadata** are released under
+  **CC0 1.0**. You can download them anonymously; we just ask you to
+  acknowledge the licence once.
+* The **stimulus images** come from third-party web sources and aren't
+  CC0. We give them to you only after you accept a short **Data Use
+  Agreement** (DUA): https://laion-fmri.hebartlab.com/terms.
+
+Most of this page is about the DUA flow — the CC0 prompt is a single
+``"I AGREE"``.
+
+------------------------------------------------------------
+
+The CC0 prompt
+==============
 
 The first time you run ``download(...)`` against a new data directory,
 the package shows you the CC0 license and asks you to type ``"I AGREE"``:
+
 .. code-block:: text
 
    === LAION-fMRI Dataset License (CC0 1.0) ===
@@ -41,9 +48,16 @@ If you'd rather review the licence up front:
 If you decline, the package raises
 :class:`laion_fmri._errors.LicenseNotAcceptedError` and stops.
 
+------------------------------------------------------------
+
+The DUA flow (stimulus images)
+==============================
+
 The stimulus images come from third-party web sources — we don't own
 them. To give them to you we ask you to accept a short Data Use
-Agreement first. You fill in a short form once.
+Agreement first. There's no login, no password, no email
+verification. You fill in a short form once; the ``laion_fmri``
+package then signs S3 URLs for you on demand.
 
 How to download
 ---------------
@@ -101,6 +115,26 @@ browser: https://laion-fmri.hebartlab.com/request. The confirmation
 page gives you direct download URLs (valid one hour) that you can use
 with ``curl`` or click in your browser.
 
+On a cluster
+------------
+
+Easiest path: download once on your laptop, then just rsync the data
+to the cluster:
+
+.. code-block:: bash
+
+   rsync -av ~/path/to/laion-fmri-data/stimuli/ cluster:~/path/to/laion-fmri-data/stimuli/
+
+On the cluster, ``load_stimuli()`` reads the local files without ever
+calling the access service, and ``download_stimuli()`` notices the files
+already match and returns immediately.
+
+You only need access state on the cluster if you also want to
+*re-download* there (e.g. after a dataset release update). In that
+case set the ``LAION_FMRI_REQUEST_ID`` environment variable to the
+value you can find in ``~/.cache/laion-fmri/auth.json`` on your
+laptop — but most workflows don't need this.
+
 If something goes wrong
 -----------------------
 
@@ -109,4 +143,28 @@ If something goes wrong
 * **The download was interrupted.** Just run the command again — it
   picks up where it left off.
 * **Anything else.** Open an issue on
-  `GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`__. 
+  `GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`__. For
+  stimulus access / takedown questions, see the contact at
+  https://laion-fmri.hebartlab.com/takedown.
+
+------------------------------------------------------------
+
+Privacy
+=======
+
+**What we keep on the server.** Your form submission (name,
+institutional email, institution, optional supervisor, research
+purpose) and a record of which files we sent you and when.
+
+**What we don't keep.** Your IP address or anything about your browser.
+
+**What we never do.** Send you email — there's no email verification,
+no newsletter, no automated notifications.
+
+**What happens to your record over time.** After a year with no
+downloads we automatically anonymise your form submission: name,
+email, institution, supervisor and research purpose are dropped while
+a minimal audit row (which files were sent, when) stays for governance.
+
+The full privacy notice — including the data-controller contact — is
+at https://laion-fmri.hebartlab.com/privacy.
