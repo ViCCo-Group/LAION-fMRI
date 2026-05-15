@@ -9,10 +9,15 @@ Every accessor maps to one file in the bucket: it returns the raw
 contents of the file you pick. Combining sessions, averaging
 across trials, or rebinning is the caller's responsibility.
 
-The "brain mask" is **derived on the fly** from the subject-level
-mean-R^2 map (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``):
-voxels with any non-zero GLMsingle fit are considered "in brain".
-The bucket does not ship a separate brain-mask file.
+Two brain-mask sources are available. The default is **derived
+on the fly** from the subject-level mean-R^2 map
+(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``): voxels with
+any non-zero GLMsingle fit are considered "in brain". An
+anatomically-derived alternative ships under
+``derivatives/anatomical/`` and is selected with
+``source="anatomical"`` on the brain-mask accessor (or
+``mask_source="anatomical"`` on the loader accessors that
+filter on the voxel axis).
 
 .. note::
 
@@ -56,6 +61,52 @@ available_rois = sub.get_available_rois()
 print(f"Primary ROI: {roi}")
 
 # %%
+# Two brain-mask sources
+# -----------------------
+#
+# Every voxel-axis accessor exposes a ``mask_source`` choice with
+# the same default:
+#
+# * ``mask_source="rsquare"`` (default) -- voxels with any non-zero
+#   GLMsingle fit. Smaller, functional-only.
+# * ``mask_source="anatomical"`` -- the anatomically-derived brain
+#   mask shipped under ``derivatives/anatomical/``. Usually wider,
+#   since brain voxels with no functional fit come along.
+#
+# The same kwarg cascades through ``get_betas``,
+# ``get_noise_ceiling``, ``to_nifti``, and
+# ``get_voxel_coordinates`` -- pick once at the loader and the
+# voxel axis stays consistent.
+
+rsq_mask = sub.get_brain_mask(source="rsquare")
+anat_mask = sub.get_brain_mask(source="anatomical")
+print(f"rsquare-derived voxels: {rsq_mask.sum()}")
+print(f"anatomical voxels:      {anat_mask.sum()}")
+
+# Resolution: ``res="1pt8"`` (default) matches the functional
+# voxel grid -- a 1-D mask of length ``X*Y*Z`` indexes the beta
+# arrays voxel-for-voxel. Pass ``res=None`` for the full-resolution
+# anatomical mask (same T1w coordinate space, finer voxel grid);
+# useful for working with the full-res T1w/T2w volumes directly,
+# but the array is larger and no longer indexes the per-voxel
+# loaders below.
+anat_full = sub.get_brain_mask(source="anatomical", res=None)
+print(f"anatomical full-res voxels: {anat_full.sum()}")
+
+# Pick a mask once at any voxel-axis loader and the rest of the
+# pipeline follows. The loaders pin ``res="1pt8"`` internally so
+# the returned voxel axis is always 1-D over the functional voxel
+# grid regardless of which ``mask_source`` you chose.
+nc_rsq = sub.get_noise_ceiling(
+    session=session, mask_source="rsquare",
+)
+nc_anat = sub.get_noise_ceiling(
+    session=session, mask_source="anatomical",
+)
+print(f"NC shape (rsquare):    {nc_rsq.shape}")
+print(f"NC shape (anatomical): {nc_anat.shape}")
+
+# %%
 # Single-trial betas for one session
 # ------------------------------------
 #
@@ -94,11 +145,9 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from matplotlib.colors import Normalize
+from matplotlib.colors import ListedColormap, Normalize
 from matplotlib.lines import Line2D
 from nilearn import plotting
-
-from laion_fmri._paths import r2mean_path
 
 # Nilearn warns about NaN / inf voxels from GLMsingle non-fits;
 # they're outside the brain mask and don't affect the rendering.
@@ -108,14 +157,14 @@ warnings.filterwarnings(
     category=UserWarning,
 )
 
-bg_img = str(r2mean_path(get_data_dir(), subject_id))
+bg_img = str(sub.get_t1w())
 stat_cmap = "gray"
 overlay_rois = ("FFA1", "OFA", "PPA", "EBA", "FBA", "MT")
 roi_colors = dict(
     zip(overlay_rois, sns.color_palette("colorblind")),
 )
 
-first_beta = sub.get_betas(session=session)[0]
+first_beta = sub.get_betas(session=session, streaming=True)[0]
 beta_path = f"/tmp/{subject_id}_{session}_trial0_full.nii.gz"
 sub.to_nifti(first_beta, beta_path)
 
@@ -184,8 +233,7 @@ if roi is not None and sub.has_stimuli():
     print(f"Shared trials:       {betas_shared.shape}")
 else:
     print(
-        "Skipped: stimulus subset filter needs "
-        "stimuli/task-images_metadata.csv."
+        "Skipped: stimulus subset filter needs stimuli/stimuli.tsv."
     )
 
 # %%
@@ -267,6 +315,80 @@ else:
     plt.show()
 
 # %%
+# Surface ROI files (.func.gii)
+# ------------------------------
+#
+# Every ROI also ships as a per-hemisphere ``.func.gii`` surface
+# mask in fsnative space (plus a FreeSurfer ``.label`` file).
+# ``Subject.get_roi_data`` reads them straight from disk -- no
+# resampling from the volume. The same accessor also returns the
+# volumetric ``.nii.gz`` and the ``.label`` when you ask for them;
+# here we pull just the surface variant per hemisphere.
+
+import nibabel as nib_
+
+from laion_fmri._paths import freesurfer_surf_path
+from nilearn.plotting import plot_surf_roi
+from nilearn.surface import InMemoryMesh, PolyMesh, SurfaceImage
+
+surf_roi = "FFA1"
+roi_gii = sub.get_roi_data(surf_roi, format="func.gii")[surf_roi]
+lh_mask = roi_gii["gii"]["hemi-L"]["func.gii"]
+rh_mask = roi_gii["gii"]["hemi-R"]["func.gii"]
+print(
+    f"{surf_roi}: L={lh_mask.sum()} / {lh_mask.size} vertices, "
+    f"R={rh_mask.sum()} / {rh_mask.size}"
+)
+
+
+def _read_pial(hemi):
+    path = freesurfer_surf_path(
+        get_data_dir(), subject_id, hemi, "pial",
+    )
+    coords, faces = nib_.freesurfer.read_geometry(str(path))
+    return InMemoryMesh(coordinates=coords, faces=faces)
+
+
+def _read_sulc(hemi):
+    return nib_.freesurfer.read_morph_data(
+        str(
+            freesurfer_surf_path(
+                get_data_dir(), subject_id, hemi, "sulc",
+            ),
+        ),
+    )
+
+
+# Combine both hemispheres into a single PolyMesh so nilearn can
+# render them side-by-side in one ventral view.
+pial = PolyMesh(left=_read_pial("L"), right=_read_pial("R"))
+sulc = SurfaceImage(
+    mesh=pial, data={"left": _read_sulc("L"), "right": _read_sulc("R")},
+)
+roi_img = SurfaceImage(
+    mesh=pial,
+    data={
+        "left": np.where(lh_mask, 1.0, np.nan),
+        "right": np.where(rh_mask, 1.0, np.nan),
+    },
+)
+
+# Single-color teal overlay; non-ROI vertices are NaN so only ROI
+# vertices get colored and the rest of the surface keeps the gray
+# sulcal-depth shading from ``bg_map``.
+teal_cmap = ListedColormap(["#1f9d8d"])
+fig = plt.figure(figsize=(9, 5))
+ax = fig.add_subplot(111, projection="3d")
+plot_surf_roi(
+    surf_mesh=pial, roi_map=roi_img,
+    bg_map=sulc, hemi="both", view="ventral",
+    axes=ax, colorbar=False,
+    cmap=teal_cmap, bg_on_data=True,
+)
+ax.set_title(f"{surf_roi} (ventral view, both hemispheres)")
+plt.show()
+
+# %%
 # Noise ceiling
 # --------------
 #
@@ -346,7 +468,9 @@ else:
 #
 # Example: trial-mean betas as a 3-D map.
 
-mean_betas = sub.get_betas(session=session).mean(axis=0)
+mean_betas = sub.get_betas(
+    session=session, streaming=True,
+).mean(axis=0)
 print(f"per-voxel mean shape: {mean_betas.shape}")
 
 mean_path = f"/tmp/{subject_id}_{session}_mean_betas.nii.gz"
@@ -397,8 +521,7 @@ if roi is not None and sub.has_stimuli():
         print(f"  {sub_id}: {arr.shape}")
 else:
     print(
-        "Skipped: shared-stimulus betas need "
-        "stimuli/task-images_metadata.csv."
+        "Skipped: shared-stimulus betas need stimuli/stimuli.tsv."
     )
 
 # %%
@@ -414,12 +537,20 @@ else:
 #
 # .. code-block:: bash
 #
-#     python -m pip install \
-#       "laion-fmri[torch] @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
+#     uv pip install "laion-fmri[torch]"
 
 # The PyTorch dataset pairs each beta with a stimulus image, so it
-# requires the stimuli/ prefix to be populated.
-if sub.has_stimuli():
+# requires the stimuli/ prefix to be populated **and** the
+# ``[torch]`` extra installed. Both conditions are checked here so
+# the example renders cleanly when either is missing.
+import importlib.util
+
+if importlib.util.find_spec("torch") is None:
+    print(
+        "PyTorch not installed; install with `[torch]` extra to "
+        "see the dataloader demo."
+    )
+elif sub.has_stimuli():
     from torch.utils.data import DataLoader
 
     dataset = sub.to_torch_dataset(session=session, roi=roi)

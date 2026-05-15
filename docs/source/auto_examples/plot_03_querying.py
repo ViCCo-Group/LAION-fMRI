@@ -4,12 +4,15 @@ Querying the Dataset
 
 Discover what is in the dataset without downloading anything.
 
-Every cell in this example either queries the S3 bucket directly
-(``laion_fmri.discovery``) or reads bundled metadata that ships with
-the package (``laion_fmri.splits``). No subject data is fetched.
-Where a query needs locally-downloaded files, the corresponding
-``download(...)`` and Subject-API calls are shown **commented out**,
-so you can copy them without this script triggering a download.
+Most cells in this example query the S3 bucket directly
+(``laion_fmri.discovery``) or read bundled metadata that ships with
+the package (``laion_fmri.splits``) -- no subject data is fetched.
+The stimulus-metadata cell below is the one exception: it reads
+``Subject.metadata`` from a subject already on disk (the quickstart
+example downloads ``sub-01 / ses-01`` into a shared data
+directory). For other Subject-API calls the corresponding
+``download(...)`` invocations are shown **commented out**, so you
+can copy them without this script triggering a download.
 
 Pick the subject you want to look at on the line below:
 """
@@ -28,7 +31,10 @@ import os
 
 from laion_fmri.config import dataset_initialize
 
-data_dir = os.path.join(os.getcwd(), "laion_fmri_quickstart")
+data_dir = os.environ.get(
+    "LAION_FMRI_EXAMPLE_DATA_DIR",
+    os.path.join(os.getcwd(), "laion_fmri_quickstart"),
+)
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 
@@ -204,24 +210,28 @@ for sub_id in get_subjects():
 
 # %%
 # Stimulus metadata
-# -----------------
+# ------------------
 #
-# The stimulus metadata table is available through ``load_stimuli()``
-# for dataset-wide queries and through ``Subject.metadata`` for
-# trial-aligned analyses. The calls below are commented out for the
-# same offline-by-default reason as the Subject queries above:
+# Trial-level stimulus metadata is exposed as a
+# ``pandas.DataFrame`` via the ``Subject.metadata`` property --
+# one row per single-trial beta, indexed by global trial index
+# (``0 .. n_total_trials-1``). Columns combine the per-session
+# events TSV with derived fields like ``image_name``, ``session``,
+# ``session_trial``, ``stim_idx``, and ``unique_or_shared``. The
+# same table is what :doc:`plot_04_loading` uses to align betas
+# with images.
 #
-# .. code-block:: python
-#
-#     # from laion_fmri import load_stimuli
-#     #
-#     # stim = load_stimuli()
-#     # print(stim.metadata.head())
-#     #
-#     # sub = load_subject("sub-01")
-#     # if sub.has_stimuli():
-#     #     trials = sub.metadata
-#     #     print(trials[[
-#     #         "session", "session_trial", "image_name",
-#     #         "unique_or_shared", "dataset",
-#     #     ]].head())
+# This reads ``sub-01`` from the shared data directory that
+# :doc:`plot_01_quickstart` populates; if you're running plot_03
+# in isolation, run plot_01 first (or call ``download(...)``
+# yourself).
+
+from laion_fmri.subject import load_subject
+
+sub = load_subject(SUBJECT)
+df = sub.metadata
+print(df.head())
+print(f"Total trials: {len(df)}")
+shared = (df["unique_or_shared"] == "shared").sum()
+print(f"Shared:       {shared}")
+print(f"Per session:  {df['session'].value_counts().to_dict()}")

@@ -1,5 +1,28 @@
 {
+ "ACCESS_SERVICE_URL": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri._constants",
+   "module_short": "laion_fmri._constants",
+   "name": "ACCESS_SERVICE_URL"
+  }
+ ],
  "LICENSE_AGREEMENT_BODY": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -12,17 +35,40 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri.download",
    "module_short": "laion_fmri.download",
    "name": "accept_license"
+  }
+ ],
+ "data_dir": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "str"
   }
  ],
  "dataset_initialize": [
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri",
+   "module_short": "laion_fmri.config",
    "name": "dataset_initialize"
   }
  ],
@@ -30,8 +76,15 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri",
+   "module_short": "laion_fmri.discovery",
    "name": "describe"
   }
  ],
@@ -39,8 +92,15 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri",
+   "module_short": "laion_fmri.config",
    "name": "get_data_dir"
   }
  ],
@@ -48,9 +108,34 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri",
+   "module_short": "laion_fmri.discovery",
    "name": "get_subjects"
+  }
+ ],
+ "laion_fmri._stimulus_access.TermsOutdatedError": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri._stimulus_access",
+   "module_short": "laion_fmri._stimulus_access",
+   "name": "TermsOutdatedError"
+  }
+ ],
+ "laion_fmri._stimulus_access.current_terms_version": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri._stimulus_access",
+   "module_short": "laion_fmri._stimulus_access",
+   "name": "current_terms_version"
   }
  ],
  "laion_fmri.download.download": [
@@ -62,7 +147,114 @@
    "name": "download"
   }
  ],
+ "laion_fmri.download.request_stimulus_access": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri",
+   "name": "request_stimulus_access"
+  },
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri",
+   "name": "request_stimulus_access"
+  }
+ ],
  "os.environ.get": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "os",
+   "module_short": "os",
+   "name": "_Environ.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "MutableMapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "MutableMapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Mapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Mapping.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Collection.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Collection.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Sized.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Sized.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Iterable.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Iterable.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections.abc",
+   "module_short": "collections.abc",
+   "name": "Container.get"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "Container.get"
+  },
   {
    "is_class": false,
    "is_explicit": false,
@@ -75,6 +267,13 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "os",
    "module_short": "os",
    "name": "getcwd"
@@ -84,12 +283,26 @@
   {
    "is_class": false,
    "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
    "module": "os",
    "module_short": "os",
    "name": "makedirs"
   }
  ],
  "os.path.join": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
   {
    "is_class": false,
    "is_explicit": false,

@@ -21,10 +21,17 @@ instance), and so on.
 # %%
 # Bind the quickstart's data directory
 # -------------------------------------
+#
+# This script reuses the same data directory as
+# :doc:`plot_01_quickstart`; no functional data is needed beyond
+# the stimulus images. ``download_segmentations()`` pulls the
+# dataset-wide segmentation HDF5 + metadata CSV (a few MB total)
+# the first time it runs and is a no-op afterwards.
 
 import os
 
 from laion_fmri.config import dataset_initialize
+from laion_fmri.download import download_segmentations
 
 data_dir = os.environ.get(
     "LAION_FMRI_EXAMPLE_DATA_DIR",
@@ -33,9 +40,21 @@ data_dir = os.environ.get(
 os.makedirs(data_dir, exist_ok=True)
 dataset_initialize(data_dir)
 
+# Segmentations are a dataset-wide derivative; pull them on the
+# first run. Idempotent -- a no-op once the local files are
+# already present.
+download_segmentations()
+
 # %%
 # Browsing masks from the stimulus side
 # --------------------------------------
+#
+# ``stim.segmentations`` exposes three accessors for an image:
+# ``nouns(image)`` returns the noun list, ``for_image(image)``
+# returns the per-mask metadata rows (one row per detected
+# instance, with score and bounding info), and
+# ``get(image, noun)`` returns a single binary ``(1000, 1000)``
+# ``uint8`` mask. The cell below exercises each in turn.
 
 import laion_fmri
 
@@ -59,24 +78,32 @@ print(f"\n'{nouns[0]}' mask: shape={mask.shape}, dtype={mask.dtype}, "
 # %%
 # Overlaying a mask on the image
 # -------------------------------
+#
+# The block below tints mask pixels with a soft red, then renders
+# the original image and the tinted overlay side-by-side. The
+# matplotlib render is commented out so the gallery doesn't
+# redistribute stimulus content -- uncomment it to inspect the
+# overlay locally.
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 img = np.array(stim.images.get(image_name))
 overlay = img.copy()
 # Soft red tint where the mask is set.
-overlay[mask == 1] = (0.55 * img[mask == 1] + 0.45 * np.array([230, 25, 75])).astype(np.uint8)
+overlay[mask == 1] = (
+    0.55 * img[mask == 1] + 0.45 * np.array([230, 25, 75])
+).astype(np.uint8)
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-axes[0].imshow(img)
-axes[0].set_title("original")
-axes[0].axis("off")
-axes[1].imshow(overlay)
-axes[1].set_title(f"'{nouns[0]}' mask overlay")
-axes[1].axis("off")
-plt.tight_layout()
-plt.show()
+# import matplotlib.pyplot as plt
+# fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+# axes[0].imshow(img)
+# axes[0].set_title("original")
+# axes[0].axis("off")
+# axes[1].imshow(overlay)
+# axes[1].set_title(f"'{nouns[0]}' mask overlay")
+# axes[1].axis("off")
+# plt.tight_layout()
+# plt.show()
 
 # %%
 # Subject-level access: masks per trial

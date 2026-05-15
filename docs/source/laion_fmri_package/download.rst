@@ -16,7 +16,9 @@ Download
        suffix=None,              # str | list, e.g. "statmap"
        extension=None,           # str | list, e.g. "nii.gz"
        include_stimuli=False,    # also pull the stimuli
-       n_jobs=1,                 # parallel AWS CLI copy workers
+       include_freesurfer=False, # also pull derivatives/freesurfer/
+       include_anatomical=False, # also pull derivatives/anatomical/
+       n_jobs=1,                 # parallel `aws s3 cp` workers
    )
 
 Arguments
@@ -33,6 +35,17 @@ Arguments
   single HDF5 covering all subjects), so this just calls
   :func:`download_stimuli` after the per-subject fetch. See
   :doc:`access`.
+* ``include_freesurfer=True`` pulls the per-subject FreeSurfer
+  recon under ``derivatives/freesurfer/{subject}/`` (a few
+  hundred MB per subject). Required by ``Subject.to_template``;
+  see :doc:`template_space`.
+* ``include_anatomical=True`` pulls the per-subject anatomical
+  derivatives under ``derivatives/anatomical/{subject}/
+  ses-PrismaAnat/anat/`` (T1w, T2w, brain mask at two
+  resolutions; tens of MB per subject). Unlocks
+  ``Subject.get_t1w`` / ``get_t2w`` /
+  ``get_anatomical_brain_mask`` and the ``source="anatomical"``
+  brain mask on the voxel-axis accessors; see :doc:`load`.
 
 Filter semantics
 ================
@@ -60,7 +73,7 @@ filter doesn't drop it.
 Idempotent re-runs
 ==================
 
-Before each object copy the package checks whether the local
+Before each ``aws s3 cp`` the package checks whether the local
 fMRI file already exists at exactly the bucket size. If yes, the
 file is skipped. So:
 
@@ -76,7 +89,7 @@ on the next call.
 Parallelism
 ===========
 
-``n_jobs`` runs that many AWS CLI copy workers concurrently.
+``n_jobs`` runs that many ``aws s3 cp`` workers concurrently.
 Each worker is itself a multipart-parallel transfer, so a value
 of 4 typically opens ~40 concurrent S3 connections.
 
@@ -107,7 +120,7 @@ each comes with its own subject-independent download function.
      - **Yes** (DUA)
      - The stimulus HDF5 + metadata CSV. First call walks the
        Data Use Agreement form; subsequent calls re-use the
-       cached access token. See :doc:`access`.
+       cached request_id. See :doc:`access`.
    * - :func:`download_embeddings`
      - ``download-embeddings``
      - No (CC0)
@@ -181,6 +194,8 @@ console script (installed by ``pip``/``uv``):
    laion-fmri download-segmentations
    laion-fmri download-captions
    laion-fmri request-access          # standalone DUA form, no download
+   laion-fmri login --request-id lfm_...
+   laion-fmri logout
 
 The CLI mirrors the Python ``download(...)`` signature: every
 BIDS-entity filter the function accepts is exposed as a
