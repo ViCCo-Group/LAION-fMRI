@@ -66,8 +66,8 @@ Design Choices
 
 All functional ROIs were manually delineated on the cortical surface.
 Statistical maps informing the delineations, such as polar angle, or
-localizer contrast t-statistics, were rendered as flatmaps via pycortex and
-annotated in Inkscape [ref].
+localizer contrast t-statistics, were rendered as flatmaps via pycortex
+[Gao2015]_ and annotated in Inkscape.
 
 **Selection of ROIs.**
 ROIs were included based on relevance to the field and consistent
@@ -78,9 +78,12 @@ ROIs can overlap across sets but not within a set. For example, face-selective
 FFA-1 may overlap with body-selective FBA, but not with face-selective FFA-2.
 
 **Contrast thresholds.**
-Localizer contrasts were thresholded at t > 0. The resulting ROIs may
-therefore be larger than those reported in studies applying more conservative
-thresholds.
+Contrast thresholds used in the definitions of ROIs vary across the field and are dependent on the statistical power of the experiment.
+To accommodate different user preferences, we applied a liberal threshold at t>0 and relied on human judgment to identify steep drop-offs in functional preference.
+The resulting ROIs may be larger than those reported in studies applying more conservative thresholds.
+We will soon release the underlying t-statistic maps, allowing users to apply stricter thresholds within the
+provided ROIs as their analyses require.
+
 
 **Spurious activity in early visual cortex.**
 Some category localizer contrasts yield significant responses in V1–V3,
@@ -245,6 +248,13 @@ Per-subject ROIs are released in two spaces:
 Both spaces cover the same ROI sets. Surface masks are the canonical
 reference; the T1w volumes are derived from them and provided for
 convenience in volume-based analyses.
+
+References
+==========
+
+.. [Gao2015] Gao JS, Huth AG, Lescroart MD and Gallant JL (2015) Pycortex:
+   an interactive surface visualizer for fMRI. *Front. Neuroinform.* 9:23.
+   doi: 10.3389/fninf.2015.00023
 
 .. only:: dev
 
