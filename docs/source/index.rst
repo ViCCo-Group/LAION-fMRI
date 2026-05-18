@@ -251,6 +251,10 @@ Contributors
        <img src="_static/contributors/vinzent-jakob.jpg" alt="Vinzent Jakob" class="lf-contributor-photo">
        <h2>Vinzent Jakob</h2>
      </a>
+     <a class="lf-contributor-card" href="https://tknapen.github.io/" target="_blank" rel="noopener noreferrer" aria-label="Tomas Knapen website">
+       <img src="_static/contributors/tomas-knapen.jpg" alt="Tomas Knapen" class="lf-contributor-photo">
+       <h2>Tomas Knapen</h2>
+     </a>
      <a class="lf-contributor-card" href="http://martin-hebart.de/" target="_blank" rel="noopener noreferrer" aria-label="Martin Hebart website">
        <img src="_static/contributors/martin-hebart.jpg" alt="Martin Hebart" class="lf-contributor-photo">
        <h2>Martin Hebart</h2>
