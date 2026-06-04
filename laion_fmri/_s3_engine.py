@@ -12,6 +12,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+import importlib.util
 
 from laion_fmri._sources import LAION_FMRI_REGION
 
@@ -37,6 +38,15 @@ def _aws(subcommand_args, capture=True):
         "--region", LAION_FMRI_REGION,
         "--no-sign-request",
     ]
+
+    if importlib.util.find_spec("awscli") is None:
+        raise RuntimeError(
+            "LAION-fMRI requires the Python package 'awscli' "
+            "for S3 access, but it is not installed in the current "
+            "environment. Install it with:\n\n"
+            "    pip install awscli"
+        )
+
     return subprocess.run(
         cmd, capture_output=capture, check=True, text=True,
     )
