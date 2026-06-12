@@ -324,6 +324,194 @@ def test_fetch_does_not_list_stimuli_prefix(
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
 @patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_lists_freesurfer_when_include_set(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``include_freesurfer=True`` lists the per-subject recon prefix."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_freesurfer=True,
+        )
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/freesurfer/sub-03/" in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_skips_freesurfer_by_default(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """No ``include_freesurfer`` flag → recon prefix is not touched."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/freesurfer/sub-03/" not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_lists_anatomical_when_include_set(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``include_anatomical=True`` lists the per-subject anat prefix."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_anatomical=True,
+        )
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/anatomical/sub-03/" in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_skips_anatomical_by_default(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """No ``include_anatomical`` flag → anat prefix is not touched."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/anatomical/sub-03/" not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_anatomical_pulled_even_with_ses_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Anatomical files use ``ses-PrismaAnat``; a functional
+    ``ses="01"`` filter would otherwise drop them, but
+    ``include_anatomical=True`` pulls the anat tree regardless of
+    BIDS filters.
+    """
+    anat_key = (
+        "derivatives/anatomical/sub-03/ses-PrismaAnat/anat/"
+        "sub-03_ses-PrismaAnat_space-T1w_res-1pt8_T1w.nii.gz"
+    )
+
+    def list_side_effect(bucket, prefix):
+        if prefix == "derivatives/anatomical/sub-03/":
+            return [{"Key": anat_key, "Size": 100}]
+        return []
+
+    mock_list_objects.side_effect = list_side_effect
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_anatomical=True, ses="01",
+        )
+
+    downloaded = [
+        c.args[1] for c in mock_download_key.call_args_list
+    ]
+    assert anat_key in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_anatomical_pulled_under_functional_suffix_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """A ``suffix=["statmap", "trials", "mask"]`` filter (common
+    for keeping the functional pull lightweight) must NOT drop
+    the anatomical T1w / T2w files -- the anat tree is pulled
+    whole, irrespective of BIDS filters.
+    """
+    t1w_key = (
+        "derivatives/anatomical/sub-03/ses-PrismaAnat/anat/"
+        "sub-03_ses-PrismaAnat_space-T1w_T1w.nii.gz"
+    )
+    t2w_key = (
+        "derivatives/anatomical/sub-03/ses-PrismaAnat/anat/"
+        "sub-03_ses-PrismaAnat_space-T1w_T2w.nii.gz"
+    )
+    mask_key = (
+        "derivatives/anatomical/sub-03/ses-PrismaAnat/anat/"
+        "sub-03_ses-PrismaAnat_space-T1w_desc-brain_mask.nii.gz"
+    )
+
+    def list_side_effect(bucket, prefix):
+        if prefix == "derivatives/anatomical/sub-03/":
+            return [
+                {"Key": t1w_key, "Size": 100},
+                {"Key": t2w_key, "Size": 100},
+                {"Key": mask_key, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = list_side_effect
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_anatomical=True,
+            suffix=["statmap", "trials", "mask"],
+        )
+
+    downloaded = [
+        c.args[1] for c in mock_download_key.call_args_list
+    ]
+    assert t1w_key in downloaded
+    assert t2w_key in downloaded
+    assert mask_key in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_freesurfer_pulled_even_with_ses_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Recon files lack BIDS entity tokens; a strict ``ses=`` filter
+    would otherwise drop them. ``include_freesurfer`` pulls the
+    recon unconditionally regardless of BIDS filters.
+    """
+    fs_key = "derivatives/freesurfer/sub-03/surf/lh.white"
+
+    def list_side_effect(bucket, prefix):
+        if prefix == "derivatives/freesurfer/sub-03/":
+            return [{"Key": fs_key, "Size": 100}]
+        return []
+
+    mock_list_objects.side_effect = list_side_effect
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_freesurfer=True, ses="01",
+        )
+
+    downloaded = [
+        c.args[1] for c in mock_download_key.call_args_list
+    ]
+    assert fs_key in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
 def test_fetch_ses_filter_narrows_downloads(
     mock_download_key, mock_list_objects, tmp_path,
 ):

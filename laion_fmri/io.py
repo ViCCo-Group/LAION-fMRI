@@ -10,6 +10,14 @@ import pandas as pd
 def load_nifti_mask(path):
     """Load a NIfTI mask as a flat 1-D boolean array.
 
+    Voxels with ``NaN`` are treated as out-of-mask. This matters
+    when the source NIfTI is a stat map (e.g. the R^2 file the
+    rsquare-derived brain mask is built from): GLMsingle writes
+    ``NaN`` at voxels where the model couldn't fit, and
+    ``np.nan.astype(bool)`` is ``True`` -- without this guard,
+    those failed-fit voxels would leak into every downstream
+    voxel-axis accessor.
+
     Parameters
     ----------
     path : str or Path
@@ -20,8 +28,8 @@ def load_nifti_mask(path):
         Shape ``(n_total_voxels,)``, dtype bool.
     """
     img = nib.load(str(path))
-    data = np.asarray(img.dataobj)
-    return data.ravel().astype(bool)
+    data = np.asarray(img.dataobj).ravel()
+    return np.where(np.isnan(data), False, data).astype(bool)
 
 
 def load_nifti_data(path, mask_path):

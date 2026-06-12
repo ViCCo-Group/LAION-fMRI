@@ -9,6 +9,7 @@ from laion_fmri._errors import (
 )
 from laion_fmri.subject import Subject, load_subject
 from tests.conftest import (
+    N_ANATOMICAL_BRAIN_VOXELS,
     N_BRAIN_VOXELS,
     N_HLVIS_VOXELS,
     N_SESSIONS,
@@ -139,7 +140,7 @@ def test_subject_get_n_stimuli_unique(configured_subject):
 
 
 def test_subject_get_n_voxels(configured_subject):
-    assert configured_subject.get_n_voxels() == N_BRAIN_VOXELS
+    assert configured_subject.get_n_voxels() == N_ANATOMICAL_BRAIN_VOXELS
 
 
 # ── Brain mask ─────────────────────────────────────────────────
@@ -148,7 +149,145 @@ def test_subject_get_n_voxels(configured_subject):
 def test_get_brain_mask(configured_subject):
     mask = configured_subject.get_brain_mask()
     assert mask.dtype == bool
-    assert mask.sum() == N_BRAIN_VOXELS
+    assert mask.sum() == N_ANATOMICAL_BRAIN_VOXELS
+
+
+def test_get_brain_mask_anatomical_default(configured_subject):
+    """``source="anatomical"`` is the default and matches no-arg call."""
+    default = configured_subject.get_brain_mask()
+    explicit = configured_subject.get_brain_mask(source="anatomical")
+    assert np.array_equal(default, explicit)
+
+
+def test_get_brain_mask_rsquare_opt_in(configured_subject):
+    """``source="rsquare"`` returns the rsquare-derived mask."""
+    rsquare = configured_subject.get_brain_mask(source="rsquare")
+    assert rsquare.dtype == bool
+    assert rsquare.sum() == N_BRAIN_VOXELS
+
+
+def test_get_brain_mask_anatomical_distinct(configured_subject):
+    """``source="anatomical"`` returns the larger anat-derived mask."""
+    rsquare = configured_subject.get_brain_mask(source="rsquare")
+    anatomical = configured_subject.get_brain_mask(
+        source="anatomical",
+    )
+    assert anatomical.dtype == bool
+    assert anatomical.sum() == N_ANATOMICAL_BRAIN_VOXELS
+    assert anatomical.sum() > rsquare.sum()
+    # Anatomical is a strict superset of rsquare in the synthetic
+    # fixture, so the union equals the anatomical mask.
+    assert np.array_equal(anatomical | rsquare, anatomical)
+
+
+def test_get_brain_mask_rejects_unknown_source(configured_subject):
+    """An unknown ``source`` raises ``ValueError``."""
+    with pytest.raises(ValueError, match="source"):
+        configured_subject.get_brain_mask(source="bogus")
+
+
+def test_get_brain_mask_anatomical_res_kwarg(configured_subject):
+    """``res`` selects which anatomical mask file is loaded.
+
+    The synthetic fixture writes the same mask under both
+    resolutions, so both kwargs must succeed and return the
+    same content.
+    """
+    default = configured_subject.get_brain_mask(source="anatomical")
+    explicit_1pt8 = configured_subject.get_brain_mask(
+        source="anatomical", res="1pt8",
+    )
+    full_res = configured_subject.get_brain_mask(
+        source="anatomical", res=None,
+    )
+    assert default.sum() == N_ANATOMICAL_BRAIN_VOXELS
+    assert np.array_equal(default, explicit_1pt8)
+    assert np.array_equal(default, full_res)
+
+
+def test_get_brain_mask_rsquare_ignores_res(configured_subject):
+    """rsquare-source ignores ``res`` (only one resolution exists)."""
+    default = configured_subject.get_brain_mask(source="rsquare")
+    with_res = configured_subject.get_brain_mask(
+        source="rsquare", res=None,
+    )
+    assert np.array_equal(default, with_res)
+
+
+def test_get_n_voxels_res_kwarg(configured_subject):
+    """``get_n_voxels`` forwards ``res`` to the brain-mask path."""
+    assert (
+        configured_subject.get_n_voxels(
+            source="anatomical", res=None,
+        )
+        == N_ANATOMICAL_BRAIN_VOXELS
+    )
+
+
+def test_get_n_voxels_with_source(configured_subject):
+    """``get_n_voxels`` honors the ``source`` kwarg too."""
+    assert (
+        configured_subject.get_n_voxels(source="rsquare")
+        == N_BRAIN_VOXELS
+    )
+    assert (
+        configured_subject.get_n_voxels(source="anatomical")
+        == N_ANATOMICAL_BRAIN_VOXELS
+    )
+
+
+# ── mask_source threaded through downstream accessors ──────────
+
+
+def test_get_betas_with_anatomical_mask_source(configured_subject):
+    """``get_betas(mask_source="anatomical")`` uses the wider mask."""
+    betas = configured_subject.get_betas(
+        session="ses-01", mask_source="anatomical",
+    )
+    assert betas.shape == (
+        N_TRIALS_PER_SESSION, N_ANATOMICAL_BRAIN_VOXELS,
+    )
+
+
+def test_get_noise_ceiling_with_anatomical_mask_source(
+    configured_subject,
+):
+    """NC honors ``mask_source`` with the anatomical voxel count."""
+    nc = configured_subject.get_noise_ceiling(
+        session="ses-01", mask_source="anatomical",
+    )
+    assert nc.shape == (N_ANATOMICAL_BRAIN_VOXELS,)
+
+
+def test_to_nifti_with_anatomical_mask_source(
+    configured_subject, tmp_path,
+):
+    """``to_nifti`` scatters an anatomical-sized array."""
+    import nibabel as nib
+
+    values = np.arange(
+        N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32,
+    )
+    out = tmp_path / "anat_scatter.nii.gz"
+    configured_subject.to_nifti(
+        values, str(out), mask_source="anatomical",
+    )
+    img = nib.load(str(out))
+    flat = np.asarray(img.dataobj).ravel()
+    anat_mask = configured_subject.get_brain_mask(
+        source="anatomical",
+    )
+    np.testing.assert_array_equal(flat[anat_mask], values)
+
+
+def test_get_voxel_coordinates_with_anatomical_mask_source(
+    configured_subject,
+):
+    """Voxel coords match the anatomical brain-mask voxel count."""
+    coords = configured_subject.get_voxel_coordinates(
+        mask_source="anatomical",
+    )
+    assert coords.shape == (N_ANATOMICAL_BRAIN_VOXELS, 3)
 
 
 # ── get_betas ──────────────────────────────────────────────────
@@ -159,10 +298,42 @@ def test_get_betas_requires_session(configured_subject):
         configured_subject.get_betas(session=None)
 
 
+def test_get_betas_preserves_nan_voxels(
+    configured_subject, synthetic_data_dir,
+):
+    """``get_betas`` preserves NaN at unmodeled voxels.
+
+    GLMsingle writes ``NaN`` at brain-mask voxels where the
+    model failed to fit a particular trial. ``NaN`` carries
+    semantically distinct information ("no estimate") that 0
+    ("estimate is 0") does not -- the loader keeps the NaN and
+    leaves it to the caller to decide what to do with them.
+    """
+    import nibabel as nib
+    from laion_fmri._paths import betas_path
+
+    # Overwrite one trial's first three voxels with NaN.
+    path = betas_path(synthetic_data_dir, "sub-01", "ses-01")
+    img = nib.load(str(path))
+    data = np.asarray(img.dataobj).copy()
+    data[0, 0, 0, 0] = np.nan
+    data[1, 1, 0, 0] = np.nan
+    data[2, 2, 0, 0] = np.nan
+    nib.save(
+        nib.Nifti1Image(data, img.affine, img.header), str(path),
+    )
+
+    betas = configured_subject.get_betas(session="ses-01")
+    # At least one NaN should survive into the returned array.
+    assert np.isnan(betas).any()
+
+
 def test_get_betas_per_session(configured_subject):
     betas = configured_subject.get_betas(session="ses-01")
     assert isinstance(betas, np.ndarray)
-    assert betas.shape == (N_TRIALS_PER_SESSION, N_BRAIN_VOXELS)
+    assert betas.shape == (
+        N_TRIALS_PER_SESSION, N_ANATOMICAL_BRAIN_VOXELS,
+    )
 
 
 def test_get_betas_roi_visual(configured_subject):
@@ -188,7 +359,7 @@ def test_get_betas_multiple_rois_union(configured_subject):
 
 
 def test_get_betas_custom_mask(configured_subject):
-    mask = np.zeros(N_BRAIN_VOXELS, dtype=bool)
+    mask = np.zeros(N_ANATOMICAL_BRAIN_VOXELS, dtype=bool)
     mask[:10] = True
     betas = configured_subject.get_betas(
         session="ses-01", mask=mask,
@@ -197,7 +368,7 @@ def test_get_betas_custom_mask(configured_subject):
 
 
 def test_get_betas_roi_and_mask_raises(configured_subject):
-    mask = np.zeros(N_BRAIN_VOXELS, dtype=bool)
+    mask = np.zeros(N_ANATOMICAL_BRAIN_VOXELS, dtype=bool)
     mask[:5] = True
     with pytest.raises(ValueError, match="mutually exclusive"):
         configured_subject.get_betas(
@@ -210,7 +381,7 @@ def test_get_betas_nc_threshold(configured_subject):
         session="ses-01", nc_threshold=0.5,
     )
     assert betas.shape[0] == N_TRIALS_PER_SESSION
-    assert betas.shape[1] <= N_BRAIN_VOXELS
+    assert betas.shape[1] <= N_ANATOMICAL_BRAIN_VOXELS
 
 
 def test_get_betas_roi_and_nc_threshold(configured_subject):
@@ -226,7 +397,7 @@ def test_get_betas_stimuli_shared(configured_subject):
         session="ses-01", stimuli="shared",
     )
     expected_n = N_SHARED * (N_TRIALS_PER_SESSION // N_STIMULI)
-    assert betas.shape == (expected_n, N_BRAIN_VOXELS)
+    assert betas.shape == (expected_n, N_ANATOMICAL_BRAIN_VOXELS)
 
 
 def test_get_betas_stimuli_unique(configured_subject):
@@ -234,7 +405,7 @@ def test_get_betas_stimuli_unique(configured_subject):
         session="ses-01", stimuli="unique",
     )
     expected_n = N_UNIQUE * (N_TRIALS_PER_SESSION // N_STIMULI)
-    assert betas.shape == (expected_n, N_BRAIN_VOXELS)
+    assert betas.shape == (expected_n, N_ANATOMICAL_BRAIN_VOXELS)
 
 
 def test_stimulus_filter_uses_label_prefix(
@@ -286,7 +457,9 @@ def test_get_betas_list_of_sessions_returns_dict(
     assert set(result) == {"ses-01", "ses-02"}
     for ses, arr in result.items():
         assert isinstance(arr, np.ndarray)
-        assert arr.shape == (N_TRIALS_PER_SESSION, N_BRAIN_VOXELS)
+        assert arr.shape == (
+            N_TRIALS_PER_SESSION, N_ANATOMICAL_BRAIN_VOXELS,
+        )
 
 
 def test_get_betas_list_with_filters(configured_subject):
@@ -313,7 +486,7 @@ def test_get_roi_mask(configured_subject):
     mask = configured_subject.get_roi_mask("hlvis")
     assert isinstance(mask, np.ndarray)
     assert mask.dtype == bool
-    assert len(mask) == N_BRAIN_VOXELS
+    assert len(mask) == N_ANATOMICAL_BRAIN_VOXELS
     assert mask.sum() == N_HLVIS_VOXELS
 
 
@@ -511,12 +684,12 @@ def test_get_roi_data_unknown_hemi_raises(configured_subject):
 def test_get_noise_ceiling_session(configured_subject):
     nc = configured_subject.get_noise_ceiling(session="ses-01")
     assert isinstance(nc, np.ndarray)
-    assert len(nc) == N_BRAIN_VOXELS
+    assert len(nc) == N_ANATOMICAL_BRAIN_VOXELS
 
 
 def test_get_noise_ceiling_subject_desc(configured_subject):
     nc = configured_subject.get_noise_ceiling(desc=SUBJECT_NC_DESC)
-    assert len(nc) == N_BRAIN_VOXELS
+    assert len(nc) == N_ANATOMICAL_BRAIN_VOXELS
 
 
 def test_get_noise_ceiling_requires_session_or_desc(
@@ -556,7 +729,7 @@ def test_get_noise_ceiling_list_of_sessions_returns_dict(
     assert isinstance(result, dict)
     assert set(result) == {"ses-01", "ses-02"}
     for arr in result.values():
-        assert arr.shape == (N_BRAIN_VOXELS,)
+        assert arr.shape == (N_ANATOMICAL_BRAIN_VOXELS,)
 
 
 # ── Trial info ─────────────────────────────────────────────────
@@ -697,7 +870,126 @@ def test_has_stimuli_true_when_present(configured_subject):
     assert configured_subject.has_stimuli() is True
 
 
-# ── Trial-to-stimulus mapping via sub.metadata.stim_idx ────────
+# ── FreeSurfer recon access ────────────────────────────────────
+
+
+def test_has_freesurfer_true_when_recon_present(configured_subject):
+    """Synthetic fixture builds the recon -- has_freesurfer is True."""
+    assert configured_subject.has_freesurfer() is True
+
+
+def test_has_freesurfer_false_when_recon_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """Subject without a recon directory reports False."""
+    import shutil
+
+    fs_dir = (
+        synthetic_data_dir / "derivatives" / "freesurfer" / "sub-01"
+    )
+    shutil.rmtree(fs_dir)
+    assert configured_subject.has_freesurfer() is False
+
+
+def test_get_freesurfer_dir_returns_local_path(
+    configured_subject, synthetic_data_dir,
+):
+    """The path resolves under ``derivatives/freesurfer/{sub}/``."""
+    fs_dir = configured_subject.get_freesurfer_dir()
+    assert fs_dir.is_dir()
+    assert fs_dir == (
+        synthetic_data_dir / "derivatives" / "freesurfer" / "sub-01"
+    )
+
+
+def test_get_freesurfer_dir_raises_when_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """No recon on disk -> clear DataNotDownloaded with a fix hint."""
+    import shutil
+
+    fs_dir = (
+        synthetic_data_dir / "derivatives" / "freesurfer" / "sub-01"
+    )
+    shutil.rmtree(fs_dir)
+    with pytest.raises(DataNotDownloadedError, match="freesurfer"):
+        configured_subject.get_freesurfer_dir()
+
+
+# ── Anatomical derivatives access ──────────────────────────────
+
+
+def test_has_anatomical_true_when_present(configured_subject):
+    """Synthetic fixture writes the anat tree -- has_anatomical True."""
+    assert configured_subject.has_anatomical() is True
+
+
+def test_has_anatomical_false_when_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """Subject without an anatomical directory reports False."""
+    import shutil
+
+    anat_dir = (
+        synthetic_data_dir / "derivatives" / "anatomical" / "sub-01"
+    )
+    shutil.rmtree(anat_dir)
+    assert configured_subject.has_anatomical() is False
+
+
+def test_get_anatomical_dir_returns_local_path(
+    configured_subject, synthetic_data_dir,
+):
+    """The path resolves under ``derivatives/anatomical/{sub}/``."""
+    anat_dir = configured_subject.get_anatomical_dir()
+    assert anat_dir.is_dir()
+    assert anat_dir == (
+        synthetic_data_dir / "derivatives" / "anatomical" / "sub-01"
+    )
+
+
+def test_get_anatomical_dir_raises_when_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """No anat dir on disk -> clear DataNotDownloaded with fix hint."""
+    import shutil
+
+    anat_dir = (
+        synthetic_data_dir / "derivatives" / "anatomical" / "sub-01"
+    )
+    shutil.rmtree(anat_dir)
+    with pytest.raises(DataNotDownloadedError, match="anatomical"):
+        configured_subject.get_anatomical_dir()
+
+
+def test_get_t1w_full_res(configured_subject):
+    """``get_t1w()`` returns the full-resolution T1w path."""
+    path = configured_subject.get_t1w()
+    assert path.is_file()
+    assert path.name.endswith("_space-T1w_T1w.nii.gz")
+
+
+def test_get_t1w_res_1pt8(configured_subject):
+    """``get_t1w(res='1pt8')`` returns the functional-res T1w path."""
+    path = configured_subject.get_t1w(res="1pt8")
+    assert path.is_file()
+    assert "res-1pt8" in path.name
+
+
+def test_get_t2w_full_res(configured_subject):
+    """``get_t2w()`` returns the full-resolution T2w path."""
+    path = configured_subject.get_t2w()
+    assert path.is_file()
+    assert path.name.endswith("_space-T1w_T2w.nii.gz")
+
+
+def test_get_anatomical_brain_mask_res_1pt8(configured_subject):
+    """Anat brain mask at ``res-1pt8`` aligns with the functional grid."""
+    path = configured_subject.get_anatomical_brain_mask(res="1pt8")
+    assert path.is_file()
+    assert path.name.endswith(
+        "_res-1pt8_desc-brain_mask.nii.gz"
+    )
 
 
 def test_sub_metadata_stim_idx_range(configured_subject):

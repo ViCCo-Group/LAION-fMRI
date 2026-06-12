@@ -9,15 +9,16 @@ Every accessor maps to one file in the bucket: it returns the raw
 contents of the file you pick. Combining sessions, averaging
 across trials, or rebinning is the caller's responsibility.
 
-Two brain-mask sources are available. The default is **derived
-on the fly** from the subject-level mean-R^2 map
-(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``): voxels with
-any non-zero GLMsingle fit are considered "in brain". An
-anatomically-derived alternative ships under
-``derivatives/anatomical/`` and is selected with
-``source="anatomical"`` on the brain-mask accessor (or
-``mask_source="anatomical"`` on the loader accessors that
-filter on the voxel axis).
+Two brain-mask sources are available. The default is the
+**anatomically-derived** mask shipped under
+``derivatives/anatomical/`` (selected via ``source="anatomical"``
+on the brain-mask accessor, or ``mask_source="anatomical"`` on
+the loader accessors that filter on the voxel axis). The
+alternative is derived on the fly from the subject-level
+mean-R^2 map
+(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``); voxels with
+any non-zero GLMsingle fit are considered "in brain". Pass
+``source="rsquare"`` (or ``mask_source="rsquare"``) to opt in.
 
 .. note::
 
@@ -67,11 +68,12 @@ print(f"Primary ROI: {roi}")
 # Every voxel-axis accessor exposes a ``mask_source`` choice with
 # the same default:
 #
-# * ``mask_source="rsquare"`` (default) -- voxels with any non-zero
+# * ``mask_source="anatomical"`` (default) -- the
+#   anatomically-derived brain mask shipped under
+#   ``derivatives/anatomical/``. Usually wider, since brain
+#   voxels with no functional fit come along.
+# * ``mask_source="rsquare"`` -- voxels with any non-zero
 #   GLMsingle fit. Smaller, functional-only.
-# * ``mask_source="anatomical"`` -- the anatomically-derived brain
-#   mask shipped under ``derivatives/anatomical/``. Usually wider,
-#   since brain voxels with no functional fit come along.
 #
 # The same kwarg cascades through ``get_betas``,
 # ``get_noise_ceiling``, ``to_nifti``, and

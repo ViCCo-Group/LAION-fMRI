@@ -1,10 +1,10 @@
 """LAION-fMRI dataset loader.
 
-Top-level exports here intentionally avoid names that collide with
-submodule names (e.g. ``download``, ``stimuli``) so that consumers can
-keep doing ``from laion_fmri.download import download`` and
-``monkeypatch.setattr("laion_fmri.download.download", ...)`` without
-the function shadowing the module.
+Top-level re-exports skip submodule names (e.g. ``download``,
+``stimuli``) so the submodules themselves remain importable
+without shadowing -- ``from laion_fmri.download import download``
+and ``monkeypatch.setattr("laion_fmri.download.download", ...)``
+keep working.
 
 For downloading and access-service helpers, import from
 :mod:`laion_fmri.download` directly.

@@ -193,6 +193,122 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
     return matches[0]
 
 
+# ── FreeSurfer recon ────────────────────────────────────────────
+
+_HEMI_TO_FS = {"L": "lh", "R": "rh"}
+
+
+def freesurfer_subject_dir(data_dir, subject):
+    """Path to the FreeSurfer recon dir for a subject."""
+    return (
+        Path(data_dir) / "derivatives" / "freesurfer" / subject
+    )
+
+
+def freesurfer_mri_path(data_dir, subject, filename):
+    """Path to a file under the recon's ``mri/`` directory.
+
+    ``filename`` is any FreeSurfer MGZ/MGH name -- e.g.
+    ``"brain.mgz"``, ``"aparc+aseg.mgz"``, ``"T1.mgz"``.
+    """
+    return (
+        freesurfer_subject_dir(data_dir, subject) / "mri" / filename
+    )
+
+
+def freesurfer_surf_path(data_dir, subject, hemi, name):
+    """Path to a per-hemisphere surface file under ``surf/``.
+
+    Parameters
+    ----------
+    hemi : ``"L"`` or ``"R"``
+    name : str
+        FreeSurfer surface name (``"white"``, ``"pial"``,
+        ``"sphere"``, ``"sphere.reg"``, ``"inflated"``, ...).
+    """
+    if hemi not in _HEMI_TO_FS:
+        raise ValueError(
+            f"hemi must be 'L' or 'R'; got {hemi!r}"
+        )
+    return (
+        freesurfer_subject_dir(data_dir, subject)
+        / "surf"
+        / f"{_HEMI_TO_FS[hemi]}.{name}"
+    )
+
+
+def freesurfer_transforms_dir(data_dir, subject):
+    """Path to the recon's ``mri/transforms/`` directory.
+
+    Holds ``talairach.lta`` (the linear T1w -> MNI305 affine
+    despite its historical name) and its older ``.xfm`` sibling.
+    """
+    return (
+        freesurfer_subject_dir(data_dir, subject)
+        / "mri"
+        / "transforms"
+    )
+
+
+# ── Anatomical derivatives ──────────────────────────────────────
+
+# The anatomical-derivatives pipeline groups all per-subject T1w /
+# T2w / brain-mask outputs under a single session named
+# ``ses-PrismaAnat``. See:
+# ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/``.
+ANATOMICAL_SESSION = "ses-PrismaAnat"
+_ANATOMICAL_SUFFIXES = ("T1w", "T2w", "mask")
+
+
+def anatomical_subject_dir(data_dir, subject):
+    """Path to the anatomical-derivatives dir for a subject.
+
+    Holds the ``ses-PrismaAnat/anat/`` directory with T1w / T2w /
+    brain-mask files at full resolution and at ``res-1pt8``.
+    """
+    return (
+        Path(data_dir) / "derivatives" / "anatomical" / subject
+    )
+
+
+def anatomical_session_dir(data_dir, subject):
+    """Path to the per-subject anatomical session directory."""
+    return (
+        anatomical_subject_dir(data_dir, subject)
+        / ANATOMICAL_SESSION
+        / "anat"
+    )
+
+
+def anatomical_file_path(
+    data_dir, subject, *, suffix, res=None, desc=None,
+):
+    """Assemble the path to one anatomical derivative file.
+
+    Parameters
+    ----------
+    suffix : ``"T1w"`` | ``"T2w"`` | ``"mask"``
+    res : ``None`` | ``"1pt8"``
+        ``None`` is full resolution; ``"1pt8"`` matches the
+        functional grid.
+    desc : ``None`` | ``"brain"``
+        BIDS ``desc-`` token; required (and the only valid value)
+        for ``suffix="mask"``.
+    """
+    if suffix not in _ANATOMICAL_SUFFIXES:
+        raise ValueError(
+            f"suffix must be one of {list(_ANATOMICAL_SUFFIXES)}; "
+            f"got {suffix!r}."
+        )
+    parts = [subject, ANATOMICAL_SESSION, "space-T1w"]
+    if res is not None:
+        parts.append(f"res-{res}")
+    if desc is not None:
+        parts.append(f"desc-{desc}")
+    filename = "_".join(parts) + f"_{suffix}.nii.gz"
+    return anatomical_session_dir(data_dir, subject) / filename
+
+
 # ── Stimuli ─────────────────────────────────────────────────────
 
 
@@ -217,21 +333,32 @@ def embeddings_h5_path(data_dir, model):
     Sits next to the stimulus images and shares the BIDS ``desc-``
     convention -- e.g. ``task-images_desc-CLIP_embeddings.h5``.
     """
-    return stimuli_dir_path(data_dir) / f"task-images_desc-{model}_embeddings.h5"
+    return (
+        stimuli_dir_path(data_dir)
+        / f"task-images_desc-{model}_embeddings.h5"
+    )
 
 
 def segmentations_h5_path(data_dir):
     """HDF5 file of per-stimulus object-segmentation masks.
 
-    Stacked ``(N, H, W)`` uint8 dataset of binary masks; row alignment
-    is described by the sibling metadata CSV.
+    Stacked ``(N, H, W)`` uint8 dataset of binary masks; row
+    alignment is described by the sibling metadata CSV.
     """
-    return stimuli_dir_path(data_dir) / "task-images_desc-segmentations.h5"
+    return (
+        stimuli_dir_path(data_dir)
+        / "task-images_desc-segmentations.h5"
+    )
 
 
 def segmentations_metadata_path(data_dir):
-    """Sidecar CSV mapping each segmentation row to its source image and noun."""
-    return stimuli_dir_path(data_dir) / "task-images_desc-segmentations_metadata.csv"
+    """Sidecar CSV mapping each segmentation row to its source
+    image and noun.
+    """
+    return (
+        stimuli_dir_path(data_dir)
+        / "task-images_desc-segmentations_metadata.csv"
+    )
 
 
 def captions_path(data_dir):

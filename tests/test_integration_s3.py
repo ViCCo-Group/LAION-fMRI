@@ -205,16 +205,18 @@ def test_download_one_session_and_load(
         f"Expected session func dir at {func_dir}"
     )
 
-    # Round-trip through the public API
+    # Round-trip through the public API. The test scope only pulled
+    # the rsquare R2mean file (not the anatomical mask), so opt in
+    # to the rsquare brain mask source explicitly.
     sub = load_subject(subject)
     assert session in sub.get_sessions()
 
-    betas = sub.get_betas(session=session)
+    betas = sub.get_betas(session=session, mask_source="rsquare")
     assert betas.ndim == 2
     assert betas.shape[0] > 0
     assert betas.shape[1] > 0
 
-    nc = sub.get_noise_ceiling(session=session)
+    nc = sub.get_noise_ceiling(session=session, mask_source="rsquare")
     assert nc.shape == (betas.shape[1],)
 
     events = sub.get_trial_info(session=session)

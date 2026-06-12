@@ -76,6 +76,7 @@ def test_download_rejects_empty_subject(configured_env):
 DEFAULT_FETCH_KWARGS = dict(
     ses=None, task=None, space=None, desc=None, stat=None,
     suffix=None, extension=None, n_jobs=1,
+    include_freesurfer=False, include_anatomical=False,
 )
 
 
@@ -151,6 +152,48 @@ def test_download_without_stimuli_does_not_call_access_service(configured_env):
     ) as mock_stim:
         download(subject="sub-01")
     mock_stim.assert_not_called()
+
+
+# ── include_freesurfer forwards to fetch_laion_fmri ────────────
+
+
+def test_download_passes_include_freesurfer_to_fetch(configured_env):
+    """``include_freesurfer=True`` flows through to the per-subject
+    fetch call so the recon prefix gets pulled.
+    """
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01", include_freesurfer=True)
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs["include_freesurfer"] is True
+
+
+def test_download_include_freesurfer_default_false(configured_env):
+    """Default is to skip the recon -- it's hundreds of MB per subject."""
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01")
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs.get("include_freesurfer", False) is False
+
+
+# ── include_anatomical forwards to fetch_laion_fmri ────────────
+
+
+def test_download_passes_include_anatomical_to_fetch(configured_env):
+    """``include_anatomical=True`` flows through to the per-subject
+    fetch call so the anat prefix gets pulled.
+    """
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01", include_anatomical=True)
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs["include_anatomical"] is True
+
+
+def test_download_include_anatomical_default_false(configured_env):
+    """Default skips the anat tree -- it's tens of MB per subject."""
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01")
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs.get("include_anatomical", False) is False
 
 
 def test_download_captions_fetches_public_csv(configured_env):

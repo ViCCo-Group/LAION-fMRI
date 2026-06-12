@@ -34,6 +34,13 @@ dependencies = [
 [project.optional-dependencies]
 torch = ["torch>=2.0", "torchvision>=0.15"]
 bids = ["pybids>=0.16"]
+# Template-space transforms: T1w volume -> MNI305 / fsaverage via
+# the FreeSurfer recon ``Subject.to_template`` reads.
+template = [
+    "nilearn>=0.10",
+    "nitransforms>=23",
+    "templateflow>=24",
+]
 
 [project.scripts]
 laion-fmri = "laion_fmri._cli:main"
