@@ -1,3 +1,4 @@
+import warnings
 from unittest.mock import call, patch
 
 import pytest
@@ -13,6 +14,14 @@ from laion_fmri.download import (
     download,
     download_captions,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_data_dir_drift_tracker(monkeypatch):
+    """Reset the cross-call data_dir tracker before every test."""
+    monkeypatch.setattr(
+        "laion_fmri.download._LAST_DATA_DIR", None, raising=False,
+    )
 
 
 @pytest.fixture
@@ -353,3 +362,83 @@ def test_download_stimuli_skips_auth_when_local_files_match(configured_env):
     mock_manifest.assert_called_once()
     mock_resolve.assert_not_called()
     mock_download.assert_not_called()
+
+
+# ── data_dir drift warning ─────────────────────────────────────
+
+
+def _make_data_dir(parent, name):
+    """Create a data dir with the .laion_fmri marker + license accepted."""
+    d = parent / name
+    d.mkdir()
+    meta = d / ".laion_fmri"
+    meta.mkdir()
+    (meta / "license_accepted").touch()
+    return d
+
+
+def test_download_does_not_warn_on_first_call(configured_env):
+    """The very first download() call in a process has no prior
+    data_dir to compare against -- it must not warn."""
+    with patch("laion_fmri.download.fetch_laion_fmri"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            download(subject="sub-01")
+
+
+def test_download_does_not_warn_on_same_data_dir(configured_env):
+    """Two successive download() calls against the same data_dir
+    don't warn."""
+    with patch("laion_fmri.download.fetch_laion_fmri"):
+        download(subject="sub-01")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            download(subject="sub-03")
+
+
+def test_download_warns_on_data_dir_drift(tmp_path, monkeypatch):
+    """A second download() with a different data_dir than the first
+    emits a UserWarning naming both paths."""
+    config_home = tmp_path / "config_home"
+    config_home.mkdir()
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(config_home))
+
+    data_dir_a = _make_data_dir(tmp_path, "data_a")
+    data_dir_b = _make_data_dir(tmp_path, "data_b")
+
+    from laion_fmri.config import dataset_initialize
+
+    dataset_initialize(str(data_dir_a))
+    with patch("laion_fmri.download.fetch_laion_fmri"):
+        download(subject="sub-01")
+
+    dataset_initialize(str(data_dir_b))
+    with patch("laion_fmri.download.fetch_laion_fmri"):
+        with pytest.warns(UserWarning, match="data directory changed"):
+            download(subject="sub-01")
+
+
+def test_drift_warning_names_both_paths(tmp_path, monkeypatch):
+    """The drift warning includes the old and new data_dir so users
+    can spot which call wrote where."""
+    config_home = tmp_path / "config_home"
+    config_home.mkdir()
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(config_home))
+
+    data_dir_a = _make_data_dir(tmp_path, "data_a")
+    data_dir_b = _make_data_dir(tmp_path, "data_b")
+
+    from laion_fmri.config import dataset_initialize
+
+    dataset_initialize(str(data_dir_a))
+    with patch("laion_fmri.download.fetch_laion_fmri"):
+        download(subject="sub-01")
+
+    dataset_initialize(str(data_dir_b))
+    with patch("laion_fmri.download.fetch_laion_fmri"):
+        with pytest.warns(UserWarning) as records:
+            download(subject="sub-01")
+
+    msg = str(records[0].message)
+    assert str(data_dir_a) in msg
+    assert str(data_dir_b) in msg

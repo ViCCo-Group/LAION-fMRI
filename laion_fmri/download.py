@@ -1,6 +1,7 @@
 """Download logic for the LAION-fMRI dataset."""
 
 import sys
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 
 from laion_fmri._constants import (
@@ -36,6 +37,36 @@ from laion_fmri._stimulus_access import (
 from laion_fmri.config import get_data_dir
 from laion_fmri.discovery import get_subjects
 from laion_fmri.embeddings import AVAILABLE_MODELS
+
+
+#: Last ``data_dir`` that ``download()`` ran against in this process.
+#: Used by :func:`_check_data_dir_drift` to warn callers whose
+#: configured data directory changed between successive downloads --
+#: a common source of "files landed in two different trees" reports.
+_LAST_DATA_DIR = None
+
+
+def _check_data_dir_drift(data_dir):
+    """Warn if ``data_dir`` differs from the previous ``download()`` call.
+
+    Catches the situation where a user re-runs ``dataset_initialize``
+    between calls (or has different ``XDG_CONFIG_HOME`` values across
+    shells) and ends up writing the second download into a different
+    tree than the first. The warning names both paths so the user can
+    decide which one to keep.
+    """
+    global _LAST_DATA_DIR
+    if _LAST_DATA_DIR is not None and _LAST_DATA_DIR != data_dir:
+        warnings.warn(
+            "The configured data directory changed between download() "
+            f"calls (was {_LAST_DATA_DIR!r}, now {data_dir!r}). Files "
+            "from the earlier call live under the old path; rerun "
+            "dataset_initialize(...) and re-download if you want one "
+            "consolidated tree.",
+            UserWarning,
+            stacklevel=3,
+        )
+    _LAST_DATA_DIR = data_dir
 
 
 def _check_license_accepted(data_dir):
@@ -560,6 +591,7 @@ def download(
         ``request_id``.
     """
     data_dir = get_data_dir()
+    _check_data_dir_drift(data_dir)
 
     if subject != "all":
         resolve_subject_id(subject)
