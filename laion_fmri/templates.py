@@ -1,21 +1,16 @@
 """Template-space projection of subject-T1w data.
 
-Wraps two parallel chains so callers reach any supported template
-through ``to_template(..., target=...)`` without touching the
-external libraries:
+Wraps two chains so callers reach a supported template through
+``to_template(..., target=...)`` without touching the external
+libraries:
 
 - *Surface chain*: T1w volume → fsnative surface
   (``nilearn.surface.vol_to_surf``) → fsaverage surface
   (``nitransforms.surface.SurfaceResampler``). Used for the
-  ``fsaverage`` target only.
+  ``fsaverage`` target.
 - *Volume chain*: T1w volume → MNI305 via
-  ``nitransforms.linear.Affine`` reading ``talairach.lta``;
-  optionally resampled onto another volume template fetched
-  through ``templateflow``.
-
-fsLR and CIVET targets need Connectome Workbench's ``wb_command``
-for the fsaverage hand-off; the surface→MNI152 direction has no
-pure-Python implementation in neuromaps. Both are deferred.
+  ``nitransforms.linear.Affine`` reading the recon's
+  ``talairach.lta``. Used for the ``MNI305`` target.
 """
 
 import importlib.util
@@ -34,35 +29,20 @@ _TEMPLATE_INSTALL_HINT = (
     "``pip install laion-fmri[template]``)."
 )
 
-# Scope notes:
-# - fsLR / CIVET need Connectome Workbench's ``wb_command`` for
-#   the fsaverage hand-off in neuromaps, so they're out.
-# - MNI152 surface route is out: neuromaps ships
-#   ``mni152_to_fsaverage`` (volume to surface) but no reverse.
-# - MNI152 / MNIColin27 variants without a templateflow xfm from
-#   MNI305 (or from MNI152NLin6Asym) are out. As of templateflow
-#   24, only the (NLin6Asym <-> NLin2009cAsym) pair ships, and
-#   NLin6Asym is reachable from MNI305 via the Brett 1999 affine.
 _SUPPORTED_TARGETS = (
     "fsaverage",
     "MNI305",
-    "MNI152NLin6Asym",
-    "MNI152NLin2009cAsym",
 )
 
 _SURFACE_TARGETS = frozenset({"fsaverage"})
-_VOLUME_ONLY_TARGETS = frozenset({
-    "MNI305",
-    "MNI152NLin6Asym",
-    "MNI152NLin2009cAsym",
-})
+_VOLUME_ONLY_TARGETS = frozenset({"MNI305"})
 
 
 def _check_template_available():
     """Raise ImportError if any template-extra dependency is missing."""
     missing = [
         name for name in (
-            "nilearn", "nitransforms", "neuromaps", "templateflow",
+            "nilearn", "nitransforms", "templateflow",
         )
         if importlib.util.find_spec(name) is None
     ]
@@ -105,8 +85,8 @@ def to_template(
         Currently every supported target has a single route, so
         ``"auto"`` always resolves to that route. The keyword is
         retained for forward compatibility; passing the wrong
-        route for a target (e.g. ``route="surface"`` for an
-        MNI152 variant) raises ``ValueError``.
+        route for a target (e.g. ``route="surface"`` for
+        ``"MNI305"``) raises ``ValueError``.
     surface : str
         Surface used by the vol→surf sampling step (``"white"``,
         ``"pial"``, or ``"midthickness"``).
@@ -143,14 +123,10 @@ def to_template(
     if effective_route == "volume":
         if target == "MNI305":
             result = _to_mni305(subject, values)
-        elif target == "MNI152NLin6Asym":
-            result = _to_mni152_nlin6asym(subject, values)
-        elif target == "MNI152NLin2009cAsym":
-            result = _to_mni152_2009casym(subject, values)
         else:
             raise NotImplementedError(
-                f"Volume route for target {target!r} is not yet "
-                "implemented in this slice of the refactor."
+                f"Volume route for target {target!r} is not "
+                "implemented."
             )
     else:
         result = _to_surface(
@@ -331,7 +307,6 @@ def _to_mni305(subject, values):
     fixture's identity LTA case).
     """
     from nitransforms.linear import Affine
-    from nitransforms.resampling import apply as nt_apply
 
     t1w_img = _scatter_to_nifti(subject, values)
     lta_path = (
@@ -342,7 +317,7 @@ def _to_mni305(subject, values):
     )
     affine_xfm = Affine.from_filename(str(lta_path), fmt="fs")
     reference = _mni305_reference(fallback=t1w_img)
-    return nt_apply(affine_xfm, t1w_img, reference=reference)
+    return _apply_resample(affine_xfm, t1w_img, reference)
 
 
 _FSAVERAGE_DENSITY_TOKENS = {
@@ -412,16 +387,15 @@ def _resample_fsnative_to_fsaverage(
 
     ``SurfaceResampler`` loads its inputs via ``nib.load`` which
     doesn't understand FreeSurfer-native binary geometry, so we
-    re-encode the subject's ``sphere.reg`` as a temp GIfTI on
-    disk and pass that. Templateflow already ships fsaverage's
-    sphere as ``.surf.gii``.
+    re-encode the subject's ``sphere.reg`` as a GIfTI in a
+    scratch directory and pass that. Templateflow already ships
+    fsaverage's sphere as ``.surf.gii``.
     """
     from nitransforms.surface import SurfaceResampler
     from templateflow.api import get as tflow_get
 
     h_fs = "lh" if hemi == "L" else "rh"
     subj_sphere_fs = fs_dir / "surf" / f"{h_fs}.sphere.reg"
-    subj_sphere_gii = _fs_geometry_as_temp_gifti(subj_sphere_fs)
 
     fsavg_sphere = tflow_get(
         "fsaverage", hemi=hemi, suffix="sphere",
@@ -430,22 +404,24 @@ def _resample_fsnative_to_fsaverage(
     if isinstance(fsavg_sphere, list):
         fsavg_sphere = fsavg_sphere[0]
 
-    try:
+    with tempfile.TemporaryDirectory() as scratch:
+        subj_sphere_gii = (
+            Path(scratch) / f"{h_fs}.sphere.reg.surf.gii"
+        )
+        _write_fs_geometry_as_gifti(subj_sphere_fs, subj_sphere_gii)
         resampler = SurfaceResampler(
             reference=str(fsavg_sphere),
-            moving=subj_sphere_gii,
+            moving=str(subj_sphere_gii),
         )
         return resampler.apply(fsnative_data)
-    finally:
-        Path(subj_sphere_gii).unlink(missing_ok=True)
 
 
-def _fs_geometry_as_temp_gifti(fs_path):
-    """Return a temp ``.surf.gii`` mirror of a FreeSurfer geometry file.
+def _write_fs_geometry_as_gifti(fs_path, gii_path):
+    """Write a FreeSurfer-native surface to ``gii_path`` as ``.surf.gii``.
 
-    The caller must delete the temp file after use. Used to bridge
-    FreeSurfer-native surface files (which ``nib.load`` doesn't
-    auto-detect) into libraries that expect GIfTI.
+    Used to bridge FreeSurfer-native surface files (which
+    ``nib.load`` doesn't auto-detect) into libraries that expect
+    GIfTI.
     """
     verts, faces = nib.freesurfer.read_geometry(str(fs_path))
     img = nib.gifti.GiftiImage(darrays=[
@@ -458,92 +434,45 @@ def _fs_geometry_as_temp_gifti(fs_path):
             intent="NIFTI_INTENT_TRIANGLE",
         ),
     ])
-    with tempfile.NamedTemporaryFile(
-        suffix=".surf.gii", delete=False,
-    ) as tmp:
-        tmp_path = tmp.name
-    nib.save(img, tmp_path)
-    return tmp_path
+    nib.save(img, str(gii_path))
 
 
-def _to_mni152_nlin6asym(subject, values):
-    """T1w → MNI305 → MNI152NLin6Asym via the Brett 1999 affine."""
-    from nitransforms.resampling import apply as nt_apply
+def _apply_resample(transform, img, reference):
+    """Resample ``img`` through ``transform`` onto ``reference``.
 
-    mni305_img = _to_mni305(subject, values)
-    target_ref = _fetch_template_reference("MNI152NLin6Asym")
-    return nt_apply(
-        _brett_mni305_to_mni152_nlin6asym(),
-        mni305_img, reference=target_ref,
-    )
+    Handles 3-D and 4-D moving images: 4-D inputs are processed
+    one volume at a time and the resampled outputs are stacked
+    back along the trailing axis. ``nitransforms``'s own
+    ``resampling.apply`` is 3-D only.
 
-
-def _to_mni152_2009casym(subject, values):
-    """T1w → MNI305 → MNI152NLin6Asym → MNI152NLin2009cAsym.
-
-    The MNI305 → NLin6Asym hop is the Brett 1999 affine; the
-    NLin6Asym → 2009cAsym hop is templateflow's nonlinear .h5
-    warp (ANTs format: linear + displacement field).
+    Uses nearest-neighbor interpolation (``order=0``) so each
+    target voxel takes the exact value of its closest source
+    voxel -- no averaging, no value drift.
     """
     from nitransforms.resampling import apply as nt_apply
 
-    mni305_img = _to_mni305(subject, values)
-    nlin6_ref = _fetch_template_reference("MNI152NLin6Asym")
-    in_nlin6 = nt_apply(
-        _brett_mni305_to_mni152_nlin6asym(),
-        mni305_img, reference=nlin6_ref,
-    )
-    warp = _load_templateflow_h5(
-        target="MNI152NLin2009cAsym", source="MNI152NLin6Asym",
-    )
-    target_ref = _fetch_template_reference("MNI152NLin2009cAsym")
-    return nt_apply(warp, in_nlin6, reference=target_ref)
-
-
-def _brett_mni305_to_mni152_nlin6asym():
-    """Return the Brett 1999 MNI305 → MNI152NLin6Asym affine.
-
-    Published in Brett, Christoff, Cusack & Lancaster (2001)
-    and shipped by FreeSurfer as ``mni152reg``.
-    """
-    from nitransforms.linear import Affine
-
-    matrix = np.array([
-        [0.9975, -0.0073,  0.0176, -0.0429],
-        [0.0146,  1.0009, -0.0024,  1.5496],
-        [-0.0130, -0.0093,  0.9971,  1.1840],
-        [0.0,     0.0,     0.0,     1.0],
-    ])
-    return Affine(matrix)
-
-
-def _load_templateflow_h5(*, target, source):
-    """Load a templateflow ``tpl-{target}_from-{source}`` .h5 warp.
-
-    ANTs composite .h5 files carry a linear part plus a dense
-    displacement field; we read both via ``ITKCompositeH5`` and
-    wrap them as a ``nitransforms.manip.TransformChain``.
-    """
-    from nitransforms.io.itk import ITKCompositeH5
-    from nitransforms.linear import Affine
-    from nitransforms.manip import TransformChain
-    from nitransforms.nonlinear import DenseFieldTransform
-    from templateflow.api import get as tflow_get
-
-    matches = tflow_get(
-        target, raise_empty=False, suffix="xfm",
-        **{"from": source},
-    )
-    if not matches:
-        raise FileNotFoundError(
-            f"No templateflow xfm from {source} to {target}."
+    if img.ndim == 3:
+        return nt_apply(
+            transform, img, reference=reference, order=0,
         )
-    path = matches[0] if isinstance(matches, list) else matches
 
-    parts = ITKCompositeH5.from_filename(str(path))
-    affine = Affine(parts[0].to_ras())
-    dense = DenseFieldTransform(parts[1], is_deltas=True)
-    return TransformChain([affine, dense])
+    if img.ndim != 4:
+        raise ValueError(
+            f"img must be 3-D or 4-D; got shape {img.shape}."
+        )
+
+    n_vols = img.shape[-1]
+    affine = img.affine
+    data_in = np.asarray(img.dataobj)
+    vols = []
+    for t in range(n_vols):
+        vol_img = nib.Nifti1Image(data_in[..., t], affine)
+        out_img = nt_apply(
+            transform, vol_img, reference=reference, order=0,
+        )
+        vols.append(np.asarray(out_img.dataobj))
+    stacked = np.stack(vols, axis=-1)
+    return nib.Nifti1Image(stacked, out_img.affine)
 
 
 def _fetch_template_reference(target):
@@ -562,16 +491,17 @@ def _fetch_template_reference(target):
 def _mni305_reference(fallback):
     """Return an MNI305 reference NIfTI; fall back to ``fallback``.
 
-    Templateflow ships MNI305 under template ``MNI305``; the T1w
-    suffix at 1 mm is the standard reference. When templateflow
-    has no match (no MNI305 entry in the local cache, or version
-    skew), we fall back to the input grid -- correct only when
-    the LTA's source and destination grids agree.
+    Templateflow ships MNI305 as ``tpl-MNI305_T1w.nii.gz`` -- a
+    1 mm isotropic image with no ``res-`` or ``desc-`` entity, so
+    the lookup must not filter on resolution. When templateflow
+    has no match at all (offline tests, no cache), we fall back
+    to the input grid -- correct only when the LTA's source and
+    destination grids agree.
     """
     from templateflow.api import get as tflow_get
 
     ref_path = tflow_get(
-        "MNI305", suffix="T1w", resolution=1, extension=".nii.gz",
+        "MNI305", suffix="T1w", extension=".nii.gz",
         raise_empty=False,
     )
     if not ref_path:
@@ -663,25 +593,57 @@ def _save_gifti(array, path):
 def _scatter_to_nifti(subject, values):
     """Round-trip a brain-masked array to a T1w-grid NIfTI.
 
-    Accepts a 1-D ``(n_voxels,)`` or 2-D ``(n_trials, n_voxels)``
-    array over the brain mask, or a path/Nifti1Image pre-built on
-    the subject's T1w grid.
+    Accepts a 1-D ``(n_voxels,)`` array, a 2-D
+    ``(n_trials, n_voxels)`` array (returns a 4-D NIfTI with the
+    trial axis preserved), or a path / Nifti1Image already on the
+    subject's T1w grid.
+
+    GLMsingle's "unmodeled voxel" sentinel (``NaN``) is replaced
+    with 0 inside the scattered volume so the downstream cubic
+    spline resample does not propagate ``NaN`` across the whole
+    output. The substitution is scoped to the transform pipeline;
+    user-facing accessors (``get_betas`` etc.) still surface the
+    original ``NaN`` values.
     """
     if isinstance(values, (str, Path)):
         return nib.load(str(values))
     if isinstance(values, nib.Nifti1Image):
         return values
 
-    arr = np.asarray(values)
-    with tempfile.NamedTemporaryFile(
-        suffix=".nii.gz", delete=False,
-    ) as tmp:
-        tmp_path = Path(tmp.name)
-    try:
-        subject.to_nifti(arr, str(tmp_path))
-        img = nib.load(str(tmp_path))
-        # Materialize the data so the temp file can be deleted.
-        data = np.asarray(img.dataobj).copy()
-        return nib.Nifti1Image(data, img.affine, img.header)
-    finally:
-        tmp_path.unlink(missing_ok=True)
+    from laion_fmri.io import load_nifti_mask
+
+    arr = np.nan_to_num(
+        np.asarray(values, dtype=np.float32), copy=True, nan=0.0,
+    )
+    mask_path = subject._brain_mask_path("rsquare")
+    brain_mask = load_nifti_mask(mask_path)
+    ref = nib.load(str(mask_path))
+    n_voxels = int(brain_mask.sum())
+
+    if arr.ndim == 1:
+        if arr.size != n_voxels:
+            raise ValueError(
+                f"values length {arr.size} does not match "
+                f"brain-mask voxel count {n_voxels}."
+            )
+        flat = np.zeros(brain_mask.shape[0], dtype=np.float32)
+        flat[brain_mask] = arr
+        vol = flat.reshape(ref.shape)
+    elif arr.ndim == 2:
+        n_trials, n_v = arr.shape
+        if n_v != n_voxels:
+            raise ValueError(
+                f"values shape {(n_trials, n_v)} does not match "
+                f"brain-mask voxel count {n_voxels}."
+            )
+        flat = np.zeros(
+            (brain_mask.shape[0], n_trials), dtype=np.float32,
+        )
+        flat[brain_mask, :] = arr.T
+        vol = flat.reshape(*ref.shape, n_trials)
+    else:
+        raise ValueError(
+            f"values must be 1-D or 2-D; got shape {arr.shape}."
+        )
+
+    return nib.Nifti1Image(vol, ref.affine)

@@ -70,6 +70,11 @@ N_SESSIONS = 2
 # Synthetic fsnative meshes are level-2 icosahedrons.
 # Closed-form vertex count: 10 * 4**level + 2.
 N_FSNATIVE_VERTICES = 162
+# Anatomical brain mask is a strict superset of the rsquare-derived
+# one (50 True voxels) so tests can tell ``source="anatomical"``
+# from ``source="rsquare"`` by voxel count.
+N_ANATOMICAL_BRAIN_VOXELS = 60
+ANATOMICAL_SESSION = "ses-PrismaAnat"
 N_REPS_PER_STIMULUS = 3
 N_TRIALS_PER_SESSION = N_STIMULI * N_REPS_PER_STIMULUS  # 60
 AFFINE = np.eye(4)
@@ -132,6 +137,19 @@ def _make_brain_mask():
     mask = np.zeros(BRAIN_SHAPE, dtype=bool)
     mask[1:4, 1:4, :] = True  # 3*3*5 = 45
     mask[0, 0, :] = True      # + 5 = 50
+    return mask
+
+
+def _make_anatomical_brain_mask():
+    """Return a 5x5x5 anatomical brain mask with 60 True voxels.
+
+    Strict superset of ``_make_brain_mask()`` so tests can verify
+    that ``source="anatomical"`` selects a different mask than
+    ``source="rsquare"``.
+    """
+    mask = _make_brain_mask().copy()
+    mask[4, 0, :] = True  # +5
+    mask[4, 1, :] = True  # +5 = 60 total
     return mask
 
 
@@ -548,6 +566,42 @@ def _build_freesurfer(data_dir, sub_id):
         )
 
 
+# ── Anatomical derivatives ──────────────────────────────────────
+
+
+def _build_anatomical(data_dir, sub_id, rng):
+    """Populate ``derivatives/anatomical/{sub_id}/ses-PrismaAnat/anat/``.
+
+    Six files per subject mirror the bucket layout: T1w, T2w, and a
+    brain mask, each at full resolution and at ``res-1pt8``. The
+    synthetic grid is 5x5x5 throughout -- the ``res-1pt8`` token
+    only differentiates the filenames, not the array shape.
+    """
+    anat_root = (
+        data_dir / "derivatives" / "anatomical"
+        / sub_id / ANATOMICAL_SESSION / "anat"
+    )
+    anat_root.mkdir(parents=True)
+
+    anat_mask = _make_anatomical_brain_mask()
+    t1w_volume = rng.standard_normal(BRAIN_SHAPE).astype(np.float32)
+    t2w_volume = rng.standard_normal(BRAIN_SHAPE).astype(np.float32)
+
+    for res in (None, "1pt8"):
+        res_token = f"_res-{res}" if res else ""
+        base = (
+            f"{sub_id}_{ANATOMICAL_SESSION}"
+            f"_space-T1w{res_token}"
+        )
+        _save_nifti(t1w_volume, anat_root / f"{base}_T1w.nii.gz")
+        _save_nifti(t2w_volume, anat_root / f"{base}_T2w.nii.gz")
+        _save_nifti(
+            anat_mask.astype(np.uint8),
+            anat_root / f"{base}_desc-brain_mask.nii.gz",
+            dtype=np.uint8,
+        )
+
+
 # ── Fixtures ────────────────────────────────────────────────────
 
 @pytest.fixture
@@ -594,6 +648,7 @@ def synthetic_data_dir(tmp_path):
         _build_subject(data_dir, sub_id, brain_mask, stim_meta, rng)
         _build_rois(data_dir, sub_id, brain_mask)
         _build_freesurfer(data_dir, sub_id)
+        _build_anatomical(data_dir, sub_id, rng)
 
     return data_dir
 

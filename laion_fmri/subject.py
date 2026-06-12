@@ -15,6 +15,8 @@ from laion_fmri._errors import (
     StimuliNotDownloadedError,
 )
 from laion_fmri._paths import (
+    anatomical_file_path,
+    anatomical_subject_dir,
     betas_path,
     freesurfer_subject_dir,
     glmsingle_subject_dir,
@@ -219,27 +221,70 @@ class Subject:
             f"stimuli must be 'shared', 'unique', or None; got {stimuli!r}"
         )
 
-    def get_n_voxels(self):
-        """Number of voxels in the subject's brain mask."""
-        return int(self.get_brain_mask().sum())
+    def get_n_voxels(self, source="rsquare", res="1pt8"):
+        """Number of voxels in the subject's brain mask.
+
+        ``source`` and ``res`` mirror :meth:`get_brain_mask`; see
+        its docstring for the available values.
+        """
+        return int(
+            self.get_brain_mask(source=source, res=res).sum()
+        )
 
     # ── Brain mask ──────────────────────────────────────────────
 
-    def get_brain_mask(self):
+    def get_brain_mask(self, source="rsquare", res="1pt8"):
         """Load the subject's brain mask as a flat boolean array.
 
-        Derived from the subject-level mean-R^2 map: every voxel
-        where the GLMsingle model has any non-zero fit. The
-        bucket ships R2mean as ``..._stat-rsquare_desc-R2mean_
-        statmap.nii.gz`` rather than a pre-computed mask file.
+        Parameters
+        ----------
+        source : ``"rsquare"`` (default) | ``"anatomical"``
+            ``"rsquare"`` derives the mask from the subject-level
+            mean-R^2 map (voxels with any non-zero GLMsingle fit;
+            the bucket ships R2mean as
+            ``..._stat-rsquare_desc-R2mean_statmap.nii.gz``).
+            ``"anatomical"`` uses the brain mask in
+            ``derivatives/anatomical/.../desc-brain_mask.nii.gz``
+            -- a wider, anatomically-derived mask. Pull it with
+            ``download(include_anatomical=True)``.
+        res : ``"1pt8"`` (default) | ``None``
+            Anatomical-mask resolution. ``"1pt8"`` matches the
+            functional grid, so the returned mask aligns with the
+            voxel axis of ``get_betas`` / ``get_noise_ceiling`` and
+            with the rsquare-derived mask. ``None`` loads the
+            full-resolution anatomical mask; the returned 1-D
+            array is larger and will not align with the loader
+            cascade. Ignored for ``source="rsquare"`` (the
+            rsquare-derived mask is published at one resolution
+            only).
 
         Returns
         -------
         np.ndarray
             1-D boolean array over the full image grid.
         """
-        return load_nifti_mask(
-            r2mean_path(self._data_dir, self._subject_id),
+        return load_nifti_mask(self._brain_mask_path(source, res))
+
+    def _brain_mask_path(self, source, res="1pt8"):
+        """Resolve the on-disk file backing ``get_brain_mask(source)``.
+
+        Shared by :meth:`get_brain_mask`, :meth:`get_n_voxels`,
+        :meth:`get_betas`, :meth:`get_noise_ceiling`,
+        :meth:`to_nifti`, and :meth:`get_voxel_coordinates`. The
+        loader cascade (everything but ``get_brain_mask`` and
+        ``get_n_voxels``) calls this with the default ``res`` so
+        the returned mask aligns with the functional grid.
+        """
+        if source == "rsquare":
+            return r2mean_path(self._data_dir, self._subject_id)
+        if source == "anatomical":
+            return anatomical_file_path(
+                self._data_dir, self._subject_id,
+                suffix="mask", res=res, desc="brain",
+            )
+        raise ValueError(
+            f"source must be 'rsquare' or 'anatomical'; "
+            f"got {source!r}."
         )
 
     # ── Betas (single-trial NIfTI per session) ─────────────────
@@ -252,6 +297,7 @@ class Subject:
         nc_threshold=None,
         stimuli=None,
         streaming=False,
+        mask_source="rsquare",
     ):
         """Load single-trial betas for one or more sessions.
 
@@ -271,6 +317,9 @@ class Subject:
         stimuli : "shared", "unique", or None
             Trial-level filter using the stimulus-metadata
             ``shared`` flag.
+        mask_source : ``"rsquare"`` (default) | ``"anatomical"``
+            Which brain mask to filter the voxel axis on; see
+            :meth:`get_brain_mask` for the difference.
         streaming : bool
             If False (default), the full 4-D NIfTI is
             materialized in RAM and then masked. Decompresses
@@ -290,13 +339,19 @@ class Subject:
         np.ndarray or dict[str, np.ndarray]
             ``(n_trials, n_selected_voxels)`` for a single
             session; a ``{session: array}`` dict for a list.
+            Values are GLMsingle single-trial β estimates in
+            percent-signal-change units. Voxels that GLMsingle
+            did not model (failed fit) arrive as ``NaN`` -- that's
+            the signal for "no estimate available", distinct
+            from "estimate is 0". Handle them at the caller's
+            analysis layer.
         """
         if isinstance(session, (list, tuple)):
             return {
                 s: self.get_betas(
                     session=s, roi=roi, mask=mask,
                     nc_threshold=nc_threshold, stimuli=stimuli,
-                    streaming=streaming,
+                    streaming=streaming, mask_source=mask_source,
                 )
                 for s in session
             }
@@ -313,27 +368,7 @@ class Subject:
         path = betas_path(
             self._data_dir, self._subject_id, session,
         )
-        mask_path = r2mean_path(
-            self._data_dir, self._subject_id,
-        )
-        if not path.exists():
-            raise DataNotDownloadedError(
-                f"Single-trial beta file for {self._subject_id} "
-                f"{session} not found at {path}. "
-                "Run: "
-                f"laion-fmri download --subject {self._subject_id} "
-                f"--ses {session} --desc SingletrialBetas "
-                "--stat effect --suffix statmap --extension nii.gz"
-            )
-        if not mask_path.exists():
-            raise DataNotDownloadedError(
-                f"Subject brain-mask source file for {self._subject_id} "
-                f"not found at {mask_path}. "
-                "Run: "
-                f"laion-fmri download --subject {self._subject_id} "
-                "--ses averages --stat rsquare --desc R2mean "
-                "--suffix statmap --extension nii.gz"
-            )
+        mask_path = self._brain_mask_path(mask_source)
 
         # Build a single full-volume voxel mask before reading the
         # betas: the streaming path then applies brain + ROI + NC
@@ -542,6 +577,7 @@ class Subject:
 
     def get_noise_ceiling(
         self, session=None, desc=None, roi=None, mask=None,
+        mask_source="rsquare",
     ):
         """Load a noise-ceiling map.
 
@@ -560,15 +596,21 @@ class Subject:
         desc : str, list of str, or None
         roi : str or None
         mask : np.ndarray[bool] or None
+        mask_source : ``"rsquare"`` (default) | ``"anatomical"``
+            Brain-mask choice; see :meth:`get_brain_mask`.
 
         Returns
         -------
         np.ndarray or dict[str, np.ndarray]
+            Noise ceiling in percent variance explained
+            (0-100, GLMsingle convention). Threshold near
+            10-20 % keeps reliably driven voxels.
         """
         if isinstance(session, (list, tuple)):
             return {
                 s: self.get_noise_ceiling(
                     session=s, roi=roi, mask=mask,
+                    mask_source=mask_source,
                 )
                 for s in session
             }
@@ -576,6 +618,7 @@ class Subject:
             return {
                 d: self.get_noise_ceiling(
                     desc=d, roi=roi, mask=mask,
+                    mask_source=mask_source,
                 )
                 for d in desc
             }
@@ -611,9 +654,7 @@ class Subject:
                 f"Run: {command}"
             )
 
-        mask_file = r2mean_path(
-            self._data_dir, self._subject_id,
-        )
+        mask_file = self._brain_mask_path(mask_source)
         nc = load_nifti_data(nc_file, mask_file)
 
         if roi is not None:
@@ -708,6 +749,77 @@ class Subject:
                 "include_freesurfer=True)"
             )
         return fs_dir
+
+    def has_anatomical(self):
+        """Return True if this subject's anatomical derivatives are on disk.
+
+        Anatomical files live under
+        ``derivatives/anatomical/{subject}/ses-PrismaAnat/anat/``
+        and ship T1w / T2w volumes plus a brain mask at two
+        resolutions (full and ``res-1pt8``).
+        """
+        return anatomical_subject_dir(
+            self._data_dir, self._subject_id,
+        ).is_dir()
+
+    def get_anatomical_dir(self):
+        """Return the path to this subject's anatomical derivatives.
+
+        Raises
+        ------
+        DataNotDownloadedError
+            If the anatomical directory does not exist on disk.
+        """
+        anat_dir = anatomical_subject_dir(
+            self._data_dir, self._subject_id,
+        )
+        if not anat_dir.is_dir():
+            raise DataNotDownloadedError(
+                f"Anatomical derivatives for {self._subject_id} "
+                f"not found at {anat_dir}. Run: "
+                "from laion_fmri.download import download; "
+                f"download(subject='{self._subject_id}', "
+                "include_anatomical=True)"
+            )
+        return anat_dir
+
+    def get_t1w(self, *, res=None):
+        """Return the path to this subject's anatomical T1w volume.
+
+        ``res=None`` returns the full-resolution image;
+        ``res="1pt8"`` returns the variant on the functional grid.
+        """
+        return self._anatomical_file(suffix="T1w", res=res)
+
+    def get_t2w(self, *, res=None):
+        """Return the path to this subject's anatomical T2w volume."""
+        return self._anatomical_file(suffix="T2w", res=res)
+
+    def get_anatomical_brain_mask(self, *, res=None):
+        """Return the path to the anatomically-derived brain mask.
+
+        Distinct from :meth:`get_brain_mask`, which returns the
+        rsquare-derived mask as a flat boolean array on the
+        subject's brain-mask voxels.
+        """
+        return self._anatomical_file(
+            suffix="mask", res=res, desc="brain",
+        )
+
+    def _anatomical_file(self, *, suffix, res=None, desc=None):
+        """Resolve one file under this subject's anatomical dir."""
+        path = anatomical_file_path(
+            self._data_dir, self._subject_id,
+            suffix=suffix, res=res, desc=desc,
+        )
+        if not path.is_file():
+            raise DataNotDownloadedError(
+                f"Anatomical file not found at {path}. Run: "
+                "from laion_fmri.download import download; "
+                f"download(subject='{self._subject_id}', "
+                "include_anatomical=True)"
+            )
+        return path
 
     @property
     def metadata(self):
@@ -819,13 +931,18 @@ class Subject:
 
     # ── Brain space ─────────────────────────────────────────────
 
-    def to_nifti(self, values, output_path, roi=None, mask=None):
-        """Write a per-voxel array to a 3-D NIfTI volume."""
+    def to_nifti(
+        self, values, output_path, roi=None, mask=None,
+        mask_source="rsquare",
+    ):
+        """Write a per-voxel array to a 3-D NIfTI volume.
+
+        ``values`` is sized to the brain mask selected by
+        ``mask_source`` (default rsquare-derived).
+        """
         from laion_fmri.brain import to_nifti
 
-        mask_file = r2mean_path(
-            self._data_dir, self._subject_id,
-        )
+        mask_file = self._brain_mask_path(mask_source)
         _, affine = load_nifti_with_affine(mask_file)
 
         roi_mask_arr = (
@@ -844,14 +961,14 @@ class Subject:
     def to_template(self, values, target, **kwargs):
         """Project T1w-space values into a template / reference space.
 
-        Thin wrapper around :func:`laion_fmri.templates.to_template`;
-        see that function's docstring for the full kwargs surface
+        Forwards to :func:`laion_fmri.templates.to_template`; see
+        that function's docstring for the full kwargs surface
         (``hemi``, ``route``, ``surface``, ``fsaverage_density``,
         ``interpolation``, ``output_dir``, ``desc``, ``session``).
 
         Requires the optional ``[template]`` extra; ``ImportError``
         is raised at call time if any of nilearn / nitransforms /
-        neuromaps / templateflow is missing.
+        templateflow is missing.
         """
         from laion_fmri.templates import to_template
         return to_template(self, values, target, **kwargs)
@@ -875,13 +992,17 @@ class Subject:
         from laion_fmri.templates import surface_to_template
         return surface_to_template(self, values, target, **kwargs)
 
-    def get_voxel_coordinates(self, roi=None, mask=None):
-        """Return MNI/T1w coordinates for the selected voxels."""
+    def get_voxel_coordinates(
+        self, roi=None, mask=None, mask_source="rsquare",
+    ):
+        """Return MNI/T1w coordinates for the selected voxels.
+
+        ``mask_source`` picks which brain mask defines "selected
+        voxels"; see :meth:`get_brain_mask`.
+        """
         from laion_fmri.brain import get_voxel_coordinates
 
-        mask_file = r2mean_path(
-            self._data_dir, self._subject_id,
-        )
+        mask_file = self._brain_mask_path(mask_source)
         _, affine = load_nifti_with_affine(mask_file)
 
         roi_mask_arr = (

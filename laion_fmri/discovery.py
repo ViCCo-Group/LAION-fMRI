@@ -18,6 +18,7 @@ SUBJECT_PREFIXES = (
     "derivatives/glmsingle-tedana/",
     "derivatives/rois/",
     "derivatives/freesurfer/",
+    "derivatives/anatomical/",
 )
 
 

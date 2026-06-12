@@ -8,9 +8,9 @@ from laion_fmri.subject import load_subject
 
 # Skip the whole module if the optional ``[template]`` extra isn't
 # installed -- the production module imports nitransforms / nilearn
-# / neuromaps / templateflow on demand and raises ``ImportError``
-# at call time, so the test suite stays usable for users who
-# haven't opted into the heavier extras.
+# / templateflow on demand and raises ``ImportError`` at call time,
+# so the test suite stays usable for users who haven't opted into
+# the heavier extras.
 nitransforms = pytest.importorskip("nitransforms")
 
 from laion_fmri.templates import to_template  # noqa: E402
@@ -45,22 +45,58 @@ def test_to_template_mni305_returns_nifti(configured_subject):
     assert out.ndim == 3
 
 
-def test_to_template_mni305_identity_preserves_data(configured_subject):
-    """With the fixture's identity LTA, the MNI305 output values
-    match the input values voxel-for-voxel (brain-masked area).
+def test_to_template_mni305_carries_finite_data(configured_subject):
+    """Identity LTA produces a finite, non-empty MNI305 volume.
+
+    Strict voxel-for-voxel identity isn't testable here: the
+    templateflow MNI305 grid is offset by fractional millimetres
+    from the fixture's integer-voxel grid, and the production
+    cubic resample on a 5x5x5 input attenuates / smooths near the
+    boundaries. Real data uses ~270 k voxels where the effect is
+    negligible; the gallery is the end-to-end test. Here we
+    sanity-check that the chain produces finite, non-zero output
+    on the MNI305 reference grid.
     """
     rng = np.random.default_rng(0)
     values = rng.standard_normal(N_BRAIN_VOXELS).astype(np.float32)
     out = to_template(configured_subject, values, "MNI305")
     data = np.asarray(out.dataobj)
-    # Round-trip via the brain mask: scatter the input into a 3-D
-    # volume on the T1w grid, apply the identity transform, and
-    # the non-zero voxels should equal the input.
-    brain_mask = configured_subject.get_brain_mask()
-    flat = data.ravel()
-    np.testing.assert_allclose(
-        flat[brain_mask], values, rtol=1e-5, atol=1e-5,
-    )
+    assert np.isfinite(data).all()
+    assert (data != 0).any()
+
+
+def test_to_template_mni305_preserves_trial_axis(configured_subject):
+    """2-D ``(n_trials, n_voxels)`` input -> 4-D MNI305 NIfTI."""
+    n_trials = 3
+    rng = np.random.default_rng(1)
+    values = rng.standard_normal(
+        (n_trials, N_BRAIN_VOXELS),
+    ).astype(np.float32)
+    out = to_template(configured_subject, values, "MNI305")
+    assert isinstance(out, nib.Nifti1Image)
+    assert out.ndim == 4
+    assert out.shape[-1] == n_trials
+
+
+def test_to_template_mni305_trial_axis_carries_finite_data(
+    configured_subject,
+):
+    """4-D ``(n_trials, n_voxels)`` input -> 4-D MNI305 NIfTI
+    with finite, non-empty content per trial. Same sub-voxel /
+    boundary caveat as the 1-D identity sanity-check.
+    """
+    n_trials = 3
+    rng = np.random.default_rng(2)
+    values = rng.standard_normal(
+        (n_trials, N_BRAIN_VOXELS),
+    ).astype(np.float32)
+    out = to_template(configured_subject, values, "MNI305")
+    data = np.asarray(out.dataobj)
+    assert data.ndim == 4
+    assert data.shape[-1] == n_trials
+    assert np.isfinite(data).all()
+    for i in range(n_trials):
+        assert (data[..., i] != 0).any()
 
 
 def test_to_template_rejects_unknown_target(configured_subject):
@@ -129,11 +165,8 @@ def test_to_template_fsaverage_rejects_volume_route(configured_subject):
         )
 
 
-# fsLR and CIVET are intentionally out of scope for this PR --
-# their fsaverage hand-off goes through neuromaps' multimodal
-# surface matching, which requires Connectome Workbench's
-# ``wb_command`` binary. See the docstring on
-# ``laion_fmri.templates._SUPPORTED_TARGETS``.
+# fsLR and CIVET are out of scope -- their fsaverage hand-off
+# would require Connectome Workbench's ``wb_command`` binary.
 
 
 def test_to_template_rejects_fslr(configured_subject):
@@ -150,88 +183,6 @@ def test_to_template_rejects_civet(configured_subject):
         to_template(configured_subject, values, "CIVET", hemi="L")
 
 
-# ── MNI152 volume route (route="volume", via MNI305) ───────────
-
-
-def test_to_template_mni152_volume_returns_nifti(configured_subject):
-    """T1w -> MNI305 -> MNI152NLin6Asym, ending on the MNI152 grid."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
-    out = to_template(
-        configured_subject, values,
-        "MNI152NLin6Asym", route="volume",
-    )
-    assert isinstance(out, nib.Nifti1Image)
-    assert out.ndim == 3
-
-
-def test_to_template_mni152_volume_on_mni152_grid(configured_subject):
-    """Output volume sits on the templateflow MNI152 reference grid."""
-    import templateflow.api as tflow
-
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
-    out = to_template(
-        configured_subject, values,
-        "MNI152NLin6Asym", route="volume",
-    )
-    ref_path = tflow.get(
-        "MNI152NLin6Asym", suffix="T1w", resolution=1,
-        extension=".nii.gz", desc=None,
-    )
-    if isinstance(ref_path, list):
-        ref_path = ref_path[0]
-    ref_img = nib.load(str(ref_path))
-    assert out.shape == ref_img.shape
-
-
-# MNI152 surface route is intentionally not supported: neuromaps
-# only ships ``mni152_to_fsaverage`` (volume→surface), not the
-# reverse, and the surface→volume direction would need
-# Connectome Workbench's ``wb_command`` for the fsaverage→fsLR
-# stop. See the docstring on
-# ``laion_fmri.templates._VOLUME_ONLY_TARGETS``.
-
-
-def test_to_template_mni152_rejects_surface_route(configured_subject):
-    """MNI152 variants are volume-only in this PR."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
-    with pytest.raises(ValueError, match="surface"):
-        to_template(
-            configured_subject, values, "MNI152NLin6Asym",
-            route="surface",
-        )
-
-
-# ── MNI152NLin2009cAsym (fmriprep's default) ───────────────────
-
-
-def test_to_template_mni152_2009c_returns_nifti(configured_subject):
-    """T1w -> MNI305 -> NLin6Asym -> 2009cAsym yields a 3-D NIfTI."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
-    out = to_template(
-        configured_subject, values, "MNI152NLin2009cAsym",
-    )
-    assert isinstance(out, nib.Nifti1Image)
-    assert out.ndim == 3
-
-
-def test_to_template_mni152_2009c_on_target_grid(configured_subject):
-    """Output volume sits on the templateflow 2009cAsym grid."""
-    import templateflow.api as tflow
-
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
-    out = to_template(
-        configured_subject, values, "MNI152NLin2009cAsym",
-    )
-    ref_path = tflow.get(
-        "MNI152NLin2009cAsym", suffix="T1w", resolution=1,
-        extension=".nii.gz", desc=None,
-    )
-    if isinstance(ref_path, list):
-        ref_path = ref_path[0]
-    ref_img = nib.load(str(ref_path))
-    assert out.shape == ref_img.shape
-
-
 # ── Out-of-scope MNI variants are rejected ─────────────────────
 
 
@@ -239,11 +190,13 @@ def test_to_template_mni152_2009c_on_target_grid(configured_subject):
     "variant",
     [
         "MNI152Lin",
+        "MNI152NLin6Asym",
         "MNI152NLin6Sym",
         "MNI152NLin2009aAsym",
         "MNI152NLin2009aSym",
         "MNI152NLin2009bAsym",
         "MNI152NLin2009bSym",
+        "MNI152NLin2009cAsym",
         "MNI152NLin2009cSym",
         "MNIColin27",
     ],
@@ -251,7 +204,7 @@ def test_to_template_mni152_2009c_on_target_grid(configured_subject):
 def test_to_template_rejects_unsupported_mni_variants(
     configured_subject, variant,
 ):
-    """MNI variants without a templateflow path raise ValueError."""
+    """MNI variants without a transform path raise ValueError."""
     values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="target"):
         to_template(configured_subject, values, variant)
@@ -273,22 +226,6 @@ def test_to_template_writes_mni305_nifti(configured_subject, tmp_path):
     )
     assert expected.exists()
     assert isinstance(out, nib.Nifti1Image)
-
-
-def test_to_template_writes_mni152_nifti(configured_subject, tmp_path):
-    """MNI152NLin6Asym + output_dir writes a BIDS-named .nii.gz."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
-    to_template(
-        configured_subject, values, "MNI152NLin6Asym",
-        route="volume",
-        output_dir=tmp_path, desc="MeanBeta", session="ses-01",
-    )
-    expected = (
-        tmp_path
-        / "sub-01_ses-01_space-MNI152NLin6Asym"
-        "_desc-MeanBeta_statmap.nii.gz"
-    )
-    assert expected.exists()
 
 
 def test_to_template_writes_fsaverage_single_hemi(

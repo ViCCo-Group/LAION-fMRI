@@ -67,6 +67,30 @@ def test_load_nifti_mask_returns_bool(synthetic_data_dir):
     assert mask.sum() == N_BRAIN_VOXELS
 
 
+def test_load_nifti_mask_excludes_nan(tmp_path):
+    """A NaN-bearing source NIfTI (e.g. an R2mean file with
+    failed GLMsingle voxels) must not leak NaN voxels into the
+    boolean brain mask. ``bool(np.nan)`` is ``True``, so a naive
+    ``.astype(bool)`` would incorrectly mark them as in-brain.
+    """
+    import nibabel as nib
+
+    arr = np.zeros((4, 4, 4), dtype=np.float32)
+    arr[1, 1, 1] = 0.5     # in-brain (non-zero R2)
+    arr[2, 2, 2] = np.nan  # GLMsingle failed here -- not in brain
+    img = nib.Nifti1Image(arr, np.eye(4))
+    p = tmp_path / "nan_mask.nii.gz"
+    nib.save(img, str(p))
+
+    mask = load_nifti_mask(p)
+    flat = arr.ravel()
+    nan_idx = np.where(np.isnan(flat))[0][0]
+    finite_idx = np.where(flat == 0.5)[0][0]
+    assert mask[finite_idx] is np.True_ or mask[finite_idx]
+    assert not mask[nan_idx]
+    assert mask.sum() == 1
+
+
 # ── load_nifti_data (3-D within mask) ───────────────────────────
 
 

@@ -21,7 +21,7 @@ from laion_fmri._paths import (
 )
 from laion_fmri._s3_engine import download_key, list_prefix_objects
 from laion_fmri._sources import LAION_FMRI_BUCKET
-from laion_fmri._stimulus_access import (
+from laion_fmri._stimulus_access import (  # noqa: F401
     AccessNotFoundError,
     AccessServiceError,
     TermsOutdatedError,
@@ -503,6 +503,7 @@ def download(
     include_stimuli=False,
     include_embeddings=False,
     include_freesurfer=False,
+    include_anatomical=False,
     n_jobs=1,
 ):
     """Download fMRI dataset files for a subject, narrowed by BIDS entities.
@@ -547,6 +548,14 @@ def download(
         subject). The recon enables ``Subject.to_template`` -- the
         chain that projects T1w-volume data onto fsaverage / fsLR /
         MNI templates without external tools.
+    include_anatomical : bool
+        If True, also pull the per-subject anatomical derivatives
+        under ``derivatives/anatomical/{subject}/ses-PrismaAnat/
+        anat/`` (T1w, T2w, brain mask -- full-res plus ``res-1pt8``
+        copies aligned with the functional grid). Tens of MB per
+        subject. Unlocks ``Subject.get_t1w``, ``get_t2w``,
+        ``get_anatomical_brain_mask``, and
+        ``mask_source="anatomical"`` on the voxel-axis accessors.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (AWS CLI copy subprocesses). ``1`` (default) is sequential.
@@ -596,6 +605,7 @@ def download(
             extension=extension,
             n_jobs=n_jobs,
             include_freesurfer=include_freesurfer,
+            include_anatomical=include_anatomical,
         )
 
     if include_stimuli:

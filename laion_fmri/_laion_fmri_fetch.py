@@ -316,6 +316,7 @@ def fetch_laion_fmri(
     extension=None,
     n_jobs=1,
     include_freesurfer=False,
+    include_anatomical=False,
 ):
     """Download fMRI / derivatives for one subject.
 
@@ -348,6 +349,15 @@ def fetch_laion_fmri(
         not carry BIDS-entity tokens (``brain.mgz``, ``lh.white``,
         ``talairach.lta``, ...), so the BIDS filters above are NOT
         applied to the recon -- it's pulled as a whole.
+    include_anatomical : bool
+        If True, also pull the per-subject anatomical derivatives
+        under ``derivatives/anatomical/{subject}/ses-PrismaAnat/
+        anat/`` (T1w, T2w, brain mask at two resolutions). The
+        anat files sit under ``ses-PrismaAnat`` and use
+        ``T1w`` / ``T2w`` / ``mask`` suffixes -- both axes are
+        orthogonal to typical functional filters, so the anat
+        prefix is pulled with no BIDS filters applied (same
+        convention as ``include_freesurfer``).
     """
     bucket = LAION_FMRI_BUCKET
     filters = {
@@ -389,7 +399,12 @@ def fetch_laion_fmri(
         data_dir, roi_filters, n_jobs=n_jobs,
     )
 
-    if not glm_result["matched"] and not roi_result["matched"]:
+    if (
+        not glm_result["matched"]
+        and not roi_result["matched"]
+        and not include_freesurfer
+        and not include_anatomical
+    ):
         prefixes = (
             f"s3://{bucket}/{glm_result['prefix']}",
             f"s3://{bucket}/{roi_result['prefix']}",
@@ -409,6 +424,19 @@ def fetch_laion_fmri(
         # no filters; the recon is a whole-tree atomic unit.
         _filtered_download(
             bucket, f"derivatives/freesurfer/{subject}/",
+            data_dir, {}, n_jobs=n_jobs,
+        )
+
+    if include_anatomical:
+        # Anatomical files use ``ses-PrismaAnat`` and suffixes
+        # ``T1w`` / ``T2w`` / ``mask`` -- both axes are
+        # orthogonal to typical functional filters
+        # (``suffix=["statmap", "trials", ...]`` would otherwise
+        # drop T1w / T2w outright). Pull the anat prefix with
+        # no filters; downstream readers want the whole anat
+        # tree.
+        _filtered_download(
+            bucket, f"derivatives/anatomical/{subject}/",
             data_dir, {}, n_jobs=n_jobs,
         )
 

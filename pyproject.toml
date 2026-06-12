@@ -34,16 +34,12 @@ dependencies = [
 [project.optional-dependencies]
 torch = ["torch>=2.0", "torchvision>=0.15"]
 bids = ["pybids>=0.16"]
-# Template-space transforms: T1w volume -> fsaverage/fsLR/CIVET/MNI*
-# via the FreeSurfer recon ``Subject.to_template`` reads.
-# ``setuptools<80`` is pinned because ``neuromaps`` still imports
-# ``pkg_resources``, which setuptools 80+ no longer ships.
+# Template-space transforms: T1w volume -> MNI305 / fsaverage via
+# the FreeSurfer recon ``Subject.to_template`` reads.
 template = [
     "nilearn>=0.10",
     "nitransforms>=23",
-    "neuromaps>=0.0.5",
     "templateflow>=24",
-    "setuptools<80",
 ]
 
 [project.scripts]

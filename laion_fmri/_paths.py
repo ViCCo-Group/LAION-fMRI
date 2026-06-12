@@ -250,6 +250,65 @@ def freesurfer_transforms_dir(data_dir, subject):
     )
 
 
+# ── Anatomical derivatives ──────────────────────────────────────
+
+# The anatomical-derivatives pipeline groups all per-subject T1w /
+# T2w / brain-mask outputs under a single session named
+# ``ses-PrismaAnat``. See:
+# ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/``.
+ANATOMICAL_SESSION = "ses-PrismaAnat"
+_ANATOMICAL_SUFFIXES = ("T1w", "T2w", "mask")
+
+
+def anatomical_subject_dir(data_dir, subject):
+    """Path to the anatomical-derivatives dir for a subject.
+
+    Holds the ``ses-PrismaAnat/anat/`` directory with T1w / T2w /
+    brain-mask files at full resolution and at ``res-1pt8``.
+    """
+    return (
+        Path(data_dir) / "derivatives" / "anatomical" / subject
+    )
+
+
+def anatomical_session_dir(data_dir, subject):
+    """Path to the per-subject anatomical session directory."""
+    return (
+        anatomical_subject_dir(data_dir, subject)
+        / ANATOMICAL_SESSION
+        / "anat"
+    )
+
+
+def anatomical_file_path(
+    data_dir, subject, *, suffix, res=None, desc=None,
+):
+    """Assemble the path to one anatomical derivative file.
+
+    Parameters
+    ----------
+    suffix : ``"T1w"`` | ``"T2w"`` | ``"mask"``
+    res : ``None`` | ``"1pt8"``
+        ``None`` is full resolution; ``"1pt8"`` matches the
+        functional grid.
+    desc : ``None`` | ``"brain"``
+        BIDS ``desc-`` token; required (and the only valid value)
+        for ``suffix="mask"``.
+    """
+    if suffix not in _ANATOMICAL_SUFFIXES:
+        raise ValueError(
+            f"suffix must be one of {list(_ANATOMICAL_SUFFIXES)}; "
+            f"got {suffix!r}."
+        )
+    parts = [subject, ANATOMICAL_SESSION, "space-T1w"]
+    if res is not None:
+        parts.append(f"res-{res}")
+    if desc is not None:
+        parts.append(f"desc-{desc}")
+    filename = "_".join(parts) + f"_{suffix}.nii.gz"
+    return anatomical_session_dir(data_dir, subject) / filename
+
+
 # ── Stimuli ─────────────────────────────────────────────────────
 
 
