@@ -67,6 +67,7 @@ def to_template(
     output_dir=None,
     desc=None,
     session=None,
+    mask_source="anatomical",
 ):
     """Project subject-T1w-space values into a template space.
 
@@ -102,6 +103,11 @@ def to_template(
     desc, session : str | None
         BIDS ``desc-`` and ``ses-`` tokens for the output
         filename(s).
+    mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+        Which brain mask the input ``values`` was produced
+        under; see :meth:`Subject.get_brain_mask`. Must match
+        the mask source used in the upstream ``get_betas`` /
+        ``get_noise_ceiling`` call.
 
     Returns
     -------
@@ -122,7 +128,7 @@ def to_template(
 
     if effective_route == "volume":
         if target == "MNI305":
-            result = _to_mni305(subject, values)
+            result = _to_mni305(subject, values, mask_source)
         else:
             raise NotImplementedError(
                 f"Volume route for target {target!r} is not "
@@ -136,6 +142,7 @@ def to_template(
             fsaverage_density=fsaverage_density,
             fslr_density=fslr_density,
             interpolation=interpolation,
+            mask_source=mask_source,
         )
 
     if output_dir is not None:
@@ -296,7 +303,7 @@ def _resolve_route(target, route):
     )
 
 
-def _to_mni305(subject, values):
+def _to_mni305(subject, values, mask_source="anatomical"):
     """T1w volume → MNI305 volume via the recon's ``talairach.lta``.
 
     The reference grid is fetched from templateflow when available
@@ -308,7 +315,7 @@ def _to_mni305(subject, values):
     """
     from nitransforms.linear import Affine
 
-    t1w_img = _scatter_to_nifti(subject, values)
+    t1w_img = _scatter_to_nifti(subject, values, mask_source)
     lta_path = (
         freesurfer_transforms_dir(
             subject._data_dir, subject._subject_id,
@@ -336,14 +343,14 @@ def _fsaverage_density_token(density):
 def _to_surface(
     subject, values, target,
     *, hemi, surface, fsaverage_density, fslr_density,
-    interpolation,
+    interpolation, mask_source="anatomical",
 ):
     """Surface chain: T1w volume → fsnative → fsaverage.
 
     Only ``target == "fsaverage"`` reaches this function; one or
     both hemispheres are produced depending on ``hemi``.
     """
-    t1w_img = _scatter_to_nifti(subject, values)
+    t1w_img = _scatter_to_nifti(subject, values, mask_source)
     fs_dir = subject.get_freesurfer_dir()
     density_token = _fsaverage_density_token(fsaverage_density)
 
@@ -590,7 +597,7 @@ def _save_gifti(array, path):
     nib.save(gifti, str(path))
 
 
-def _scatter_to_nifti(subject, values):
+def _scatter_to_nifti(subject, values, mask_source="anatomical"):
     """Round-trip a brain-masked array to a T1w-grid NIfTI.
 
     Accepts a 1-D ``(n_voxels,)`` array, a 2-D
@@ -615,7 +622,7 @@ def _scatter_to_nifti(subject, values):
     arr = np.nan_to_num(
         np.asarray(values, dtype=np.float32), copy=True, nan=0.0,
     )
-    mask_path = subject._brain_mask_path("rsquare")
+    mask_path = subject._brain_mask_path(mask_source)
     brain_mask = load_nifti_mask(mask_path)
     ref = nib.load(str(mask_path))
     n_voxels = int(brain_mask.sum())

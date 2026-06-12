@@ -140,7 +140,7 @@ def test_subject_get_n_stimuli_unique(configured_subject):
 
 
 def test_subject_get_n_voxels(configured_subject):
-    assert configured_subject.get_n_voxels() == N_BRAIN_VOXELS
+    assert configured_subject.get_n_voxels() == N_ANATOMICAL_BRAIN_VOXELS
 
 
 # ── Brain mask ─────────────────────────────────────────────────
@@ -149,14 +149,21 @@ def test_subject_get_n_voxels(configured_subject):
 def test_get_brain_mask(configured_subject):
     mask = configured_subject.get_brain_mask()
     assert mask.dtype == bool
-    assert mask.sum() == N_BRAIN_VOXELS
+    assert mask.sum() == N_ANATOMICAL_BRAIN_VOXELS
 
 
-def test_get_brain_mask_rsquare_default(configured_subject):
-    """``source="rsquare"`` is the default and matches no-arg call."""
+def test_get_brain_mask_anatomical_default(configured_subject):
+    """``source="anatomical"`` is the default and matches no-arg call."""
     default = configured_subject.get_brain_mask()
-    explicit = configured_subject.get_brain_mask(source="rsquare")
+    explicit = configured_subject.get_brain_mask(source="anatomical")
     assert np.array_equal(default, explicit)
+
+
+def test_get_brain_mask_rsquare_opt_in(configured_subject):
+    """``source="rsquare"`` returns the rsquare-derived mask."""
+    rsquare = configured_subject.get_brain_mask(source="rsquare")
+    assert rsquare.dtype == bool
+    assert rsquare.sum() == N_BRAIN_VOXELS
 
 
 def test_get_brain_mask_anatomical_distinct(configured_subject):
@@ -324,7 +331,9 @@ def test_get_betas_preserves_nan_voxels(
 def test_get_betas_per_session(configured_subject):
     betas = configured_subject.get_betas(session="ses-01")
     assert isinstance(betas, np.ndarray)
-    assert betas.shape == (N_TRIALS_PER_SESSION, N_BRAIN_VOXELS)
+    assert betas.shape == (
+        N_TRIALS_PER_SESSION, N_ANATOMICAL_BRAIN_VOXELS,
+    )
 
 
 def test_get_betas_roi_visual(configured_subject):
@@ -350,7 +359,7 @@ def test_get_betas_multiple_rois_union(configured_subject):
 
 
 def test_get_betas_custom_mask(configured_subject):
-    mask = np.zeros(N_BRAIN_VOXELS, dtype=bool)
+    mask = np.zeros(N_ANATOMICAL_BRAIN_VOXELS, dtype=bool)
     mask[:10] = True
     betas = configured_subject.get_betas(
         session="ses-01", mask=mask,
@@ -359,7 +368,7 @@ def test_get_betas_custom_mask(configured_subject):
 
 
 def test_get_betas_roi_and_mask_raises(configured_subject):
-    mask = np.zeros(N_BRAIN_VOXELS, dtype=bool)
+    mask = np.zeros(N_ANATOMICAL_BRAIN_VOXELS, dtype=bool)
     mask[:5] = True
     with pytest.raises(ValueError, match="mutually exclusive"):
         configured_subject.get_betas(
@@ -372,7 +381,7 @@ def test_get_betas_nc_threshold(configured_subject):
         session="ses-01", nc_threshold=0.5,
     )
     assert betas.shape[0] == N_TRIALS_PER_SESSION
-    assert betas.shape[1] <= N_BRAIN_VOXELS
+    assert betas.shape[1] <= N_ANATOMICAL_BRAIN_VOXELS
 
 
 def test_get_betas_roi_and_nc_threshold(configured_subject):
@@ -388,7 +397,7 @@ def test_get_betas_stimuli_shared(configured_subject):
         session="ses-01", stimuli="shared",
     )
     expected_n = N_SHARED * (N_TRIALS_PER_SESSION // N_STIMULI)
-    assert betas.shape == (expected_n, N_BRAIN_VOXELS)
+    assert betas.shape == (expected_n, N_ANATOMICAL_BRAIN_VOXELS)
 
 
 def test_get_betas_stimuli_unique(configured_subject):
@@ -396,7 +405,7 @@ def test_get_betas_stimuli_unique(configured_subject):
         session="ses-01", stimuli="unique",
     )
     expected_n = N_UNIQUE * (N_TRIALS_PER_SESSION // N_STIMULI)
-    assert betas.shape == (expected_n, N_BRAIN_VOXELS)
+    assert betas.shape == (expected_n, N_ANATOMICAL_BRAIN_VOXELS)
 
 
 def test_stimulus_filter_uses_label_prefix(
@@ -448,7 +457,9 @@ def test_get_betas_list_of_sessions_returns_dict(
     assert set(result) == {"ses-01", "ses-02"}
     for ses, arr in result.items():
         assert isinstance(arr, np.ndarray)
-        assert arr.shape == (N_TRIALS_PER_SESSION, N_BRAIN_VOXELS)
+        assert arr.shape == (
+            N_TRIALS_PER_SESSION, N_ANATOMICAL_BRAIN_VOXELS,
+        )
 
 
 def test_get_betas_list_with_filters(configured_subject):
@@ -475,7 +486,7 @@ def test_get_roi_mask(configured_subject):
     mask = configured_subject.get_roi_mask("hlvis")
     assert isinstance(mask, np.ndarray)
     assert mask.dtype == bool
-    assert len(mask) == N_BRAIN_VOXELS
+    assert len(mask) == N_ANATOMICAL_BRAIN_VOXELS
     assert mask.sum() == N_HLVIS_VOXELS
 
 
@@ -673,12 +684,12 @@ def test_get_roi_data_unknown_hemi_raises(configured_subject):
 def test_get_noise_ceiling_session(configured_subject):
     nc = configured_subject.get_noise_ceiling(session="ses-01")
     assert isinstance(nc, np.ndarray)
-    assert len(nc) == N_BRAIN_VOXELS
+    assert len(nc) == N_ANATOMICAL_BRAIN_VOXELS
 
 
 def test_get_noise_ceiling_subject_desc(configured_subject):
     nc = configured_subject.get_noise_ceiling(desc=SUBJECT_NC_DESC)
-    assert len(nc) == N_BRAIN_VOXELS
+    assert len(nc) == N_ANATOMICAL_BRAIN_VOXELS
 
 
 def test_get_noise_ceiling_requires_session_or_desc(
@@ -718,7 +729,7 @@ def test_get_noise_ceiling_list_of_sessions_returns_dict(
     assert isinstance(result, dict)
     assert set(result) == {"ses-01", "ses-02"}
     for arr in result.values():
-        assert arr.shape == (N_BRAIN_VOXELS,)
+        assert arr.shape == (N_ANATOMICAL_BRAIN_VOXELS,)
 
 
 # ── Trial info ─────────────────────────────────────────────────

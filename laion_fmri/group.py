@@ -66,6 +66,7 @@ class Group:
 
     def get_shared_betas(
         self, session, roi=None, mask=None, nc_threshold=None,
+        mask_source="anatomical",
     ):
         """Load shared-stimulus single-trial betas for all subjects.
 
@@ -77,6 +78,9 @@ class Group:
         roi : str or None
         mask : np.ndarray[bool] or None
         nc_threshold : float or None
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+            Forwarded to :meth:`Subject.get_betas`; see
+            :meth:`Subject.get_brain_mask` for the difference.
 
         Returns
         -------
@@ -92,6 +96,7 @@ class Group:
                 roi=roi,
                 mask=mask,
                 nc_threshold=nc_threshold,
+                mask_source=mask_source,
             )
         return result
 

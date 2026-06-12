@@ -122,13 +122,12 @@ download(
 # -----------------
 #
 # Once data is on disk, load a :class:`~laion_fmri.subject.Subject`
-# and inspect its sessions and available ROIs. The brain mask is
-# derived on the fly from the subject-level mean-R^2 file
-# (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``) -- voxels with
-# any non-zero GLMsingle fit are considered "in brain". Pass
-# ``source="anatomical"`` to switch to the wider anatomically-
-# derived mask instead (see :doc:`plot_04_loading` for the full
-# cascading-kwarg story).
+# and inspect its sessions and available ROIs. The brain mask
+# defaults to the anatomically-derived mask shipped under
+# ``derivatives/anatomical/``. Pass ``source="rsquare"`` to
+# switch to the functional mean-R^2 derived mask instead
+# (every voxel with a non-zero GLMsingle fit; see
+# :doc:`plot_04_loading` for the full cascading-kwarg story).
 
 from laion_fmri.subject import load_subject
 
@@ -137,7 +136,7 @@ print(f"Subject:   {sub.subject_id}")
 print(f"Sessions:  {sub.get_sessions()}")
 print(
     f"Voxels:    {sub.get_n_voxels()} "
-    f"(anatomical: {sub.get_n_voxels(source='anatomical')})"
+    f"(rsquare: {sub.get_n_voxels(source='rsquare')})"
 )
 print(f"ROIs:      {sub.get_available_rois()}")
 

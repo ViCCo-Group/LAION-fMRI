@@ -13,20 +13,20 @@ maps to exactly one file on disk**, returned as raw arrays;
 combining sessions, averaging, or rebinning is the caller's
 responsibility.
 
-Two brain masks are available; the default is unchanged:
+Two brain masks are available:
 
-* ``source="rsquare"`` *(default)* -- derived on the fly from
-  the subject-level mean-R^2 map
-  (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``). Voxels
-  with any non-zero GLMsingle fit are considered "in brain".
-  No extra download required.
-* ``source="anatomical"`` -- the anatomically-derived brain
-  mask shipped under
+* ``source="anatomical"`` *(default)* -- the
+  anatomically-derived brain mask shipped under
   ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/
   ..._res-1pt8_desc-brain_mask.nii.gz``. Wider than the
   rsquare-derived mask (it includes voxels with no GLMsingle
   signal too). Requires
   ``download(include_anatomical=True)``.
+* ``source="rsquare"`` -- derived on the fly from
+  the subject-level mean-R^2 map
+  (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``). Voxels
+  with any non-zero GLMsingle fit are considered "in brain".
+  No extra download required.
 
 Both masks are consistent across sessions for a given subject,
 so betas stacked along the trial axis stay aligned on the
@@ -34,11 +34,10 @@ voxel axis (within one ``source``).
 
 .. code-block:: python
 
-   sub.get_brain_mask()                       # rsquare-derived
-   sub.get_brain_mask(source="anatomical")    # anat-derived, res-1pt8
-   sub.get_brain_mask(source="anatomical",
-                      res=None)               # full-resolution anat mask
-   sub.get_n_voxels(source="anatomical")      # n voxels under that mask
+   sub.get_brain_mask()                       # anat-derived, res-1pt8
+   sub.get_brain_mask(source="rsquare")       # rsquare-derived
+   sub.get_brain_mask(res=None)               # full-resolution anat mask
+   sub.get_n_voxels(source="rsquare")         # n voxels under rsquare
 
 ``res`` defaults to ``"1pt8"`` -- the functional grid -- so the
 returned mask aligns with the voxel axis of ``get_betas`` and
@@ -51,10 +50,10 @@ loader cascade. ``res`` is ignored for ``source="rsquare"``
 
 Several voxel-axis accessors take a matching ``mask_source``
 kwarg so the choice flows through downstream:
-``get_betas(..., mask_source="anatomical")``,
-``get_noise_ceiling(..., mask_source="anatomical")``,
-``to_nifti(..., mask_source="anatomical")``,
-``get_voxel_coordinates(mask_source="anatomical")``. These all
+``get_betas(..., mask_source="rsquare")``,
+``get_noise_ceiling(..., mask_source="rsquare")``,
+``to_nifti(..., mask_source="rsquare")``,
+``get_voxel_coordinates(mask_source="rsquare")``. These all
 pin the mask at ``res="1pt8"`` internally, since their data is
 on the functional grid.
 

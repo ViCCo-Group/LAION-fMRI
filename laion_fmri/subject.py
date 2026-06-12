@@ -221,7 +221,7 @@ class Subject:
             f"stimuli must be 'shared', 'unique', or None; got {stimuli!r}"
         )
 
-    def get_n_voxels(self, source="rsquare", res="1pt8"):
+    def get_n_voxels(self, source="anatomical", res="1pt8"):
         """Number of voxels in the subject's brain mask.
 
         ``source`` and ``res`` mirror :meth:`get_brain_mask`; see
@@ -233,20 +233,20 @@ class Subject:
 
     # ── Brain mask ──────────────────────────────────────────────
 
-    def get_brain_mask(self, source="rsquare", res="1pt8"):
+    def get_brain_mask(self, source="anatomical", res="1pt8"):
         """Load the subject's brain mask as a flat boolean array.
 
         Parameters
         ----------
-        source : ``"rsquare"`` (default) | ``"anatomical"``
-            ``"rsquare"`` derives the mask from the subject-level
-            mean-R^2 map (voxels with any non-zero GLMsingle fit;
-            the bucket ships R2mean as
-            ``..._stat-rsquare_desc-R2mean_statmap.nii.gz``).
+        source : ``"anatomical"`` (default) | ``"rsquare"``
             ``"anatomical"`` uses the brain mask in
             ``derivatives/anatomical/.../desc-brain_mask.nii.gz``
             -- a wider, anatomically-derived mask. Pull it with
             ``download(include_anatomical=True)``.
+            ``"rsquare"`` derives the mask from the subject-level
+            mean-R^2 map (voxels with any non-zero GLMsingle fit;
+            the bucket ships R2mean as
+            ``..._stat-rsquare_desc-R2mean_statmap.nii.gz``).
         res : ``"1pt8"`` (default) | ``None``
             Anatomical-mask resolution. ``"1pt8"`` matches the
             functional grid, so the returned mask aligns with the
@@ -297,7 +297,7 @@ class Subject:
         nc_threshold=None,
         stimuli=None,
         streaming=False,
-        mask_source="rsquare",
+        mask_source="anatomical",
     ):
         """Load single-trial betas for one or more sessions.
 
@@ -317,7 +317,7 @@ class Subject:
         stimuli : "shared", "unique", or None
             Trial-level filter using the stimulus-metadata
             ``shared`` flag.
-        mask_source : ``"rsquare"`` (default) | ``"anatomical"``
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
             Which brain mask to filter the voxel axis on; see
             :meth:`get_brain_mask` for the difference.
         streaming : bool
@@ -376,7 +376,7 @@ class Subject:
         # real session).
         brain_mask = load_nifti_mask(mask_path)
         voxel_filter = self._build_voxel_mask(
-            roi, mask, nc_threshold, session,
+            roi, mask, nc_threshold, session, mask_source,
         )
         if voxel_filter is None:
             combined_mask = brain_mask
@@ -394,18 +394,22 @@ class Subject:
 
         return betas
 
-    def _build_voxel_mask(self, roi, mask, nc_threshold, session):
+    def _build_voxel_mask(
+        self, roi, mask, nc_threshold, session, mask_source,
+    ):
         """Combine ROI/custom-mask/NC-threshold into one boolean mask."""
         combined = None
 
         if roi is not None:
-            combined = self.get_roi_mask(roi)
+            combined = self.get_roi_mask(roi, mask_source=mask_source)
 
         if mask is not None:
             combined = mask
 
         if nc_threshold is not None:
-            nc = self.get_noise_ceiling(session=session)
+            nc = self.get_noise_ceiling(
+                session=session, mask_source=mask_source,
+            )
             nc_mask = nc >= nc_threshold
             combined = (
                 nc_mask if combined is None else combined & nc_mask
@@ -453,7 +457,7 @@ class Subject:
 
     # ── ROI masks ───────────────────────────────────────────────
 
-    def get_roi_mask(self, query):
+    def get_roi_mask(self, query, mask_source="anatomical"):
         """Load one or more ROI masks, restricted to brain-mask voxels.
 
         ``query`` accepts the multi-level grammar:
@@ -466,26 +470,41 @@ class Subject:
 
         Multi-element resolutions are unioned voxel-wise. Always
         returns one 1-D bool array within the brain mask.
+
+        ``mask_source`` selects which brain mask the result is
+        indexed within; see :meth:`get_brain_mask`.
         """
         rois = self._resolve_rois_query(query)
-        union = np.zeros(self.get_n_voxels(), dtype=bool)
+        union = np.zeros(
+            self.get_n_voxels(source=mask_source), dtype=bool,
+        )
         for roi in rois:
-            union |= self._load_roi_volume_mask(roi)
+            union |= self._load_roi_volume_mask(
+                roi, mask_source=mask_source,
+            )
         return union
 
-    def get_roi_masks(self, queries):
+    def get_roi_masks(self, queries, mask_source="anatomical"):
         """Load several ROI masks at once.
 
         ``queries`` is a list (or single string). Each element is
         passed verbatim to ``get_roi_mask``; the returned dict is
         keyed by the user's strings, so categories and "all" appear
         as their original keys with a union mask as value.
+
+        ``mask_source`` is forwarded to :meth:`get_roi_mask`.
         """
         if isinstance(queries, str):
             queries = [queries]
-        return {q: self.get_roi_mask(q) for q in queries}
+        return {
+            q: self.get_roi_mask(q, mask_source=mask_source)
+            for q in queries
+        }
 
-    def get_roi_data(self, query, format=None, hemi=None):
+    def get_roi_data(
+        self, query, format=None, hemi=None,
+        mask_source="anatomical",
+    ):
         """Load multi-format ROI data: volume, surface, FreeSurfer label.
 
         Parameters
@@ -531,25 +550,31 @@ class Subject:
             )
 
         rois = self._resolve_rois_query(query)
-        return {roi: self._build_roi_data(roi, format, hemi)
-                for roi in rois}
+        return {
+            roi: self._build_roi_data(
+                roi, format, hemi, mask_source,
+            )
+            for roi in rois
+        }
 
-    def _load_roi_volume_mask(self, roi):
+    def _load_roi_volume_mask(self, roi, mask_source="anatomical"):
         """Load a single volumetric ROI mask within the brain mask."""
         roi_vol = load_nifti_mask(
             roi_mask_path(self._data_dir, self._subject_id, roi),
         )
-        brain = self.get_brain_mask()
+        brain = self.get_brain_mask(source=mask_source)
         return roi_vol[brain]
 
-    def _build_roi_data(self, roi, format, hemi):
+    def _build_roi_data(self, roi, format, hemi, mask_source):
         """Assemble the nested per-ROI dict, pruned by format/hemi."""
         out = {}
         want_volume = format in ("all", "volume", "nii.gz")
         want_gii = format in ("all", "gii", "func.gii", "label")
 
         if want_volume:
-            out["volume"] = self._load_roi_volume_mask(roi)
+            out["volume"] = self._load_roi_volume_mask(
+                roi, mask_source=mask_source,
+            )
 
         if want_gii:
             hemis = ("L", "R") if hemi == "all" else (hemi,)
@@ -577,7 +602,7 @@ class Subject:
 
     def get_noise_ceiling(
         self, session=None, desc=None, roi=None, mask=None,
-        mask_source="rsquare",
+        mask_source="anatomical",
     ):
         """Load a noise-ceiling map.
 
@@ -596,7 +621,7 @@ class Subject:
         desc : str, list of str, or None
         roi : str or None
         mask : np.ndarray[bool] or None
-        mask_source : ``"rsquare"`` (default) | ``"anatomical"``
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
             Brain-mask choice; see :meth:`get_brain_mask`.
 
         Returns
@@ -658,7 +683,7 @@ class Subject:
         nc = load_nifti_data(nc_file, mask_file)
 
         if roi is not None:
-            nc = nc[self.get_roi_mask(roi)]
+            nc = nc[self.get_roi_mask(roi, mask_source=mask_source)]
         elif mask is not None:
             nc = nc[mask]
 
@@ -933,12 +958,12 @@ class Subject:
 
     def to_nifti(
         self, values, output_path, roi=None, mask=None,
-        mask_source="rsquare",
+        mask_source="anatomical",
     ):
         """Write a per-voxel array to a 3-D NIfTI volume.
 
         ``values`` is sized to the brain mask selected by
-        ``mask_source`` (default rsquare-derived).
+        ``mask_source`` (default anatomical-derived).
         """
         from laion_fmri.brain import to_nifti
 
@@ -946,7 +971,8 @@ class Subject:
         _, affine = load_nifti_with_affine(mask_file)
 
         roi_mask_arr = (
-            self.get_roi_mask(roi) if roi is not None else None
+            self.get_roi_mask(roi, mask_source=mask_source)
+            if roi is not None else None
         )
 
         to_nifti(
@@ -993,7 +1019,7 @@ class Subject:
         return surface_to_template(self, values, target, **kwargs)
 
     def get_voxel_coordinates(
-        self, roi=None, mask=None, mask_source="rsquare",
+        self, roi=None, mask=None, mask_source="anatomical",
     ):
         """Return MNI/T1w coordinates for the selected voxels.
 
@@ -1006,7 +1032,8 @@ class Subject:
         _, affine = load_nifti_with_affine(mask_file)
 
         roi_mask_arr = (
-            self.get_roi_mask(roi) if roi is not None else None
+            self.get_roi_mask(roi, mask_source=mask_source)
+            if roi is not None else None
         )
         return get_voxel_coordinates(
             str(mask_file),

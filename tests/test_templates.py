@@ -16,7 +16,7 @@ nitransforms = pytest.importorskip("nitransforms")
 from laion_fmri.templates import to_template  # noqa: E402
 
 from tests.conftest import (  # noqa: E402
-    N_BRAIN_VOXELS,
+    N_ANATOMICAL_BRAIN_VOXELS,
     N_FSNATIVE_VERTICES,
 )
 
@@ -39,7 +39,7 @@ def configured_subject(synthetic_data_dir, monkeypatch):
 
 def test_to_template_mni305_returns_nifti(configured_subject):
     """Projecting brain-mask values to MNI305 yields a 3-D NIfTI."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = to_template(configured_subject, values, "MNI305")
     assert isinstance(out, nib.Nifti1Image)
     assert out.ndim == 3
@@ -58,7 +58,7 @@ def test_to_template_mni305_carries_finite_data(configured_subject):
     on the MNI305 reference grid.
     """
     rng = np.random.default_rng(0)
-    values = rng.standard_normal(N_BRAIN_VOXELS).astype(np.float32)
+    values = rng.standard_normal(N_ANATOMICAL_BRAIN_VOXELS).astype(np.float32)
     out = to_template(configured_subject, values, "MNI305")
     data = np.asarray(out.dataobj)
     assert np.isfinite(data).all()
@@ -70,7 +70,7 @@ def test_to_template_mni305_preserves_trial_axis(configured_subject):
     n_trials = 3
     rng = np.random.default_rng(1)
     values = rng.standard_normal(
-        (n_trials, N_BRAIN_VOXELS),
+        (n_trials, N_ANATOMICAL_BRAIN_VOXELS),
     ).astype(np.float32)
     out = to_template(configured_subject, values, "MNI305")
     assert isinstance(out, nib.Nifti1Image)
@@ -88,7 +88,7 @@ def test_to_template_mni305_trial_axis_carries_finite_data(
     n_trials = 3
     rng = np.random.default_rng(2)
     values = rng.standard_normal(
-        (n_trials, N_BRAIN_VOXELS),
+        (n_trials, N_ANATOMICAL_BRAIN_VOXELS),
     ).astype(np.float32)
     out = to_template(configured_subject, values, "MNI305")
     data = np.asarray(out.dataobj)
@@ -101,14 +101,14 @@ def test_to_template_mni305_trial_axis_carries_finite_data(
 
 def test_to_template_rejects_unknown_target(configured_subject):
     """Unrecognised target -> ValueError with the accepted list."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="target"):
         to_template(configured_subject, values, "MNI999")
 
 
 def test_to_template_mni305_rejects_surface_route(configured_subject):
     """MNI305 is volume-only; route='surface' is rejected."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="surface"):
         to_template(
             configured_subject, values, "MNI305", route="surface",
@@ -124,7 +124,7 @@ FSAVERAGE5_N_VERTICES = 10242
 
 def test_to_template_fsaverage_left_hemi(configured_subject):
     """Single-hemi surface output: 1-D array of fsaverage5 length."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = to_template(
         configured_subject, values, "fsaverage", hemi="L",
     )
@@ -135,7 +135,7 @@ def test_to_template_fsaverage_left_hemi(configured_subject):
 
 def test_to_template_fsaverage_right_hemi(configured_subject):
     """Right hemi works the same way as left."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = to_template(
         configured_subject, values, "fsaverage", hemi="R",
     )
@@ -147,7 +147,7 @@ def test_to_template_fsaverage_both_hemis_returns_dict(
     configured_subject,
 ):
     """``hemi=None`` returns both hemispheres in a dict."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = to_template(configured_subject, values, "fsaverage")
     assert isinstance(out, dict)
     assert set(out) == {"L", "R"}
@@ -157,7 +157,7 @@ def test_to_template_fsaverage_both_hemis_returns_dict(
 
 def test_to_template_fsaverage_rejects_volume_route(configured_subject):
     """fsaverage is surface-only; ``route='volume'`` is rejected."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="volume"):
         to_template(
             configured_subject, values, "fsaverage",
@@ -171,14 +171,14 @@ def test_to_template_fsaverage_rejects_volume_route(configured_subject):
 
 def test_to_template_rejects_fslr(configured_subject):
     """fsLR is not in this PR's supported-targets list."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="target"):
         to_template(configured_subject, values, "fsLR", hemi="L")
 
 
 def test_to_template_rejects_civet(configured_subject):
     """CIVET is not in this PR's supported-targets list."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="target"):
         to_template(configured_subject, values, "CIVET", hemi="L")
 
@@ -205,7 +205,7 @@ def test_to_template_rejects_unsupported_mni_variants(
     configured_subject, variant,
 ):
     """MNI variants without a transform path raise ValueError."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="target"):
         to_template(configured_subject, values, variant)
 
@@ -215,7 +215,7 @@ def test_to_template_rejects_unsupported_mni_variants(
 
 def test_to_template_writes_mni305_nifti(configured_subject, tmp_path):
     """MNI305 + output_dir writes a BIDS-named .nii.gz."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = to_template(
         configured_subject, values, "MNI305",
         output_dir=tmp_path, desc="MeanBeta", session="ses-01",
@@ -232,7 +232,7 @@ def test_to_template_writes_fsaverage_single_hemi(
     configured_subject, tmp_path,
 ):
     """fsaverage hemi='L' writes one func.gii with den-/hemi- tokens."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = to_template(
         configured_subject, values, "fsaverage", hemi="L",
         output_dir=tmp_path, desc="MeanBeta", session="ses-01",
@@ -250,7 +250,7 @@ def test_to_template_writes_fsaverage_both_hemis(
     configured_subject, tmp_path,
 ):
     """fsaverage hemi=None writes one func.gii per hemisphere."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     to_template(
         configured_subject, values, "fsaverage",
         output_dir=tmp_path, desc="MeanBeta", session="ses-01",
@@ -273,7 +273,7 @@ def test_to_template_writes_omits_session_and_desc(
     configured_subject, tmp_path,
 ):
     """No session / no desc -> the corresponding tokens are absent."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     to_template(
         configured_subject, values, "MNI305",
         output_dir=tmp_path,
@@ -286,7 +286,7 @@ def test_to_template_writes_strips_ses_prefix(
     configured_subject, tmp_path,
 ):
     """Passing ``session='ses-01'`` or ``session='01'`` both work."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     to_template(
         configured_subject, values, "MNI305",
         output_dir=tmp_path, session="01",
@@ -300,7 +300,7 @@ def test_to_template_writes_strips_ses_prefix(
 
 def test_subject_to_template_mni305(configured_subject):
     """``Subject.to_template`` mirrors the module-level call."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = configured_subject.to_template(values, "MNI305")
     assert isinstance(out, nib.Nifti1Image)
     assert out.ndim == 3
@@ -308,7 +308,7 @@ def test_subject_to_template_mni305(configured_subject):
 
 def test_subject_to_template_fsaverage_hemi(configured_subject):
     """``Subject.to_template`` forwards surface-target kwargs."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = configured_subject.to_template(
         values, "fsaverage", hemi="L",
     )
@@ -320,7 +320,7 @@ def test_subject_to_template_writes_to_disk(
     configured_subject, tmp_path,
 ):
     """``output_dir`` flows through the wrapper to the writer."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     configured_subject.to_template(
         values, "MNI305",
         output_dir=tmp_path, desc="MeanBeta", session="ses-01",
@@ -337,7 +337,7 @@ def test_subject_to_template_writes_to_disk(
 
 def test_volume_to_surface_single_hemi(configured_subject):
     """``volume_to_surface`` is the volume->fsaverage shortcut."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = configured_subject.volume_to_surface(values, hemi="L")
     assert isinstance(out, np.ndarray)
     assert out.shape == (FSAVERAGE5_N_VERTICES,)
@@ -345,7 +345,7 @@ def test_volume_to_surface_single_hemi(configured_subject):
 
 def test_volume_to_surface_both_hemis(configured_subject):
     """``hemi=None`` returns both hemispheres as a dict."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = configured_subject.volume_to_surface(values)
     assert isinstance(out, dict)
     assert set(out) == {"L", "R"}
@@ -353,14 +353,14 @@ def test_volume_to_surface_both_hemis(configured_subject):
 
 def test_volume_to_surface_rejects_volume_target(configured_subject):
     """``volume_to_surface`` refuses volume targets."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="surface"):
         configured_subject.volume_to_surface(values, target="MNI305")
 
 
 def test_volume_to_template_mni305(configured_subject):
     """``volume_to_template`` is the volume->MNI shortcut."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     out = configured_subject.volume_to_template(values, "MNI305")
     assert isinstance(out, nib.Nifti1Image)
     assert out.ndim == 3
@@ -368,7 +368,7 @@ def test_volume_to_template_mni305(configured_subject):
 
 def test_volume_to_template_rejects_surface_target(configured_subject):
     """``volume_to_template`` refuses ``fsaverage``."""
-    values = np.ones(N_BRAIN_VOXELS, dtype=np.float32)
+    values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
     with pytest.raises(ValueError, match="volume"):
         configured_subject.volume_to_template(values, "fsaverage")
 

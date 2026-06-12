@@ -61,6 +61,9 @@ class LaionFMRIDataset:
         Minimum noise ceiling for voxel inclusion.
     image_transform : callable or None
         Transform applied to image tensors.
+    mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+        Forwarded to :meth:`Subject.get_betas`; see
+        :meth:`Subject.get_brain_mask` for the difference.
     """
 
     def __init__(
@@ -71,6 +74,7 @@ class LaionFMRIDataset:
         mask=None,
         nc_threshold=None,
         image_transform=None,
+        mask_source="anatomical",
     ):
         _check_torch_available()
         import torch
@@ -85,6 +89,7 @@ class LaionFMRIDataset:
             roi=roi,
             mask=mask,
             nc_threshold=nc_threshold,
+            mask_source=mask_source,
         )
         # Slice the subject's global trial table down to this session,
         # preserving global trial indices.
