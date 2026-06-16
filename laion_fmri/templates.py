@@ -420,6 +420,17 @@ def _resample_fsnative_to_fsaverage(
             reference=str(fsavg_sphere),
             moving=str(subj_sphere_gii),
         )
+        # ``nilearn.surface.vol_to_surf`` returns
+        # ``(n_vertices, n_samples)`` for a 4-D source volume,
+        # but ``SurfaceResampler.apply`` does ``x @ self.mat``
+        # with ``self.mat`` shaped ``(n_source, n_target)``; the
+        # input therefore needs samples on the leading axis. The
+        # resampler then returns ``(n_samples, n_target_vertices)``
+        # directly, so a single inbound transpose is all that's
+        # needed to keep the public 2-D layout as
+        # ``(n_samples, n_vertices)``.
+        if fsnative_data.ndim == 2:
+            return resampler.apply(fsnative_data.T)
         return resampler.apply(fsnative_data)
 
 
