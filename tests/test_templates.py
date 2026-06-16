@@ -155,6 +155,50 @@ def test_to_template_fsaverage_both_hemis_returns_dict(
     assert out["R"].shape == (FSAVERAGE5_N_VERTICES,)
 
 
+def test_to_template_fsaverage_preserves_trial_axis_left(
+    configured_subject,
+):
+    """2-D ``(n_trials, n_voxels)`` input -> 2-D
+    ``(n_trials, n_fsaverage_vertices)`` output on the surface
+    chain.
+
+    Regression: ``nilearn.surface.vol_to_surf`` returns
+    ``(n_samples, n_vertices)`` for a 4-D source volume, but
+    ``SurfaceResampler.apply`` expects vertices on the leading
+    axis. Without an explicit transpose the matmul inside the
+    resampler raises a ``signature (n,k)(k,m)`` mismatch and the
+    batched call fails outright.
+    """
+    n_trials = 2
+    rng = np.random.default_rng(3)
+    values = rng.standard_normal(
+        (n_trials, N_ANATOMICAL_BRAIN_VOXELS),
+    ).astype(np.float32)
+    out = to_template(
+        configured_subject, values, "fsaverage", hemi="L",
+    )
+    assert isinstance(out, np.ndarray)
+    assert out.shape == (n_trials, FSAVERAGE5_N_VERTICES)
+    assert np.isfinite(out).all()
+
+
+def test_to_template_fsaverage_preserves_trial_axis_both_hemis(
+    configured_subject,
+):
+    """Batched fsaverage with ``hemi=None`` returns per-hemi 2-D
+    arrays keyed by ``"L"`` / ``"R"``."""
+    n_trials = 4
+    rng = np.random.default_rng(4)
+    values = rng.standard_normal(
+        (n_trials, N_ANATOMICAL_BRAIN_VOXELS),
+    ).astype(np.float32)
+    out = to_template(configured_subject, values, "fsaverage")
+    assert isinstance(out, dict)
+    assert set(out) == {"L", "R"}
+    assert out["L"].shape == (n_trials, FSAVERAGE5_N_VERTICES)
+    assert out["R"].shape == (n_trials, FSAVERAGE5_N_VERTICES)
+
+
 def test_to_template_fsaverage_rejects_volume_route(configured_subject):
     """fsaverage is surface-only; ``route='volume'`` is rejected."""
     values = np.ones(N_ANATOMICAL_BRAIN_VOXELS, dtype=np.float32)
