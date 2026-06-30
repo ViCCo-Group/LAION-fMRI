@@ -53,11 +53,20 @@ extensions = [
     "sphinxext.opengraph",
 ]
 
-if _BUILD_EXAMPLES:
-    # Pre-write license markers under a build-controlled data dir so
-    # the example scripts run non-interactively. End users running
-    # the example scripts directly still see the real prompts the
-    # first time.
+if _BUILD_EXAMPLES and not os.environ.get(
+    "LAION_FMRI_EXAMPLE_DATA_DIR",
+):
+    # Caller didn't pre-set ``LAION_FMRI_EXAMPLE_DATA_DIR`` (the
+    # common case on a clean CI build). Pre-write license markers
+    # under a build-controlled sandbox so the example scripts run
+    # non-interactively. End users running the example scripts
+    # directly still see the real prompts the first time.
+    #
+    # When the caller HAS set ``LAION_FMRI_EXAMPLE_DATA_DIR`` (e.g.
+    # pointing at an existing cached data dir from a prior
+    # ``download()`` round), respect that path -- don't overwrite
+    # it with the sandbox, and don't touch its license markers
+    # since the prior download will have accepted them already.
     _BUILD_DATA_ROOT = pathlib.Path(
         os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "build")

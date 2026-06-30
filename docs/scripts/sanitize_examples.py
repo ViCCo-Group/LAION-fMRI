@@ -21,25 +21,54 @@ SOURCE = DOCS_DIR / "source" / "auto_examples"
 BUILD_HTML = DOCS_DIR / "build" / "html"
 REPO_ROOT = DOCS_DIR.parent
 
-# Paths to scrub. Order matters: replace the longest first, so that
-# the data-dir match doesn't get partially eaten by the repo-root
-# match.
-_REPLACEMENTS = (
-    (
-        os.path.abspath(
+
+def _build_replacements():
+    """Assemble the path-replacement table.
+
+    Order matters: longest / most specific paths first, so a more
+    general match doesn't partially eat a more specific one.
+    """
+    replacements = []
+
+    # If the local build pointed at a custom cached data dir via
+    # ``LAION_FMRI_EXAMPLE_DATA_DIR`` (e.g. plot_01's cache
+    # location), scrub that path too. Skipped if the env var
+    # isn't set OR points at the build sandbox (already handled
+    # by the next replacement).
+    env_dir = os.environ.get("LAION_FMRI_EXAMPLE_DATA_DIR")
+    if env_dir:
+        env_abs = os.path.abspath(env_dir)
+        sandbox_abs = os.path.abspath(
             DOCS_DIR / "build" / "_examples_data" / "laion_fmri_quickstart"
-        ),
-        "/path/to/laion-fmri-data",
-    ),
-    (
-        os.path.abspath(REPO_ROOT),
-        "/path/to/laion-fmri",
-    ),
-    (
-        os.path.expanduser("~"),
-        "$HOME",
-    ),
-)
+        )
+        if env_abs != sandbox_abs:
+            replacements.append((env_abs, "/path/to/laion-fmri-data"))
+
+    # Build-managed sandbox path (used when LAION_FMRI_EXAMPLE_DATA_DIR
+    # isn't set; see docs/source/conf.py).
+    replacements.append(
+        (
+            os.path.abspath(
+                DOCS_DIR / "build" / "_examples_data" / "laion_fmri_quickstart"
+            ),
+            "/path/to/laion-fmri-data",
+        )
+    )
+
+    # Repo root → generic placeholder for any in-tree paths
+    # (sphinx-gallery captures e.g. the gallery script path).
+    replacements.append(
+        (os.path.abspath(REPO_ROOT), "/path/to/laion-fmri")
+    )
+
+    # Home dir → ``$HOME`` placeholder. Last so longer matches
+    # above take precedence on paths that live under ``~``.
+    replacements.append((os.path.expanduser("~"), "$HOME"))
+
+    return tuple(replacements)
+
+
+_REPLACEMENTS = _build_replacements()
 
 
 def sanitize(text):

@@ -2,7 +2,7 @@
 Discover what's in the bucket
 =============================
 
-All discovery functions read the bucket directly -- they don't
+All discovery functions read the bucket directly, they don't
 depend on what's on your disk. Run them right after
 :doc:`initialization <initialize>` to confirm the bucket is
 reachable and see what's available before committing to a
@@ -36,7 +36,7 @@ What each one does
    ROIs by category (``body``, ``character``, ``face``,
    ``laion``, ``motion``, ``object``, ``place``,
    ``retinotopy``); pass ``category=`` to restrict the listing.
-   ROI labels are returned in BIDS-clean form -- the bucket
+   ROI labels are returned in BIDS-clean form. The bucket
    sometimes ships hyphenated label values (``label-FFA-1``,
    ``label-pSTS-faces``) that the package rewrites locally to
    ``FFA1`` / ``pSTSfaces`` so the on-disk mirror passes the
@@ -46,7 +46,7 @@ What each one does
    Prints a human-readable summary of bucket contents.
 
 ``inspect_bucket()``
-   Verbose diagnostic listing -- useful when something looks
+   Verbose diagnostic listing, useful when something looks
    wrong (no subjects returned, unexpected layout, etc.).
 
 Sample output

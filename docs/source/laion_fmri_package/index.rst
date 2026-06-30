@@ -23,8 +23,8 @@ A typical session looks like:
    sub = load_subject("sub-03")
    betas = sub.get_betas(session="ses-01")     # (n_trials, n_voxels), float32
 
-The same three workflow steps -- *configure*, *inspect*,
-*download* -- are also exposed as a ``laion-fmri`` shell
+The same three workflow steps (*configure*, *inspect*,
+*download*) are also exposed as a ``laion-fmri`` shell
 command, installed automatically by ``pip``/``uv``:
 
 .. code-block:: bash
@@ -73,7 +73,7 @@ The cards below walk through each step in detail.
       :class-card: sd-border-0
       :shadow: sm
 
-      List subjects, ROIs, and bucket structure -- every query
+      List subjects, ROIs, and bucket structure. Every query
       reads S3 directly, no local download needed.
 
       +++

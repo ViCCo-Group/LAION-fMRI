@@ -26,6 +26,60 @@
    "name": "list"
   }
  ],
+ "betas_all": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "betas_all.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "betas_face": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "betas_face.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "betas_one": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "betas_one.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
  "cat": [
   {
    "is_class": false,
@@ -56,7 +110,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "dataset_initialize"
   }
  ],
@@ -72,7 +126,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "describe"
   }
  ],
@@ -211,7 +265,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "get_rois"
   }
  ],
@@ -227,7 +281,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "get_subjects"
   }
  ],
@@ -264,6 +318,13 @@
   }
  ],
  "laion_fmri.subject.Subject": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject"
+  },
   {
    "is_class": false,
    "is_explicit": true,
@@ -518,6 +579,24 @@
    "name": "join"
   }
  ],
+ "roi": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "dict"
+  }
+ ],
+ "roi.keys": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
  "rois": [
   {
    "is_class": false,
@@ -620,6 +699,70 @@
    "name": "Subject"
   }
  ],
+ "sub.get_betas": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_betas"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_betas"
+  }
+ ],
+ "sub.get_roi_data": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_roi_data"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_roi_data"
+  }
+ ],
+ "sub.get_sessions": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_sessions"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_sessions"
+  }
+ ],
+ "sub.get_trial_info": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_trial_info"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_trial_info"
+  }
+ ],
  "sub.metadata": [
   {
    "is_class": false,
@@ -670,6 +813,108 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "list"
+  }
+ ],
+ "trials": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "DataFrame"
+  }
+ ],
+ "trials.columns.tolist": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "Index.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core.base",
+   "module_short": "pandas.core.base",
+   "name": "IndexOpsMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core",
+   "module_short": "pandas.core",
+   "name": "IndexOpsMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "IndexOpsMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core.base",
+   "module_short": "pandas.core.base",
+   "name": "PandasObject.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core",
+   "module_short": "pandas.core",
+   "name": "PandasObject.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "PandasObject.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core.arraylike",
+   "module_short": "pandas.core.arraylike",
+   "name": "OpsMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core",
+   "module_short": "pandas.core",
+   "name": "OpsMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "OpsMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core.accessor",
+   "module_short": "pandas.core.accessor",
+   "name": "DirNamesMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas.core",
+   "module_short": "pandas.core",
+   "name": "DirNamesMixin.tolist"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pandas",
+   "module_short": "pandas",
+   "name": "DirNamesMixin.tolist"
   }
  ]
 }
