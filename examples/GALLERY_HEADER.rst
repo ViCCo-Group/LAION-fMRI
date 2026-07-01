@@ -19,6 +19,8 @@ Recommended reading order:
    loading, and PyTorch.
 5. :doc:`plot_05_segmentations`, per-image object-level
    segmentation masks for the shared stimulus set.
+6. :doc:`plot_06_templates`, bring data into and work within
+   template spaces, volume and surface
 
 For a complete reference of the package's public API, see
 :doc:`/laion_fmri_package/index`.

@@ -122,7 +122,7 @@ The cards below walk through each step in detail.
       :class-card: sd-border-0
       :shadow: sm
 
-      Five hands-on, narrated walkthroughs covering the full
+      Six hands-on, narrated walkthroughs covering the full
       workflow.
 
       +++
