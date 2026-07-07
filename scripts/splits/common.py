@@ -1,24 +1,25 @@
-"""Shared helpers for split-generation scripts.
+"""Shared helpers for standalone split-generation scripts.
 
-These scripts are maintainer tooling for regenerating the JSON files shipped
-under ``laion_fmri/splits/data``. They intentionally avoid importing the
-public ``laion_fmri`` package so split validation can run in a minimal Python
-environment.
+The generators in this directory derive split membership from the stimulus
+metadata and, for feature-based splits, stimulus embeddings. They do not use
+``experiments/`` artifacts or existing package split JSONs as input.
 """
 
 from __future__ import annotations
 
+import csv
 import difflib
 import json
+import os
 from pathlib import Path
 from typing import Any, Iterable
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_SPLIT_DIR = REPO_ROOT / "laion_fmri" / "splits" / "data"
-FINALIZED_MIN_NN_DIR = (
-    REPO_ROOT / "experiments" / "generalization_split" / "min_nn"
-)
+
+STIMULI_METADATA = "task-images_metadata.csv"
+STIMULI_H5 = "task-images_stimuli.h5"
 
 POOLS = ("shared", "sub-01", "sub-03", "sub-05", "sub-06", "sub-07")
 SUBJECT_POOLS = ("sub-01", "sub-03", "sub-05", "sub-06", "sub-07")
@@ -26,16 +27,14 @@ RANDOM_NAMES = tuple(f"random_{i}" for i in range(5))
 CLUSTER_K5_NAMES = tuple(f"cluster_k5_{i}" for i in range(5))
 SPLIT_NAMES = RANDOM_NAMES + CLUSTER_K5_NAMES + ("tau", "ood")
 
-# Historical full-pool artifacts were generated under acquisition/run pool
-# labels. These map those finalized artifact pools back to public BIDS subject
-# pool names exposed by laion_fmri.splits.
-PUBLIC_TO_FINALIZED_POOL = {
-    "shared": "shared",
-    "sub-01": "p01_full",
-    "sub-03": "p04_full",
-    "sub-05": "p03_full",
-    "sub-06": "p02_full",
-    "sub-07": "p05_full",
+# Public BIDS pool names point to the participant-suffix stimulus pools used
+# in the released image filenames.
+POOL_TO_PARTICIPANT = {
+    "sub-01": "p01",
+    "sub-03": "p04",
+    "sub-05": "p03",
+    "sub-06": "p02",
+    "sub-07": "p05",
 }
 
 OOD_TYPES = (
@@ -90,29 +89,146 @@ def test_ids(split: dict[str, Any]) -> list[str]:
     return [str(x) for x in variant(split)["test_ids"]]
 
 
-def regular_pool_ids(
-    pool: str,
-    data_dir: Path = PACKAGE_SPLIT_DIR,
-) -> list[str]:
-    """Return the regular, non-OOD image IDs for a pool.
+def default_stimuli_dir() -> Path | None:
+    direct = os.environ.get("LAION_FMRI_STIMULI_DIR")
+    if direct:
+        return Path(direct)
 
-    In packaged splits, ``ood`` is train=regular-pool and test=OOD-shared, so
-    the train side is the canonical regular stimulus universe.
-    """
+    data_dir = os.environ.get("LAION_FMRI_DATA")
+    if data_dir:
+        return Path(data_dir) / "stimuli"
 
-    return train_ids(load_split(pool, "ood", data_dir))
+    config_home = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
+    config_path = config_home / "laion_fmri" / "config.json"
+    if config_path.exists():
+        try:
+            cfg = load_json(config_path)
+        except json.JSONDecodeError:
+            return None
+        if cfg.get("data_dir"):
+            return Path(str(cfg["data_dir"])) / "stimuli"
+    return None
 
 
-def ood_image_ids(data_dir: Path = PACKAGE_SPLIT_DIR) -> list[str]:
-    return test_ids(load_split("shared", "ood", data_dir))
+def add_stimuli_arg(parser) -> None:
+    parser.add_argument(
+        "--stimuli-dir",
+        type=Path,
+        default=default_stimuli_dir(),
+        help=(
+            "Directory containing task-images_metadata.csv and, when feature "
+            "extraction is needed, task-images_stimuli.h5. Defaults to "
+            "LAION_FMRI_STIMULI_DIR, LAION_FMRI_DATA/stimuli, or the "
+            "configured laion-fmri data directory."
+        ),
+    )
 
 
-def pool_label_from_existing(
-    pool: str,
-    split_name: str,
-    data_dir: Path = PACKAGE_SPLIT_DIR,
-) -> str:
-    return str(load_split(pool, split_name, data_dir)["pool"])
+def require_stimuli_dir(stimuli_dir: Path | None) -> Path:
+    if stimuli_dir is None:
+        raise FileNotFoundError(
+            "No stimuli directory configured. Pass --stimuli-dir or set "
+            "LAION_FMRI_STIMULI_DIR/LAION_FMRI_DATA."
+        )
+    stimuli_dir = Path(stimuli_dir)
+    metadata_path = stimuli_dir / STIMULI_METADATA
+    if not metadata_path.exists():
+        raise FileNotFoundError(
+            f"Missing stimulus metadata: {metadata_path}. Download stimuli "
+            "with `laion-fmri download-stimuli` or pass --stimuli-dir."
+        )
+    return stimuli_dir
+
+
+def load_stimulus_metadata(stimuli_dir: Path) -> list[dict[str, str]]:
+    metadata_path = stimuli_dir / STIMULI_METADATA
+    with metadata_path.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    if not rows or "image_name" not in rows[0]:
+        raise ValueError(f"{metadata_path} must contain an image_name column")
+    return rows
+
+
+def _as_token(value: str | None) -> str:
+    return str(value or "").strip().lower().replace("-", "")
+
+
+def _participant_suffix(image_name: str) -> str | None:
+    stem = Path(image_name).stem
+    suffix = stem.rsplit("_", 1)[-1].lower()
+    if len(suffix) == 3 and suffix.startswith("p") and suffix[1:].isdigit():
+        return suffix
+    return None
+
+
+def _row_participant(row: dict[str, str]) -> str | None:
+    token = _as_token(row.get("participant"))
+    if token.startswith("p") and token[1:].isdigit():
+        return f"p{int(token[1:]):02d}"
+    if token.startswith("sub") and token[3:].isdigit():
+        return f"p{int(token[3:]):02d}"
+    if token.isdigit():
+        return f"p{int(token):02d}"
+    return _participant_suffix(row["image_name"])
+
+
+def is_ood(row: dict[str, str]) -> bool:
+    dataset = _as_token(row.get("dataset"))
+    image_name = row["image_name"]
+    return dataset == "ood" or "_OOD_" in image_name
+
+
+def is_shared(row: dict[str, str]) -> bool:
+    shared = _as_token(row.get("unique_or_shared"))
+    return shared == "shared" or row["image_name"].startswith("shared_")
+
+
+def pool_label(pool: str) -> str:
+    if pool == "shared":
+        return "LAION non-OOD shared (1121 images)"
+    participant = POOL_TO_PARTICIPANT[pool]
+    subject_label = f"sub-{int(participant[1:]):02d}"
+    return f"{subject_label} full pool (unique + LAION non-OOD shared)"
+
+
+def ood_pool_label(pool: str) -> str:
+    if pool == "shared":
+        return pool_label(pool)
+    return f"{pool} full pool (5833 images)"
+
+
+def pool_image_ids(rows: list[dict[str, str]], pool: str) -> list[str]:
+    """Return the ordered regular image universe for a split pool."""
+
+    if pool not in POOLS:
+        raise KeyError(f"unknown pool {pool!r}; expected one of {POOLS}")
+
+    shared_regular = [
+        row["image_name"]
+        for row in rows
+        if is_shared(row) and not is_ood(row)
+    ]
+    if pool == "shared":
+        return sorted(shared_regular)
+
+    participant = POOL_TO_PARTICIPANT[pool]
+    unique = [
+        row["image_name"]
+        for row in rows
+        if not is_shared(row)
+        and not is_ood(row)
+        and _row_participant(row) == participant
+    ]
+    return sorted(shared_regular + unique)
+
+
+def ood_image_ids_from_metadata(rows: list[dict[str, str]]) -> list[str]:
+    return sorted(row["image_name"] for row in rows if is_shared(row) and is_ood(row))
+
+
+def ordered_complement(image_ids: list[str], test: Iterable[str]) -> list[str]:
+    test_set = set(str(x) for x in test)
+    return [image_id for image_id in image_ids if image_id not in test_set]
 
 
 def make_single_variant_split(
@@ -186,22 +302,6 @@ def validate_single_split(split: dict[str, Any]) -> None:
         raise AssertionError(f"{split['name']}: bad n_test")
     if var.get("variant_id") != 0:
         raise AssertionError(f"{split['name']}: expected variant_id=0")
-
-
-def public_pool_to_finalized(pool: str) -> str:
-    try:
-        return PUBLIC_TO_FINALIZED_POOL[pool]
-    except KeyError as exc:
-        raise KeyError(f"unknown public pool {pool!r}") from exc
-
-
-def finalized_split_path(
-    finalized_root: Path,
-    pool: str,
-    name: str,
-) -> Path:
-    artifact_pool = public_pool_to_finalized(pool)
-    return finalized_root / artifact_pool / "splits" / f"{name}.json"
 
 
 def add_write_check_args(parser) -> None:

@@ -1,76 +1,124 @@
-"""Package the finalized CLIP k-means cluster holdout splits.
-
-The cluster splits were selected upstream in the min-NN generalization
-pipeline and exported as finalized per-pool split JSON files. This script
-normalizes those finalized artifacts into ``laion_fmri/splits/data`` and
-checks that they reproduce the packaged ``cluster_k5_*`` splits.
-"""
+"""Regenerate CLIP k-means K=5 cluster holdout splits from stimuli."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
+import numpy as np
+
 from common import (
     CLUSTER_K5_NAMES,
-    FINALIZED_MIN_NN_DIR,
     POOLS,
+    add_stimuli_arg,
+    add_write_check_args,
     check_or_write,
-    finalized_split_path,
-    load_json,
+    load_stimulus_metadata,
     make_single_variant_split,
+    ordered_complement,
+    pool_image_ids,
+    pool_label,
+    require_stimuli_dir,
     should_write,
     split_path,
     validate_single_split,
-    variant,
-    add_write_check_args,
 )
+from features import load_feature_mats
 
 
-def _load_finalized_cluster(
+DEFAULT_SEED = 2026
+DEFAULT_K = 5
+
+
+def build_cluster_splits(
     pool: str,
-    name: str,
     *,
-    finalized_root: Path,
-) -> dict:
-    source_path = finalized_split_path(finalized_root, pool, name)
-    if not source_path.exists():
-        raise FileNotFoundError(
-            f"missing finalized cluster split artifact: {source_path}"
+    image_ids: list[str],
+    clip_features: np.ndarray,
+    seed: int = DEFAULT_SEED,
+    k: int = DEFAULT_K,
+) -> list[tuple[str, dict]]:
+    try:
+        from sklearn.cluster import KMeans
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "cluster split generation requires scikit-learn"
+        ) from exc
+
+    km = KMeans(n_clusters=k, random_state=seed, n_init=10).fit(clip_features)
+    labels = km.labels_
+
+    payloads = []
+    for cluster_id, name in enumerate(CLUSTER_K5_NAMES):
+        test = [
+            image_id
+            for image_id, label in zip(image_ids, labels)
+            if int(label) == cluster_id
+        ]
+        payload = make_single_variant_split(
+            name=name,
+            pool_label=pool_label(pool),
+            splitter="min_nn_stochastic",
+            params={
+                "method": "kmeans_clip_k5_holdout",
+                "held_out_cluster": cluster_id,
+            },
+            train=ordered_complement(image_ids, test),
+            test=test,
         )
-    source = load_json(source_path)
-    source_variant = variant(source)
-    payload = make_single_variant_split(
-        name=name,
-        pool_label=str(source["pool"]),
-        splitter=str(source["splitter"]),
-        params=dict(source["params"]),
-        train=source_variant["train_ids"],
-        test=source_variant["test_ids"],
-    )
-    validate_single_split(payload)
-    return payload
+        validate_single_split(payload)
+        payloads.append((name, payload))
+
+    return payloads
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_write_check_args(parser)
+    add_stimuli_arg(parser)
     parser.add_argument(
-        "--finalized-root",
+        "--cache-dir",
         type=Path,
-        default=FINALIZED_MIN_NN_DIR,
-        help="Root containing finalized min-NN split artifacts.",
+        default=Path("temp/split_feature_cache"),
+        help="Feature cache directory.",
     )
+    parser.add_argument(
+        "--extract-missing",
+        action="store_true",
+        help="Extract missing CLIP features from task-images_stimuli.h5.",
+    )
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--clip-model", default="ViT-H-14")
+    parser.add_argument("--clip-pretrained", default="laion2b_s32b_b79k")
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     args = parser.parse_args()
 
+    stimuli_dir = require_stimuli_dir(args.stimuli_dir)
+    rows = load_stimulus_metadata(stimuli_dir)
     write = should_write(args)
+
     for pool in POOLS:
-        for name in CLUSTER_K5_NAMES:
-            payload = _load_finalized_cluster(
-                pool,
-                name,
-                finalized_root=args.finalized_root,
-            )
+        image_ids = pool_image_ids(rows, pool)
+        mats = load_feature_mats(
+            spaces=["CLIP"],
+            rows=rows,
+            stimuli_dir=stimuli_dir,
+            image_ids=image_ids,
+            cache_dir=args.cache_dir,
+            extract_missing=args.extract_missing,
+            batch_size=args.batch_size,
+            device=args.device,
+            clip_model=args.clip_model,
+            clip_pretrained=args.clip_pretrained,
+            dinov2_model="dinov2_vitl14",
+        )
+        for name, payload in build_cluster_splits(
+            pool,
+            image_ids=image_ids,
+            clip_features=mats["clip"],
+            seed=args.seed,
+        ):
             check_or_write(
                 split_path(pool, name, args.data_dir),
                 payload,

@@ -14,7 +14,6 @@ from common import (
     RANDOM_NAMES,
     SPLIT_NAMES,
     load_split,
-    regular_pool_ids,
     test_ids,
     train_ids,
     validate_single_split,
@@ -57,8 +56,12 @@ def _ood_type(image_id: str) -> str:
     return image_id.split(marker, 1)[1].split("_", 1)[0]
 
 
+def _regular_pool_ids(pool: str, data_dir: Path) -> list[str]:
+    return train_ids(load_split(pool, "ood", data_dir))
+
+
 def validate_pool(pool: str, data_dir: Path) -> None:
-    universe = regular_pool_ids(pool, data_dir)
+    universe = _regular_pool_ids(pool, data_dir)
     _assert_unique(universe, f"{pool}/regular universe")
     universe_set = set(universe)
 

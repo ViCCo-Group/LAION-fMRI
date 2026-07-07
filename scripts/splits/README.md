@@ -1,39 +1,51 @@
 # Split Generation Scripts
 
-This directory contains maintainer scripts for reproducing the JSON split
-files shipped in `laion_fmri/splits/data`.
+This directory contains standalone maintainer scripts for regenerating the JSON
+split files shipped in `laion_fmri/splits/data`.
 
-Run scripts without `--write` to check the generated payloads against the
-current package data:
+The scripts derive split membership from the released stimuli:
+
+- `task-images_metadata.csv` defines shared, OOD, and participant-unique image
+  pools.
+- `task-images_stimuli.h5` is used when image embeddings need to be extracted.
+- Downloaded embedding files such as `task-images_desc-CLIP_embeddings.h5` and
+  `task-images_desc-DINOv2_embeddings.h5` are used when present.
+- No script reads `experiments/` artifacts or existing split JSONs as its
+  generation source.
+
+By default, scripts discover stimuli via `LAION_FMRI_STIMULI_DIR`,
+`LAION_FMRI_DATA/stimuli`, or the configured `laion-fmri` data directory.
+You can also pass `--stimuli-dir /path/to/stimuli`.
+
+## Commands
+
+Check generated JSONs against the package data:
 
 ```bash
-python scripts/splits/create_ood.py --check
-python scripts/splits/create_random.py --check
-python scripts/splits/create_cluster_k5.py --check
-python scripts/splits/create_tau.py --check
+python scripts/splits/create_ood.py --check --stimuli-dir /path/to/stimuli
+python scripts/splits/create_random.py --check --stimuli-dir /path/to/stimuli
+python scripts/splits/create_cluster_k5.py --check --stimuli-dir /path/to/stimuli
+python scripts/splits/create_tau.py --check --stimuli-dir /path/to/stimuli
 python scripts/splits/validate.py
 ```
 
 Use `--write` to rewrite the target `--data-dir`.
 
-## Sources
+## Feature Splits
 
-- `create_ood.py` rebuilds `ood.json` from a source split-data directory. The
-  tracked repository currently has no independent raw all-stimulus manifest, so
-  the source `ood` train side defines each regular pool and the shared source
-  `ood` test side defines the common 371-image OOD holdout.
-- `create_random.py` rebuilds `random_0` ... `random_4` as one shuffled
-  5-fold CV partition of each regular pool, using `seed=42`.
-- `create_cluster_k5.py` packages the finalized CLIP k-means holdout artifacts
-  from `experiments/generalization_split/min_nn/<pool>/splits`.
-- `create_tau.py` packages the finalized adaptive tau artifact. By default it
-  reads `tau_balanced_adaptive_stochastic.json` and writes/checks the public
-  `tau.json` split.
-- `validate.py` checks schema-level invariants plus cross-split invariants:
-  random and cluster test folds are disjoint full partitions, every train side
-  is the ordered complement of its test side, OOD tests are identical across
-  pools, and tau is a 20% holdout of the regular pool.
+`create_cluster_k5.py` uses CLIP features and reruns K-means with
+`random_state=2026`.
 
-The public subject-pool names and historical finalized artifact names differ.
-The mapping is centralized in `common.py` so the package continues to reproduce
-the existing split IDs and labels exactly.
+`create_tau.py` uses CLIP, DreamSim, and DINOv2 by default. It recomputes
+nearest-neighbor isolation, sweeps adaptive tau percentiles, seeds candidates
+by best-of-N MMD, and runs stochastic MMD-swap refinement.
+
+If downloaded embedding files are unavailable, pass `--extract-missing`.
+Optional extraction dependencies:
+
+```bash
+pip install torch torchvision open_clip_torch scikit-learn dreamsim
+```
+
+Feature arrays are cached under `temp/split_feature_cache` by default; override
+with `--cache-dir`.

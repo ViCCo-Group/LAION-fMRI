@@ -1,26 +1,27 @@
-"""Regenerate the packaged shuffled 5-fold random splits.
+"""Regenerate the packaged shuffled 5-fold random splits from stimuli.
 
 The random split family is a single shuffled K-fold partition of each regular
-pool. Every image appears in exactly one validation fold across
-``random_0`` ... ``random_4``; each train set is the complement of its test
-fold.
+pool. Pool membership comes from ``task-images_metadata.csv``; no existing
+split JSON is used as input.
 """
 
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 import numpy as np
 
 from common import (
-    PACKAGE_SPLIT_DIR,
     POOLS,
+    add_stimuli_arg,
     add_write_check_args,
     check_or_write,
+    load_stimulus_metadata,
     make_single_variant_split,
-    pool_label_from_existing,
-    regular_pool_ids,
+    ordered_complement,
+    pool_image_ids,
+    pool_label,
+    require_stimuli_dir,
     should_write,
     split_path,
     validate_single_split,
@@ -34,14 +35,11 @@ DEFAULT_FOLDS = 5
 def build_random_splits(
     pool: str,
     *,
+    image_ids: list[str],
     seed: int = DEFAULT_SEED,
     folds: int = DEFAULT_FOLDS,
-    source_data_dir: Path,
 ) -> list[tuple[str, dict]]:
     """Return ``random_*`` split payloads for one pool."""
-
-    image_ids = regular_pool_ids(pool, source_data_dir)
-    pool_label = pool_label_from_existing(pool, "random_0", source_data_dir)
 
     shuffled = np.array(image_ids, dtype=object)
     np.random.default_rng(seed).shuffle(shuffled)
@@ -50,11 +48,9 @@ def build_random_splits(
     for fold, test_arr in enumerate(np.array_split(shuffled, folds)):
         name = f"random_{fold}"
         test = [str(x) for x in test_arr.tolist()]
-        test_set = set(test)
-        train = [image_id for image_id in image_ids if image_id not in test_set]
         payload = make_single_variant_split(
             name=name,
-            pool_label=pool_label,
+            pool_label=pool_label(pool),
             splitter="random_kfold",
             params={
                 "method": "shuffled_5fold_cv",
@@ -62,7 +58,7 @@ def build_random_splits(
                 "seed": seed,
                 "fold": fold,
             },
-            train=train,
+            train=ordered_complement(image_ids, test),
             test=test,
         )
         validate_single_split(payload)
@@ -74,6 +70,7 @@ def build_random_splits(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_write_check_args(parser)
+    add_stimuli_arg(parser)
     parser.add_argument(
         "--seed",
         type=int,
@@ -86,21 +83,19 @@ def main() -> None:
         default=DEFAULT_FOLDS,
         help="Number of shuffled CV folds to generate.",
     )
-    parser.add_argument(
-        "--source-data-dir",
-        type=Path,
-        default=PACKAGE_SPLIT_DIR,
-        help="Split data directory that supplies the regular pool universes.",
-    )
     args = parser.parse_args()
 
+    stimuli_dir = require_stimuli_dir(args.stimuli_dir)
+    rows = load_stimulus_metadata(stimuli_dir)
     write = should_write(args)
+
     for pool in POOLS:
+        image_ids = pool_image_ids(rows, pool)
         for name, payload in build_random_splits(
             pool,
+            image_ids=image_ids,
             seed=args.seed,
             folds=args.folds,
-            source_data_dir=args.source_data_dir,
         ):
             check_or_write(
                 split_path(pool, name, args.data_dir),
