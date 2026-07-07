@@ -27,14 +27,23 @@ RANDOM_NAMES = tuple(f"random_{i}" for i in range(5))
 CLUSTER_K5_NAMES = tuple(f"cluster_k5_{i}" for i in range(5))
 SPLIT_NAMES = RANDOM_NAMES + CLUSTER_K5_NAMES + ("tau", "ood")
 
-# Public BIDS pool names point to the participant-suffix stimulus pools used
-# in the released image filenames.
-POOL_TO_PARTICIPANT = {
-    "sub-01": "p01",
-    "sub-03": "p04",
-    "sub-05": "p03",
-    "sub-06": "p02",
-    "sub-07": "p05",
+# Historical filename suffixes do not always match public BIDS subject IDs.
+# Prefer the metadata participant column; use this only when that column is
+# absent or empty.
+FILENAME_SUFFIX_TO_POOL = {
+    "p01": "sub-01",
+    "p02": "sub-06",
+    "p03": "sub-05",
+    "p04": "sub-03",
+    "p05": "sub-07",
+}
+
+POOL_TO_FEATURE_LABEL = {
+    "sub-01": "sub-01",
+    "sub-03": "sub-04",
+    "sub-05": "sub-03",
+    "sub-06": "sub-02",
+    "sub-07": "sub-05",
 }
 
 OOD_TYPES = (
@@ -161,15 +170,17 @@ def _participant_suffix(image_name: str) -> str | None:
     return None
 
 
-def _row_participant(row: dict[str, str]) -> str | None:
+def _row_pool(row: dict[str, str]) -> str | None:
     token = _as_token(row.get("participant"))
-    if token.startswith("p") and token[1:].isdigit():
-        return f"p{int(token[1:]):02d}"
     if token.startswith("sub") and token[3:].isdigit():
-        return f"p{int(token[3:]):02d}"
-    if token.isdigit():
-        return f"p{int(token):02d}"
-    return _participant_suffix(row["image_name"])
+        return f"sub-{int(token[3:]):02d}"
+    if token.startswith("p") and token[1:].isdigit():
+        suffix = f"p{int(token[1:]):02d}"
+        return FILENAME_SUFFIX_TO_POOL.get(suffix)
+    suffix = _participant_suffix(row["image_name"])
+    if suffix is not None:
+        return FILENAME_SUFFIX_TO_POOL.get(suffix)
+    return None
 
 
 def is_ood(row: dict[str, str]) -> bool:
@@ -186,8 +197,7 @@ def is_shared(row: dict[str, str]) -> bool:
 def pool_label(pool: str) -> str:
     if pool == "shared":
         return "LAION non-OOD shared (1121 images)"
-    participant = POOL_TO_PARTICIPANT[pool]
-    subject_label = f"sub-{int(participant[1:]):02d}"
+    subject_label = POOL_TO_FEATURE_LABEL[pool]
     return f"{subject_label} full pool (unique + LAION non-OOD shared)"
 
 
@@ -211,13 +221,12 @@ def pool_image_ids(rows: list[dict[str, str]], pool: str) -> list[str]:
     if pool == "shared":
         return sorted(shared_regular)
 
-    participant = POOL_TO_PARTICIPANT[pool]
     unique = [
         row["image_name"]
         for row in rows
         if not is_shared(row)
         and not is_ood(row)
-        and _row_participant(row) == participant
+        and _row_pool(row) == pool
     ]
     return sorted(shared_regular + unique)
 

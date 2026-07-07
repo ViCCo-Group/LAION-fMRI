@@ -121,15 +121,14 @@ def extract_clip(
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
             "CLIP extraction requires torch and open_clip_torch. Install them "
-            "or download task-images_desc-CLIP_embeddings.h5."
+            "or provide a cached CLIP feature .npz."
         ) from exc
 
     model, _, preprocess = open_clip.create_model_and_transforms(
         model_name,
         pretrained=pretrained,
-        device=device,
     )
-    model.eval()
+    model.eval().to(device)
     batches = []
     with torch.no_grad():
         for _, images in _image_batches(
@@ -154,24 +153,20 @@ def extract_dinov2(
 ) -> np.ndarray:
     try:
         import torch
-        from torchvision import transforms
+        import timm
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "DINOv2 extraction requires torch and torchvision. Install them "
-            "or download task-images_desc-DINOv2_embeddings.h5."
+            "DINOv2 extraction requires torch and timm. Install them "
+            "or provide a cached DINOv2 feature .npz."
         ) from exc
 
-    model = torch.hub.load("facebookresearch/dinov2", model_name)
-    model = model.to(device).eval()
-    preprocess = transforms.Compose([
-        transforms.Resize(518, interpolation=transforms.InterpolationMode.BICUBIC),
-        transforms.CenterCrop(518),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=(0.485, 0.456, 0.406),
-            std=(0.229, 0.224, 0.225),
-        ),
-    ])
+    model = timm.create_model(
+        model_name,
+        pretrained=True,
+        num_classes=0,
+    ).to(device).eval()
+    cfg = timm.data.resolve_model_data_config(model)
+    preprocess = timm.data.create_transform(**cfg, is_training=False)
 
     batches = []
     with torch.no_grad():
@@ -231,6 +226,7 @@ def load_or_extract_features(
     clip_model: str = "ViT-H-14",
     clip_pretrained: str = "laion2b_s32b_b79k",
     dinov2_model: str = "dinov2_vitl14",
+    use_release_embeddings: bool = False,
 ) -> np.ndarray:
     """Load or compute features for ``image_ids`` in their requested order."""
 
@@ -248,7 +244,7 @@ def load_or_extract_features(
         raise ValueError(f"cache image_ids do not match request: {cache_path}")
 
     release_name = RELEASE_EMBEDDING_NAMES.get(normalized)
-    if release_name is not None:
+    if use_release_embeddings and release_name is not None:
         h5_path = embeddings_h5_path(stimuli_dir, release_name)
         if h5_path.exists():
             features = _read_h5_rows(h5_path, image_ids)
@@ -317,6 +313,7 @@ def load_feature_mats(
     clip_model: str,
     clip_pretrained: str,
     dinov2_model: str,
+    use_release_embeddings: bool = False,
 ) -> dict[str, np.ndarray]:
     mats = {}
     for space in spaces:
@@ -332,6 +329,7 @@ def load_feature_mats(
             clip_model=clip_model,
             clip_pretrained=clip_pretrained,
             dinov2_model=dinov2_model,
+            use_release_embeddings=use_release_embeddings,
         )
         mats[space.lower()] = center_l2_normalize(features)
     return mats

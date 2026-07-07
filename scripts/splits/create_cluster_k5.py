@@ -28,6 +28,12 @@ from features import load_feature_mats
 
 DEFAULT_SEED = 2026
 DEFAULT_K = 5
+DEFAULT_N_INIT = 10
+ORIGINAL_N_INIT_BY_POOL = {
+    # The packaged sub-05 cluster splits were generated with five k-means++
+    # restarts; the other pools were generated with ten.
+    "sub-05": 5,
+}
 
 
 def build_cluster_splits(
@@ -37,6 +43,7 @@ def build_cluster_splits(
     clip_features: np.ndarray,
     seed: int = DEFAULT_SEED,
     k: int = DEFAULT_K,
+    n_init: int = DEFAULT_N_INIT,
 ) -> list[tuple[str, dict]]:
     try:
         from sklearn.cluster import KMeans
@@ -45,7 +52,11 @@ def build_cluster_splits(
             "cluster split generation requires scikit-learn"
         ) from exc
 
-    km = KMeans(n_clusters=k, random_state=seed, n_init=10).fit(clip_features)
+    km = KMeans(
+        n_clusters=k,
+        random_state=seed,
+        n_init=n_init,
+    ).fit(clip_features)
     labels = km.labels_
 
     payloads = []
@@ -89,9 +100,18 @@ def main() -> None:
     )
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--clip-model", default="ViT-H-14")
-    parser.add_argument("--clip-pretrained", default="laion2b_s32b_b79k")
+    parser.add_argument("--clip-model", default="ViT-L-14-CLIPA")
+    parser.add_argument("--clip-pretrained", default="datacomp1b")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument(
+        "--n-init",
+        type=int,
+        default=None,
+        help=(
+            "KMeans n_init override. Defaults to the original per-pool values "
+            "used for the packaged splits."
+        ),
+    )
     args = parser.parse_args()
 
     stimuli_dir = require_stimuli_dir(args.stimuli_dir)
@@ -112,12 +132,18 @@ def main() -> None:
             clip_model=args.clip_model,
             clip_pretrained=args.clip_pretrained,
             dinov2_model="dinov2_vitl14",
+            use_release_embeddings=False,
         )
         for name, payload in build_cluster_splits(
             pool,
             image_ids=image_ids,
             clip_features=mats["clip"],
             seed=args.seed,
+            n_init=(
+                args.n_init
+                if args.n_init is not None
+                else ORIGINAL_N_INIT_BY_POOL.get(pool, DEFAULT_N_INIT)
+            ),
         ):
             check_or_write(
                 split_path(pool, name, args.data_dir),

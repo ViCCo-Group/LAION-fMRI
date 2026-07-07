@@ -57,11 +57,13 @@ def _lonely_worst_percentile(mats: dict[str, np.ndarray]) -> np.ndarray:
     for x in mats.values():
         dist = 1.0 - x @ x.T
         np.fill_diagonal(dist, np.inf)
+        dist = dist.astype(np.float32)
         lonely = dist.min(axis=1)
         order = np.argsort(lonely)
         ranks = np.empty_like(order)
         ranks[order] = np.arange(len(lonely))
-        pct_per_space.append(ranks.astype(np.float32) / max(len(lonely) - 1, 1))
+        pct = ranks.astype(np.float64) / max(len(lonely) - 1, 1)
+        pct_per_space.append(pct.astype(np.float32))
     return np.stack(pct_per_space).min(axis=0).astype(np.float32)
 
 
@@ -267,16 +269,21 @@ def select_tau_indices(
         sweep,
         key=lambda row: _log_distance(row["ratio_to_random"], target_ratio),
     )
+    refined = np.asarray(chosen["test_idx"], dtype=np.int64)
+    mask = np.zeros(n, dtype=bool)
+    mask[refined] = True
+    mmd_per_space = {space: _mmd2(x, mask) for space, x in mats.items()}
+    mmd_mean = float(np.mean(list(mmd_per_space.values())))
     selection = {
         "criterion": "mmd_matched_log_closest",
         "tier": tier,
         "target_ratio_x_random": float(target_ratio),
         "tau": float(chosen["tau"]),
         "percentile": float(chosen["percentile"]),
-        "mmd2_mean": float(chosen["mmd2_mean"]),
-        "ratio_to_random": float(chosen["ratio_to_random"]),
+        "mmd2_mean": mmd_mean,
+        "ratio_to_random": mmd_mean / baseline_mean,
     }
-    return np.asarray(chosen["test_idx"], dtype=np.int64), selection
+    return np.where(mask)[0].astype(np.int64), selection
 
 
 def build_tau_split(
@@ -342,9 +349,9 @@ def main() -> None:
     )
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--clip-model", default="ViT-H-14")
-    parser.add_argument("--clip-pretrained", default="laion2b_s32b_b79k")
-    parser.add_argument("--dinov2-model", default="dinov2_vitl14")
+    parser.add_argument("--clip-model", default="ViT-L-14-CLIPA")
+    parser.add_argument("--clip-pretrained", default="datacomp1b")
+    parser.add_argument("--dinov2-model", default="vit_base_patch14_dinov2.lvd142m")
     parser.add_argument("--tier", choices=tuple(TARGET_RATIOS), default="balanced")
     parser.add_argument("--output-name", default="tau")
     parser.add_argument("--target-frac", type=float, default=0.20)
@@ -373,6 +380,7 @@ def main() -> None:
             clip_model=args.clip_model,
             clip_pretrained=args.clip_pretrained,
             dinov2_model=args.dinov2_model,
+            use_release_embeddings=False,
         )
         payload = build_tau_split(
             pool,
