@@ -1,7 +1,7 @@
 """Demonstrate adaptive tau split construction from stimulus embeddings.
 
 This implements the min-NN + stochastic MMD-swap procedure from stimulus
-metadata and feature spaces, not from finalized experiment artifacts.
+metadata and feature spaces.
 """
 
 from __future__ import annotations

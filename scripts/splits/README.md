@@ -11,8 +11,7 @@ The scripts derive split membership from released stimulus inputs:
 - Feature caches under `--cache-dir` are used when present. Otherwise,
   feature-based scripts require `--extract-missing` so they can compute the
   embeddings from `task-images_stimuli.h5`.
-- No script reads `experiments/` artifacts or existing split JSONs as its
-  method input.
+- Method inputs are stimulus metadata, stimulus images, and visual embeddings.
 
 By default, scripts discover stimuli via `LAION_FMRI_STIMULI_DIR`,
 `LAION_FMRI_DATA/stimuli`, or the configured `laion-fmri` data directory.
