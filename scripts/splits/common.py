@@ -1,8 +1,8 @@
 """Shared helpers for standalone split method scripts.
 
 The scripts in this directory derive split membership from stimulus metadata
-and, for feature-based methods, stimulus embeddings. They do not use
-``experiments/`` artifacts or existing split JSONs as method input.
+and, for feature-based methods, stimulus embeddings. Method inputs are
+stimulus-level data and visual feature arrays.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ RANDOM_NAMES = tuple(f"random_{i}" for i in range(5))
 CLUSTER_K5_NAMES = tuple(f"cluster_k5_{i}" for i in range(5))
 SPLIT_NAMES = RANDOM_NAMES + CLUSTER_K5_NAMES + ("tau", "ood")
 
-# Historical filename suffixes do not always match public BIDS subject IDs.
+# Historical filename suffixes can differ from public BIDS subject IDs.
 # Prefer the metadata participant column; use this only when that column is
 # absent or empty.
 FILENAME_SUFFIX_TO_POOL = {
@@ -86,7 +86,7 @@ def load_split(
 def variant(split: dict[str, Any]) -> dict[str, Any]:
     variants = split.get("variants", [])
     if len(variants) != 1:
-        raise ValueError(f"expected exactly one variant in {split.get('name')}")
+        raise ValueError(f"expected a single variant in {split.get('name')}")
     return variants[0]
 
 
@@ -136,7 +136,7 @@ def add_stimuli_arg(parser) -> None:
 def require_stimuli_dir(stimuli_dir: Path | None) -> Path:
     if stimuli_dir is None:
         raise FileNotFoundError(
-            "No stimuli directory configured. Pass --stimuli-dir or set "
+            "Stimuli directory is required. Pass --stimuli-dir or set "
             "LAION_FMRI_STIMULI_DIR/LAION_FMRI_DATA."
         )
     stimuli_dir = Path(stimuli_dir)
@@ -296,7 +296,7 @@ def check_or_write(
             n=3,
         )
     )
-    raise AssertionError(f"{path} does not match generated payload:\n{diff}")
+    raise AssertionError(f"{path} differs from generated payload:\n{diff}")
 
 
 def validate_single_split(split: dict[str, Any]) -> None:
@@ -334,5 +334,5 @@ def add_write_check_args(parser) -> None:
 
 
 def should_write(args) -> bool:
-    # Default to check mode so running a script without flags is non-mutating.
+    # Default mode is non-mutating check behavior.
     return bool(args.write)

@@ -262,7 +262,7 @@ def select_tau_indices(
         })
 
     if not sweep:
-        raise RuntimeError("no feasible tau candidates found")
+        raise RuntimeError("feasible tau candidate set is empty")
 
     chosen = min(
         sweep,

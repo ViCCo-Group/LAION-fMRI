@@ -1,8 +1,7 @@
 """Create shuffled 5-fold random split payloads from stimuli.
 
 The random split family is a single shuffled K-fold partition of each regular
-pool. Pool membership comes from ``task-images_metadata.csv``; no existing
-split JSON is used as method input.
+pool. Pool membership comes from ``task-images_metadata.csv``.
 """
 
 from __future__ import annotations

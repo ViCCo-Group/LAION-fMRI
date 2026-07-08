@@ -42,11 +42,11 @@ def _assert_complement(
         missing = sorted(universe_set - (train_set | test_set))[:5]
         extra = sorted((train_set | test_set) - universe_set)[:5]
         raise AssertionError(
-            f"{pool}/{name}: train+test does not equal regular universe; "
+            f"{pool}/{name}: train+test differs from regular universe; "
             f"missing={missing}, extra={extra}"
         )
     if train != [image_id for image_id in universe if image_id not in test_set]:
-        raise AssertionError(f"{pool}/{name}: train is not ordered complement")
+        raise AssertionError(f"{pool}/{name}: train differs from ordered complement")
 
 
 def _ood_type(image_id: str) -> str:
@@ -99,7 +99,7 @@ def validate_pool(pool: str, data_dir: Path) -> None:
             raise AssertionError(f"{pool}/{name}: unexpected random params")
         random_test_sets.append(set(test_ids(split)))
     if set.union(*random_test_sets) != universe_set:
-        raise AssertionError(f"{pool}: random folds do not cover universe")
+        raise AssertionError(f"{pool}: random folds leave gaps in universe coverage")
     if sum(len(s) for s in random_test_sets) != len(universe_set):
         raise AssertionError(f"{pool}: random fold test sets overlap")
     random_sizes = [len(s) for s in random_test_sets]
@@ -109,7 +109,7 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     cluster_test_sets = [set(test_ids(load_split(pool, n, data_dir)))
                          for n in CLUSTER_K5_NAMES]
     if set.union(*cluster_test_sets) != universe_set:
-        raise AssertionError(f"{pool}: cluster folds do not cover universe")
+        raise AssertionError(f"{pool}: cluster folds leave gaps in universe coverage")
     if sum(len(s) for s in cluster_test_sets) != len(universe_set):
         raise AssertionError(f"{pool}: cluster fold test sets overlap")
 
@@ -127,7 +127,7 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     if ood["splitter"] != "ood_holdout":
         raise AssertionError(f"{pool}/ood: unexpected splitter")
     if set(train_ids(ood)) != universe_set:
-        raise AssertionError(f"{pool}/ood: train side is not regular universe")
+        raise AssertionError(f"{pool}/ood: train side differs from regular universe")
     if set(test_ids(ood)) & universe_set:
         raise AssertionError(f"{pool}/ood: OOD test overlaps regular universe")
     seen_types = sorted({_ood_type(image_id) for image_id in test_ids(ood)})

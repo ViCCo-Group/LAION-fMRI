@@ -241,7 +241,7 @@ def load_or_extract_features(
         cached_ids = [str(x) for x in data["image_ids"]]
         if cached_ids == image_ids:
             return np.asarray(data["features"], dtype=np.float32)
-        raise ValueError(f"cache image_ids do not match request: {cache_path}")
+        raise ValueError(f"cache image_ids differ from request: {cache_path}")
 
     release_name = RELEASE_EMBEDDING_NAMES.get(normalized)
     if use_release_embeddings and release_name is not None:
@@ -257,7 +257,7 @@ def load_or_extract_features(
 
     if not extract_missing:
         raise FileNotFoundError(
-            f"No cached/precomputed {space} features found for this pool. "
+            f"Missing cached/precomputed {space} features for this pool. "
             "Pass --extract-missing to compute them from task-images_stimuli.h5."
         )
 
