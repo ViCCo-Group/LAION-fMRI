@@ -1,4 +1,4 @@
-"""Regenerate the packaged OOD holdout splits from stimulus metadata.
+"""Create OOD holdout split payloads from stimulus metadata.
 
 The OOD split is defined by the stimuli themselves: train is the pool's regular
 non-OOD images, and test is the shared OOD stimulus set.

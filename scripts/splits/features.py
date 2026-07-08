@@ -1,4 +1,4 @@
-"""Feature loading and extraction helpers for split generation."""
+"""Feature loading and extraction helpers for split method scripts."""
 
 from __future__ import annotations
 

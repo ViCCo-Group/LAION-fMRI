@@ -1,4 +1,4 @@
-"""Regenerate CLIP k-means K=5 cluster holdout splits from stimuli."""
+"""Demonstrate CLIP k-means K=5 cluster holdout construction."""
 
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ DEFAULT_SEED = 2026
 DEFAULT_K = 5
 DEFAULT_N_INIT = 10
 ORIGINAL_N_INIT_BY_POOL = {
-    # The packaged sub-05 cluster splits were generated with five k-means++
-    # restarts; the other pools were generated with ten.
+    # The split-construction method used five k-means++ restarts for sub-05
+    # and ten for the other pools.
     "sub-05": 5,
 }
 
@@ -109,7 +109,7 @@ def main() -> None:
         default=None,
         help=(
             "KMeans n_init override. Defaults to the original per-pool values "
-            "used for the packaged splits."
+            "used by the split-construction method."
         ),
     )
     args = parser.parse_args()

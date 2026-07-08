@@ -1,8 +1,8 @@
-"""Shared helpers for standalone split-generation scripts.
+"""Shared helpers for standalone split method scripts.
 
-The generators in this directory derive split membership from the stimulus
-metadata and, for feature-based splits, stimulus embeddings. They do not use
-``experiments/`` artifacts or existing package split JSONs as input.
+The scripts in this directory derive split membership from stimulus metadata
+and, for feature-based methods, stimulus embeddings. They do not use
+``experiments/`` artifacts or existing split JSONs as method input.
 """
 
 from __future__ import annotations
@@ -274,7 +274,7 @@ def check_or_write(
     *,
     write: bool,
 ) -> None:
-    """Write payload or compare it against the current JSON object."""
+    """Write payload or compare it against a reference JSON object."""
 
     if write:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -318,18 +318,18 @@ def add_write_check_args(parser) -> None:
     mode.add_argument(
         "--write",
         action="store_true",
-        help="Write generated JSONs into --data-dir.",
+        help="Write generated JSON payloads into --data-dir.",
     )
     mode.add_argument(
         "--check",
         action="store_true",
-        help="Check generated JSONs against --data-dir without writing.",
+        help="Compare generated JSON payloads against --data-dir.",
     )
     parser.add_argument(
         "--data-dir",
         type=Path,
         default=PACKAGE_SPLIT_DIR,
-        help="Package split data directory to check or write.",
+        help="Split data directory to compare or write.",
     )
 
 

@@ -1,18 +1,18 @@
-# Split Generation Scripts
+# Split Method Scripts
 
-This directory contains standalone maintainer scripts for regenerating the JSON
-split files shipped in `laion_fmri/splits/data`.
+This directory contains standalone scripts demonstrating how the split families
+are constructed from stimulus metadata and visual embeddings.
 
-The scripts derive split membership from the released stimuli:
+The scripts derive split membership from released stimulus inputs:
 
 - `task-images_metadata.csv` defines shared, OOD, and participant-unique image
   pools.
 - `task-images_stimuli.h5` is used when image embeddings need to be extracted.
 - Feature caches under `--cache-dir` are used when present. Otherwise,
   feature-based scripts require `--extract-missing` so they can compute the
-  exact embeddings from `task-images_stimuli.h5`.
+  embeddings from `task-images_stimuli.h5`.
 - No script reads `experiments/` artifacts or existing split JSONs as its
-  generation source.
+  method input.
 
 By default, scripts discover stimuli via `LAION_FMRI_STIMULI_DIR`,
 `LAION_FMRI_DATA/stimuli`, or the configured `laion-fmri` data directory.
@@ -20,31 +20,35 @@ You can also pass `--stimuli-dir /path/to/stimuli`.
 
 ## Commands
 
-Check generated JSONs against the package data:
+Run deterministic split checks and invariants:
 
 ```bash
 python scripts/splits/create_ood.py --check --stimuli-dir /path/to/stimuli
 python scripts/splits/create_random.py --check --stimuli-dir /path/to/stimuli
-python scripts/splits/create_cluster_k5.py --check --stimuli-dir /path/to/stimuli
-python scripts/splits/create_tau.py --check --stimuli-dir /path/to/stimuli
 python scripts/splits/validate.py
 ```
 
-Use `--write` to rewrite the target `--data-dir`.
+Generate feature-based method payloads:
+
+```bash
+python scripts/splits/create_cluster_k5.py --write --stimuli-dir /path/to/stimuli
+python scripts/splits/create_tau.py --write --stimuli-dir /path/to/stimuli
+```
+
+Use `--data-dir` to choose where JSON payloads are compared or written.
 
 ## Feature Splits
 
 `create_cluster_k5.py` uses `open_clip` `ViT-L-14-CLIPA` with
 `pretrained="datacomp1b"` and reruns K-means with `random_state=2026`.
-It uses the original per-pool `n_init` values from the packaged split
-generation.
+It uses the per-pool `n_init` values from the split-construction method.
 
 `create_tau.py` uses CLIPA, DreamSim, and `timm`
 `vit_base_patch14_dinov2.lvd142m` by default. It recomputes nearest-neighbor
 isolation, sweeps adaptive tau percentiles, seeds candidates by best-of-N MMD,
-and runs stochastic MMD-swap refinement.
+and runs stochastic MMD-swap refinement as a method demonstration.
 
-Feature-based scripts need an exact feature cache or `--extract-missing`.
+Feature-based scripts need a compatible feature cache or `--extract-missing`.
 Optional extraction dependencies:
 
 ```bash

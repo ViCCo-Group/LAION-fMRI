@@ -1,4 +1,4 @@
-"""Validate the packaged split JSON files and cross-split invariants."""
+"""Validate split JSON files and cross-split invariants."""
 
 from __future__ import annotations
 
