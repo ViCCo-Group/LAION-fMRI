@@ -10,7 +10,6 @@ from __future__ import annotations
 import csv
 import difflib
 import json
-import os
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -98,47 +97,19 @@ def test_ids(split: dict[str, Any]) -> list[str]:
     return [str(x) for x in variant(split)["test_ids"]]
 
 
-def default_stimuli_dir() -> Path | None:
-    direct = os.environ.get("LAION_FMRI_STIMULI_DIR")
-    if direct:
-        return Path(direct)
-
-    data_dir = os.environ.get("LAION_FMRI_DATA")
-    if data_dir:
-        return Path(data_dir) / "stimuli"
-
-    config_home = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
-    config_path = config_home / "laion_fmri" / "config.json"
-    if config_path.exists():
-        try:
-            cfg = load_json(config_path)
-        except json.JSONDecodeError:
-            return None
-        if cfg.get("data_dir"):
-            return Path(str(cfg["data_dir"])) / "stimuli"
-    return None
-
-
 def add_stimuli_arg(parser) -> None:
     parser.add_argument(
         "--stimuli-dir",
         type=Path,
-        default=default_stimuli_dir(),
+        required=True,
         help=(
             "Directory containing task-images_metadata.csv and, when feature "
-            "extraction is needed, task-images_stimuli.h5. Defaults to "
-            "LAION_FMRI_STIMULI_DIR, LAION_FMRI_DATA/stimuli, or the "
-            "configured laion-fmri data directory."
+            "extraction is needed, task-images_stimuli.h5."
         ),
     )
 
 
-def require_stimuli_dir(stimuli_dir: Path | None) -> Path:
-    if stimuli_dir is None:
-        raise FileNotFoundError(
-            "Stimuli directory is required. Pass --stimuli-dir or set "
-            "LAION_FMRI_STIMULI_DIR/LAION_FMRI_DATA."
-        )
+def require_stimuli_dir(stimuli_dir: Path) -> Path:
     stimuli_dir = Path(stimuli_dir)
     metadata_path = stimuli_dir / STIMULI_METADATA
     if not metadata_path.exists():

@@ -8,14 +8,11 @@ The scripts derive split membership from released stimulus inputs:
 - `task-images_metadata.csv` defines shared, OOD, and participant-unique image
   pools.
 - `task-images_stimuli.h5` is used when image embeddings need to be extracted.
-- Feature caches under `--cache-dir` are used when present. Otherwise,
-  feature-based scripts require `--extract-missing` so they can compute the
-  embeddings from `task-images_stimuli.h5`.
+- Feature caches under `--cache-dir` are used when present. Pass
+  `--extract-missing` to compute embeddings from `task-images_stimuli.h5`.
 - Method inputs are stimulus metadata, stimulus images, and visual embeddings.
 
-By default, scripts discover stimuli via `LAION_FMRI_STIMULI_DIR`,
-`LAION_FMRI_DATA/stimuli`, or the configured `laion-fmri` data directory.
-You can also pass `--stimuli-dir /path/to/stimuli`.
+Pass `--stimuli-dir /path/to/stimuli` to every method script.
 
 ## Commands
 
