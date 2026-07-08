@@ -10,19 +10,11 @@ import argparse
 
 import numpy as np
 
-from common import (
-    POOLS,
-    TAU_METHOD,
-    TAU_SPLITTER,
-    add_stimuli_arg,
+from split_json import (
     add_write_check_args,
     check_or_write,
-    load_stimulus_metadata,
     make_single_variant_split,
     ordered_complement,
-    pool_image_ids,
-    pool_label,
-    require_stimuli_dir,
     should_write,
     split_path,
     validate_single_split,
@@ -32,8 +24,18 @@ from features import (
     feature_runtime_kwargs,
     load_feature_mats,
 )
+from stimuli import (
+    POOLS,
+    add_stimuli_arg,
+    load_stimulus_metadata,
+    pool_image_ids,
+    pool_label,
+    require_stimuli_dir,
+)
 
 
+TAU_SPLITTER = "min_nn_stochastic"
+TAU_METHOD = "min_nn_filter + stochastic_mmd_swap"
 TAU_TIER = "balanced"
 TAU_OUTPUT_NAME = "tau"
 TAU_SPACES = ("CLIP", "DreamSim", "DINOv2")

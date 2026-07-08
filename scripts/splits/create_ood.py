@@ -8,23 +8,45 @@ from __future__ import annotations
 
 import argparse
 
-from common import (
-    OOD_SPLITTER,
-    POOLS,
-    add_stimuli_arg,
+from split_json import (
     add_write_check_args,
     check_or_write,
-    load_stimulus_metadata,
     make_single_variant_split,
-    ood_params,
-    ood_pool_label,
-    ood_image_ids_from_metadata,
-    pool_image_ids,
-    require_stimuli_dir,
     should_write,
     split_path,
     validate_single_split,
 )
+from stimuli import (
+    POOLS,
+    add_stimuli_arg,
+    load_stimulus_metadata,
+    ood_image_ids_from_metadata,
+    ood_pool_label,
+    pool_image_ids,
+    require_stimuli_dir,
+)
+
+
+OOD_TYPES = (
+    "cropped",
+    "gabor",
+    "gaudy",
+    "illusion-classic",
+    "illusion-natural",
+    "relations",
+    "selfmade",
+    "shape",
+    "unusual",
+)
+OOD_SPLITTER = "ood_holdout"
+OOD_METHOD = "ood_dataset_holdout"
+
+
+def ood_params() -> dict[str, object]:
+    return {
+        "method": OOD_METHOD,
+        "ood_types": list(OOD_TYPES),
+    }
 
 
 def build_ood_split(

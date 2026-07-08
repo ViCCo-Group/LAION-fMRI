@@ -10,25 +10,39 @@ import argparse
 
 import numpy as np
 
-from common import (
-    POOLS,
-    RANDOM_FOLDS,
-    RANDOM_SEED,
-    RANDOM_SPLITTER,
-    add_stimuli_arg,
+from split_json import (
     add_write_check_args,
     check_or_write,
-    load_stimulus_metadata,
     make_single_variant_split,
     ordered_complement,
-    pool_image_ids,
-    pool_label,
-    random_params,
-    require_stimuli_dir,
     should_write,
     split_path,
     validate_single_split,
 )
+from stimuli import (
+    POOLS,
+    add_stimuli_arg,
+    load_stimulus_metadata,
+    pool_image_ids,
+    pool_label,
+    require_stimuli_dir,
+)
+
+
+RANDOM_NAMES = tuple(f"random_{i}" for i in range(5))
+RANDOM_SPLITTER = "random_kfold"
+RANDOM_METHOD = "shuffled_5fold_cv"
+RANDOM_SEED = 42
+RANDOM_FOLDS = 5
+
+
+def random_params(fold: int) -> dict[str, object]:
+    return {
+        "method": RANDOM_METHOD,
+        "k": RANDOM_FOLDS,
+        "seed": RANDOM_SEED,
+        "fold": int(fold),
+    }
 
 
 def build_random_splits(
@@ -42,8 +56,9 @@ def build_random_splits(
     np.random.default_rng(RANDOM_SEED).shuffle(shuffled)
 
     payloads = []
-    for fold, test_arr in enumerate(np.array_split(shuffled, RANDOM_FOLDS)):
-        name = f"random_{fold}"
+    for fold, (name, test_arr) in enumerate(
+        zip(RANDOM_NAMES, np.array_split(shuffled, RANDOM_FOLDS)),
+    ):
         test = [str(x) for x in test_arr.tolist()]
         payload = make_single_variant_split(
             name=name,

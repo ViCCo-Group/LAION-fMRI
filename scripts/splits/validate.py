@@ -6,26 +6,26 @@ import argparse
 from collections import Counter
 from pathlib import Path
 
-from common import (
-    CLUSTER_K5_NAMES,
-    CLUSTER_K5_SPLITTER,
-    OOD_TYPES,
-    OOD_SPLITTER,
+from split_json import (
     PACKAGE_SPLIT_DIR,
-    POOLS,
-    RANDOM_NAMES,
-    RANDOM_SPLITTER,
-    SPLIT_NAMES,
-    TAU_SPLITTER,
-    cluster_k5_n_init,
-    cluster_k5_params,
     load_split,
-    ood_params,
-    random_params,
     test_ids,
     train_ids,
     validate_single_split,
 )
+from create_cluster_k5 import (
+    CLUSTER_K5_NAMES,
+    CLUSTER_K5_SPLITTER,
+    cluster_k5_n_init,
+    cluster_k5_params,
+)
+from create_ood import OOD_SPLITTER, OOD_TYPES, ood_params
+from create_random import RANDOM_NAMES, RANDOM_SPLITTER, random_params
+from create_tau import TAU_SPLITTER
+from stimuli import POOLS
+
+
+SPLIT_NAMES = RANDOM_NAMES + CLUSTER_K5_NAMES + ("tau", "ood")
 
 
 def _assert_unique(values: list[str], label: str) -> None:

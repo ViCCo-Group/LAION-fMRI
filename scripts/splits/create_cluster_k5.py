@@ -6,24 +6,11 @@ import argparse
 
 import numpy as np
 
-from common import (
-    CLUSTER_K5_FEATURE_SPACE,
-    CLUSTER_K5_K,
-    CLUSTER_K5_NAMES,
-    CLUSTER_K5_SEED,
-    CLUSTER_K5_SPLITTER,
-    POOLS,
-    add_stimuli_arg,
+from split_json import (
     add_write_check_args,
     check_or_write,
-    cluster_k5_n_init,
-    cluster_k5_params,
-    load_stimulus_metadata,
     make_single_variant_split,
     ordered_complement,
-    pool_image_ids,
-    pool_label,
-    require_stimuli_dir,
     should_write,
     split_path,
     validate_single_split,
@@ -33,6 +20,45 @@ from features import (
     feature_runtime_kwargs,
     load_feature_mats,
 )
+from stimuli import (
+    POOLS,
+    add_stimuli_arg,
+    load_stimulus_metadata,
+    pool_image_ids,
+    pool_label,
+    require_stimuli_dir,
+)
+
+
+CLUSTER_K5_NAMES = tuple(f"cluster_k5_{i}" for i in range(5))
+CLUSTER_K5_SPLITTER = "kmeans_cluster_holdout"
+CLUSTER_K5_METHOD = "kmeans_clip_k5_holdout"
+CLUSTER_K5_FEATURE_SPACE = "CLIP"
+CLUSTER_K5_K = 5
+CLUSTER_K5_SEED = 2026
+CLUSTER_K5_DEFAULT_N_INIT = 10
+# The split-construction method used five k-means++ restarts for sub-05
+# and ten for the other pools.
+CLUSTER_K5_N_INIT_BY_POOL = {"sub-05": 5}
+
+
+def cluster_k5_n_init(pool: str) -> int:
+    return CLUSTER_K5_N_INIT_BY_POOL.get(pool, CLUSTER_K5_DEFAULT_N_INIT)
+
+
+def cluster_k5_params(
+    held_out_cluster: int,
+    *,
+    n_init: int,
+) -> dict[str, object]:
+    return {
+        "method": CLUSTER_K5_METHOD,
+        "feature_space": CLUSTER_K5_FEATURE_SPACE,
+        "n_clusters": CLUSTER_K5_K,
+        "seed": CLUSTER_K5_SEED,
+        "n_init": int(n_init),
+        "held_out_cluster": int(held_out_cluster),
+    }
 
 
 def build_cluster_splits(

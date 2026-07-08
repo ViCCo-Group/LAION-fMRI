@@ -9,7 +9,7 @@ from typing import Iterable
 
 import numpy as np
 
-from common import STIMULI_H5
+from stimuli import STIMULI_H5
 
 
 SPLIT_CLIP_MODEL = "ViT-L-14-CLIPA"
