@@ -26,6 +26,27 @@ RANDOM_NAMES = tuple(f"random_{i}" for i in range(5))
 CLUSTER_K5_NAMES = tuple(f"cluster_k5_{i}" for i in range(5))
 SPLIT_NAMES = RANDOM_NAMES + CLUSTER_K5_NAMES + ("tau", "ood")
 
+RANDOM_SPLITTER = "random_kfold"
+RANDOM_METHOD = "shuffled_5fold_cv"
+RANDOM_SEED = 42
+RANDOM_FOLDS = 5
+
+CLUSTER_K5_SPLITTER = "kmeans_cluster_holdout"
+CLUSTER_K5_METHOD = "kmeans_clip_k5_holdout"
+CLUSTER_K5_FEATURE_SPACE = "CLIP"
+CLUSTER_K5_K = 5
+CLUSTER_K5_SEED = 2026
+CLUSTER_K5_DEFAULT_N_INIT = 10
+# The split-construction method used five k-means++ restarts for sub-05
+# and ten for the other pools.
+CLUSTER_K5_N_INIT_BY_POOL = {"sub-05": 5}
+
+TAU_SPLITTER = "min_nn_stochastic"
+TAU_METHOD = "min_nn_filter + stochastic_mmd_swap"
+
+OOD_SPLITTER = "ood_holdout"
+OOD_METHOD = "ood_dataset_holdout"
+
 # Historical filename suffixes can differ from public BIDS subject IDs.
 # Prefer the metadata participant column; use this only when that column is
 # absent or empty.
@@ -56,6 +77,48 @@ OOD_TYPES = (
     "shape",
     "unusual",
 )
+
+
+def random_params(
+    fold: int,
+    *,
+    folds: int = RANDOM_FOLDS,
+    seed: int = RANDOM_SEED,
+) -> dict[str, Any]:
+    return {
+        "method": RANDOM_METHOD,
+        "k": int(folds),
+        "seed": int(seed),
+        "fold": int(fold),
+    }
+
+
+def cluster_k5_n_init(pool: str) -> int:
+    return CLUSTER_K5_N_INIT_BY_POOL.get(pool, CLUSTER_K5_DEFAULT_N_INIT)
+
+
+def cluster_k5_params(
+    held_out_cluster: int,
+    *,
+    k: int = CLUSTER_K5_K,
+    seed: int = CLUSTER_K5_SEED,
+    n_init: int = CLUSTER_K5_DEFAULT_N_INIT,
+) -> dict[str, Any]:
+    return {
+        "method": CLUSTER_K5_METHOD,
+        "feature_space": CLUSTER_K5_FEATURE_SPACE,
+        "n_clusters": int(k),
+        "seed": int(seed),
+        "n_init": int(n_init),
+        "held_out_cluster": int(held_out_cluster),
+    }
+
+
+def ood_params() -> dict[str, Any]:
+    return {
+        "method": OOD_METHOD,
+        "ood_types": list(OOD_TYPES),
+    }
 
 
 def load_json(path: Path) -> dict[str, Any]:

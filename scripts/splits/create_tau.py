@@ -13,6 +13,8 @@ import numpy as np
 
 from common import (
     POOLS,
+    TAU_METHOD,
+    TAU_SPLITTER,
     add_stimuli_arg,
     add_write_check_args,
     check_or_write,
@@ -313,9 +315,9 @@ def build_tau_split(
     payload = make_single_variant_split(
         name=output_name,
         pool_label=pool_label(pool),
-        splitter="min_nn_stochastic",
+        splitter=TAU_SPLITTER,
         params={
-            "method": "min_nn_filter + stochastic_mmd_swap",
+            "method": TAU_METHOD,
             "criterion": TAU_CRITERION[tier],
             "adaptive_selection": selection,
         },

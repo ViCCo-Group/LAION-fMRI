@@ -82,6 +82,39 @@ def test_split_family():
     assert load_split("tau", pool="sub-01").split_family == "tau"
 
 
+def test_split_metadata_matches_split_family():
+    random = load_split("random_0", pool="shared")
+    assert random.splitter == "random_kfold"
+    assert random.params == {
+        "method": "shuffled_5fold_cv",
+        "k": 5,
+        "seed": 42,
+        "fold": 0,
+    }
+
+    cluster = load_split("cluster_k5_2", pool="sub-05")
+    assert cluster.splitter == "kmeans_cluster_holdout"
+    assert cluster.params == {
+        "method": "kmeans_clip_k5_holdout",
+        "feature_space": "CLIP",
+        "n_clusters": 5,
+        "seed": 2026,
+        "n_init": 5,
+        "held_out_cluster": 2,
+    }
+
+    tau = load_split("tau", pool="shared")
+    assert tau.splitter == "min_nn_stochastic"
+    assert tau.params["method"] == "min_nn_filter + stochastic_mmd_swap"
+
+    ood = load_split("ood", pool="shared")
+    assert ood.splitter == "ood_holdout"
+    assert ood.params == {
+        "method": "ood_dataset_holdout",
+        "ood_types": list_ood_types(),
+    }
+
+
 def test_load_all_splits_returns_twelve():
     all_sp = load_all_splits(pool="sub-01")
     assert len(all_sp) == 12

@@ -12,6 +12,9 @@ import numpy as np
 
 from common import (
     POOLS,
+    RANDOM_FOLDS,
+    RANDOM_SEED,
+    RANDOM_SPLITTER,
     add_stimuli_arg,
     add_write_check_args,
     check_or_write,
@@ -20,6 +23,7 @@ from common import (
     ordered_complement,
     pool_image_ids,
     pool_label,
+    random_params,
     require_stimuli_dir,
     should_write,
     split_path,
@@ -27,16 +31,12 @@ from common import (
 )
 
 
-DEFAULT_SEED = 42
-DEFAULT_FOLDS = 5
-
-
 def build_random_splits(
     pool: str,
     *,
     image_ids: list[str],
-    seed: int = DEFAULT_SEED,
-    folds: int = DEFAULT_FOLDS,
+    seed: int = RANDOM_SEED,
+    folds: int = RANDOM_FOLDS,
 ) -> list[tuple[str, dict]]:
     """Return ``random_*`` split payloads for one pool."""
 
@@ -50,13 +50,8 @@ def build_random_splits(
         payload = make_single_variant_split(
             name=name,
             pool_label=pool_label(pool),
-            splitter="random_kfold",
-            params={
-                "method": "shuffled_5fold_cv",
-                "k": folds,
-                "seed": seed,
-                "fold": fold,
-            },
+            splitter=RANDOM_SPLITTER,
+            params=random_params(fold, folds=folds, seed=seed),
             train=ordered_complement(image_ids, test),
             test=test,
         )
@@ -73,13 +68,13 @@ def main() -> None:
     parser.add_argument(
         "--seed",
         type=int,
-        default=DEFAULT_SEED,
+        default=RANDOM_SEED,
         help="Shuffle seed used for the K-fold partition.",
     )
     parser.add_argument(
         "--folds",
         type=int,
-        default=DEFAULT_FOLDS,
+        default=RANDOM_FOLDS,
         help="Number of shuffled CV folds to generate.",
     )
     args = parser.parse_args()

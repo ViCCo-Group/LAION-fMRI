@@ -7,13 +7,25 @@ from collections import Counter
 from pathlib import Path
 
 from common import (
+    CLUSTER_K5_K,
     CLUSTER_K5_NAMES,
+    CLUSTER_K5_SEED,
+    CLUSTER_K5_SPLITTER,
     OOD_TYPES,
+    OOD_SPLITTER,
     PACKAGE_SPLIT_DIR,
     POOLS,
+    RANDOM_FOLDS,
     RANDOM_NAMES,
+    RANDOM_SEED,
+    RANDOM_SPLITTER,
     SPLIT_NAMES,
+    TAU_SPLITTER,
+    cluster_k5_n_init,
+    cluster_k5_params,
     load_split,
+    ood_params,
+    random_params,
     test_ids,
     train_ids,
     validate_single_split,
@@ -86,16 +98,15 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     random_test_sets = []
     for name in RANDOM_NAMES:
         split = load_split(pool, name, data_dir)
-        if split["splitter"] != "random_kfold":
-            raise AssertionError(f"{pool}/{name}: expected random_kfold")
+        if split["splitter"] != RANDOM_SPLITTER:
+            raise AssertionError(f"{pool}/{name}: expected {RANDOM_SPLITTER}")
         params = split["params"]
         expected_fold = int(name.rsplit("_", 1)[1])
-        if params != {
-            "method": "shuffled_5fold_cv",
-            "k": 5,
-            "seed": 42,
-            "fold": expected_fold,
-        }:
+        if params != random_params(
+            expected_fold,
+            folds=RANDOM_FOLDS,
+            seed=RANDOM_SEED,
+        ):
             raise AssertionError(f"{pool}/{name}: unexpected random params")
         random_test_sets.append(set(test_ids(split)))
     if set.union(*random_test_sets) != universe_set:
@@ -106,15 +117,29 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     if max(random_sizes) - min(random_sizes) > 1:
         raise AssertionError(f"{pool}: imbalanced random fold sizes")
 
-    cluster_test_sets = [set(test_ids(load_split(pool, n, data_dir)))
-                         for n in CLUSTER_K5_NAMES]
+    cluster_test_sets = []
+    for name in CLUSTER_K5_NAMES:
+        split = load_split(pool, name, data_dir)
+        if split["splitter"] != CLUSTER_K5_SPLITTER:
+            raise AssertionError(
+                f"{pool}/{name}: expected {CLUSTER_K5_SPLITTER}"
+            )
+        expected_cluster = int(name.rsplit("_", 1)[1])
+        if split["params"] != cluster_k5_params(
+            expected_cluster,
+            k=CLUSTER_K5_K,
+            seed=CLUSTER_K5_SEED,
+            n_init=cluster_k5_n_init(pool),
+        ):
+            raise AssertionError(f"{pool}/{name}: unexpected cluster params")
+        cluster_test_sets.append(set(test_ids(split)))
     if set.union(*cluster_test_sets) != universe_set:
         raise AssertionError(f"{pool}: cluster folds leave gaps in universe coverage")
     if sum(len(s) for s in cluster_test_sets) != len(universe_set):
         raise AssertionError(f"{pool}: cluster fold test sets overlap")
 
     tau = load_split(pool, "tau", data_dir)
-    if tau["splitter"] != "min_nn_stochastic":
+    if tau["splitter"] != TAU_SPLITTER:
         raise AssertionError(f"{pool}/tau: unexpected splitter")
     expected_tau_n = round(0.20 * len(universe))
     if tau["n_test"] != expected_tau_n:
@@ -124,8 +149,10 @@ def validate_pool(pool: str, data_dir: Path) -> None:
         )
 
     ood = load_split(pool, "ood", data_dir)
-    if ood["splitter"] != "ood_holdout":
+    if ood["splitter"] != OOD_SPLITTER:
         raise AssertionError(f"{pool}/ood: unexpected splitter")
+    if ood["params"] != ood_params():
+        raise AssertionError(f"{pool}/ood: unexpected params")
     if set(train_ids(ood)) != universe_set:
         raise AssertionError(f"{pool}/ood: train side differs from regular universe")
     if set(test_ids(ood)) & universe_set:

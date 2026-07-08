@@ -8,11 +8,18 @@ from pathlib import Path
 import numpy as np
 
 from common import (
+    CLUSTER_K5_DEFAULT_N_INIT,
+    CLUSTER_K5_FEATURE_SPACE,
+    CLUSTER_K5_K,
     CLUSTER_K5_NAMES,
+    CLUSTER_K5_SEED,
+    CLUSTER_K5_SPLITTER,
     POOLS,
     add_stimuli_arg,
     add_write_check_args,
     check_or_write,
+    cluster_k5_n_init,
+    cluster_k5_params,
     load_stimulus_metadata,
     make_single_variant_split,
     ordered_complement,
@@ -26,24 +33,14 @@ from common import (
 from features import load_feature_mats
 
 
-DEFAULT_SEED = 2026
-DEFAULT_K = 5
-DEFAULT_N_INIT = 10
-ORIGINAL_N_INIT_BY_POOL = {
-    # The split-construction method used five k-means++ restarts for sub-05
-    # and ten for the other pools.
-    "sub-05": 5,
-}
-
-
 def build_cluster_splits(
     pool: str,
     *,
     image_ids: list[str],
     clip_features: np.ndarray,
-    seed: int = DEFAULT_SEED,
-    k: int = DEFAULT_K,
-    n_init: int = DEFAULT_N_INIT,
+    seed: int = CLUSTER_K5_SEED,
+    k: int = CLUSTER_K5_K,
+    n_init: int = CLUSTER_K5_DEFAULT_N_INIT,
 ) -> list[tuple[str, dict]]:
     try:
         from sklearn.cluster import KMeans
@@ -69,11 +66,13 @@ def build_cluster_splits(
         payload = make_single_variant_split(
             name=name,
             pool_label=pool_label(pool),
-            splitter="min_nn_stochastic",
-            params={
-                "method": "kmeans_clip_k5_holdout",
-                "held_out_cluster": cluster_id,
-            },
+            splitter=CLUSTER_K5_SPLITTER,
+            params=cluster_k5_params(
+                cluster_id,
+                k=k,
+                seed=seed,
+                n_init=n_init,
+            ),
             train=ordered_complement(image_ids, test),
             test=test,
         )
@@ -102,7 +101,7 @@ def main() -> None:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--clip-model", default="ViT-L-14-CLIPA")
     parser.add_argument("--clip-pretrained", default="datacomp1b")
-    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--seed", type=int, default=CLUSTER_K5_SEED)
     parser.add_argument(
         "--n-init",
         type=int,
@@ -121,7 +120,7 @@ def main() -> None:
     for pool in POOLS:
         image_ids = pool_image_ids(rows, pool)
         mats = load_feature_mats(
-            spaces=["CLIP"],
+            spaces=[CLUSTER_K5_FEATURE_SPACE],
             rows=rows,
             stimuli_dir=stimuli_dir,
             image_ids=image_ids,
@@ -142,7 +141,7 @@ def main() -> None:
             n_init=(
                 args.n_init
                 if args.n_init is not None
-                else ORIGINAL_N_INIT_BY_POOL.get(pool, DEFAULT_N_INIT)
+                else cluster_k5_n_init(pool)
             ),
         ):
             check_or_write(

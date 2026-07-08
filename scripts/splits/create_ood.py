@@ -9,13 +9,14 @@ from __future__ import annotations
 import argparse
 
 from common import (
-    OOD_TYPES,
+    OOD_SPLITTER,
     POOLS,
     add_stimuli_arg,
     add_write_check_args,
     check_or_write,
     load_stimulus_metadata,
     make_single_variant_split,
+    ood_params,
     ood_pool_label,
     ood_image_ids_from_metadata,
     pool_image_ids,
@@ -35,11 +36,8 @@ def build_ood_split(
     payload = make_single_variant_split(
         name="ood",
         pool_label=ood_pool_label(pool),
-        splitter="ood_holdout",
-        params={
-            "method": "ood_dataset_holdout",
-            "ood_types": list(OOD_TYPES),
-        },
+        splitter=OOD_SPLITTER,
+        params=ood_params(),
         train=image_ids,
         test=ood_ids,
     )
