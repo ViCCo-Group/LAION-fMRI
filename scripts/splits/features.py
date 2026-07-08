@@ -12,12 +12,41 @@ import numpy as np
 from common import STIMULI_H5
 
 
+SPLIT_CLIP_MODEL = "ViT-L-14-CLIPA"
+SPLIT_CLIP_PRETRAINED = "datacomp1b"
+SPLIT_DINOV2_MODEL = "vit_base_patch14_dinov2.lvd142m"
+
 RELEASE_EMBEDDING_NAMES = {
     "clip": "CLIP",
     "dinov2": "DINOv2",
     "pecore": "PEcore",
     "siglip2": "SigLIP2",
 }
+
+
+def add_feature_runtime_args(parser, *, extract_help: str) -> None:
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=Path("temp/split_feature_cache"),
+        help="Feature cache directory.",
+    )
+    parser.add_argument(
+        "--extract-missing",
+        action="store_true",
+        help=extract_help,
+    )
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--device", default="cuda")
+
+
+def feature_runtime_kwargs(args) -> dict:
+    return {
+        "cache_dir": args.cache_dir,
+        "extract_missing": args.extract_missing,
+        "batch_size": args.batch_size,
+        "device": args.device,
+    }
 
 
 def feature_cache_key(space: str, image_ids: Iterable[str]) -> str:
@@ -302,7 +331,7 @@ def load_or_extract_features(
 
 def load_feature_mats(
     *,
-    spaces: list[str],
+    spaces: Iterable[str],
     rows: list[dict[str, str]],
     stimuli_dir: Path,
     image_ids: list[str],
@@ -310,9 +339,9 @@ def load_feature_mats(
     extract_missing: bool,
     batch_size: int,
     device: str,
-    clip_model: str,
-    clip_pretrained: str,
-    dinov2_model: str,
+    clip_model: str = SPLIT_CLIP_MODEL,
+    clip_pretrained: str = SPLIT_CLIP_PRETRAINED,
+    dinov2_model: str = SPLIT_DINOV2_MODEL,
     use_release_embeddings: bool = False,
 ) -> dict[str, np.ndarray]:
     mats = {}

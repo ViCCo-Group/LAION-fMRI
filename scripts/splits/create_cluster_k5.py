@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 import numpy as np
 
 from common import (
-    CLUSTER_K5_DEFAULT_N_INIT,
     CLUSTER_K5_FEATURE_SPACE,
     CLUSTER_K5_K,
     CLUSTER_K5_NAMES,
@@ -30,7 +28,11 @@ from common import (
     split_path,
     validate_single_split,
 )
-from features import load_feature_mats
+from features import (
+    add_feature_runtime_args,
+    feature_runtime_kwargs,
+    load_feature_mats,
+)
 
 
 def build_cluster_splits(
@@ -38,9 +40,6 @@ def build_cluster_splits(
     *,
     image_ids: list[str],
     clip_features: np.ndarray,
-    seed: int = CLUSTER_K5_SEED,
-    k: int = CLUSTER_K5_K,
-    n_init: int = CLUSTER_K5_DEFAULT_N_INIT,
 ) -> list[tuple[str, dict]]:
     try:
         from sklearn.cluster import KMeans
@@ -49,9 +48,10 @@ def build_cluster_splits(
             "cluster split generation requires scikit-learn"
         ) from exc
 
+    n_init = cluster_k5_n_init(pool)
     km = KMeans(
-        n_clusters=k,
-        random_state=seed,
+        n_clusters=CLUSTER_K5_K,
+        random_state=CLUSTER_K5_SEED,
         n_init=n_init,
     ).fit(clip_features)
     labels = km.labels_
@@ -69,8 +69,6 @@ def build_cluster_splits(
             splitter=CLUSTER_K5_SPLITTER,
             params=cluster_k5_params(
                 cluster_id,
-                k=k,
-                seed=seed,
                 n_init=n_init,
             ),
             train=ordered_complement(image_ids, test),
@@ -86,29 +84,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_write_check_args(parser)
     add_stimuli_arg(parser)
-    parser.add_argument(
-        "--cache-dir",
-        type=Path,
-        default=Path("temp/split_feature_cache"),
-        help="Feature cache directory.",
-    )
-    parser.add_argument(
-        "--extract-missing",
-        action="store_true",
-        help="Extract missing CLIP features from task-images_stimuli.h5.",
-    )
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--device", default="cuda")
-    parser.add_argument("--clip-model", default="ViT-L-14-CLIPA")
-    parser.add_argument("--clip-pretrained", default="datacomp1b")
-    parser.add_argument("--seed", type=int, default=CLUSTER_K5_SEED)
-    parser.add_argument(
-        "--n-init",
-        type=int,
-        default=None,
-        help=(
-            "KMeans n_init override. Defaults to the original per-pool values "
-            "used by the split-construction method."
+    add_feature_runtime_args(
+        parser,
+        extract_help=(
+            "Extract missing CLIP features from task-images_stimuli.h5."
         ),
     )
     args = parser.parse_args()
@@ -124,25 +103,12 @@ def main() -> None:
             rows=rows,
             stimuli_dir=stimuli_dir,
             image_ids=image_ids,
-            cache_dir=args.cache_dir,
-            extract_missing=args.extract_missing,
-            batch_size=args.batch_size,
-            device=args.device,
-            clip_model=args.clip_model,
-            clip_pretrained=args.clip_pretrained,
-            dinov2_model="dinov2_vitl14",
-            use_release_embeddings=False,
+            **feature_runtime_kwargs(args),
         )
         for name, payload in build_cluster_splits(
             pool,
             image_ids=image_ids,
             clip_features=mats["clip"],
-            seed=args.seed,
-            n_init=(
-                args.n_init
-                if args.n_init is not None
-                else cluster_k5_n_init(pool)
-            ),
         ):
             check_or_write(
                 split_path(pool, name, args.data_dir),

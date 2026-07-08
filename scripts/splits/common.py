@@ -79,16 +79,11 @@ OOD_TYPES = (
 )
 
 
-def random_params(
-    fold: int,
-    *,
-    folds: int = RANDOM_FOLDS,
-    seed: int = RANDOM_SEED,
-) -> dict[str, Any]:
+def random_params(fold: int) -> dict[str, Any]:
     return {
         "method": RANDOM_METHOD,
-        "k": int(folds),
-        "seed": int(seed),
+        "k": RANDOM_FOLDS,
+        "seed": RANDOM_SEED,
         "fold": int(fold),
     }
 
@@ -100,15 +95,13 @@ def cluster_k5_n_init(pool: str) -> int:
 def cluster_k5_params(
     held_out_cluster: int,
     *,
-    k: int = CLUSTER_K5_K,
-    seed: int = CLUSTER_K5_SEED,
-    n_init: int = CLUSTER_K5_DEFAULT_N_INIT,
+    n_init: int,
 ) -> dict[str, Any]:
     return {
         "method": CLUSTER_K5_METHOD,
         "feature_space": CLUSTER_K5_FEATURE_SPACE,
-        "n_clusters": int(k),
-        "seed": int(seed),
+        "n_clusters": CLUSTER_K5_K,
+        "seed": CLUSTER_K5_SEED,
         "n_init": int(n_init),
         "held_out_cluster": int(held_out_cluster),
     }

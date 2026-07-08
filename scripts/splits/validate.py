@@ -7,17 +7,13 @@ from collections import Counter
 from pathlib import Path
 
 from common import (
-    CLUSTER_K5_K,
     CLUSTER_K5_NAMES,
-    CLUSTER_K5_SEED,
     CLUSTER_K5_SPLITTER,
     OOD_TYPES,
     OOD_SPLITTER,
     PACKAGE_SPLIT_DIR,
     POOLS,
-    RANDOM_FOLDS,
     RANDOM_NAMES,
-    RANDOM_SEED,
     RANDOM_SPLITTER,
     SPLIT_NAMES,
     TAU_SPLITTER,
@@ -102,11 +98,7 @@ def validate_pool(pool: str, data_dir: Path) -> None:
             raise AssertionError(f"{pool}/{name}: expected {RANDOM_SPLITTER}")
         params = split["params"]
         expected_fold = int(name.rsplit("_", 1)[1])
-        if params != random_params(
-            expected_fold,
-            folds=RANDOM_FOLDS,
-            seed=RANDOM_SEED,
-        ):
+        if params != random_params(expected_fold):
             raise AssertionError(f"{pool}/{name}: unexpected random params")
         random_test_sets.append(set(test_ids(split)))
     if set.union(*random_test_sets) != universe_set:
@@ -127,8 +119,6 @@ def validate_pool(pool: str, data_dir: Path) -> None:
         expected_cluster = int(name.rsplit("_", 1)[1])
         if split["params"] != cluster_k5_params(
             expected_cluster,
-            k=CLUSTER_K5_K,
-            seed=CLUSTER_K5_SEED,
             n_init=cluster_k5_n_init(pool),
         ):
             raise AssertionError(f"{pool}/{name}: unexpected cluster params")

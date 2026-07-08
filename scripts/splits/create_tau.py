@@ -7,7 +7,6 @@ metadata and feature spaces.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 import numpy as np
 
@@ -28,19 +27,24 @@ from common import (
     split_path,
     validate_single_split,
 )
-from features import load_feature_mats
+from features import (
+    add_feature_runtime_args,
+    feature_runtime_kwargs,
+    load_feature_mats,
+)
 
 
-TARGET_RATIOS = {
-    "permissive": 0.40,
-    "balanced": 1.00,
-    "tight": 1.80,
-}
-TAU_CRITERION = {
-    "permissive": "MMD-matched (≤ 0.5× random)",
-    "balanced": "MMD-matched (≤ 1.0× random)",
-    "tight": "MMD-matched (≤ 2.0× random)",
-}
+TAU_TIER = "balanced"
+TAU_OUTPUT_NAME = "tau"
+TAU_SPACES = ("CLIP", "DreamSim", "DINOv2")
+TAU_TARGET_FRAC = 0.20
+TAU_TARGET_RATIO = 1.00
+TAU_BASELINE_DRAWS = 50
+TAU_N_SEED_SAMPLES = 1500
+TAU_ANNEAL_STEPS = 30000
+TAU_ANNEAL_TF = 1e-10
+TAU_SEED = 0
+TAU_CRITERION = "MMD-matched (≤ 1.0× random)"
 ADAPTIVE_PERCENTILES = sorted(set(
     [p for p in range(5, 50, 5)]
     + [p for p in range(50, 86, 1)]
@@ -72,13 +76,11 @@ def _random_baseline(
     mats: dict[str, np.ndarray],
     *,
     n_test: int,
-    seed: int,
-    n_draws: int,
 ) -> tuple[dict[str, float], float]:
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(TAU_SEED)
     n = next(iter(mats.values())).shape[0]
     values = {space: [] for space in mats}
-    for _ in range(n_draws):
+    for _ in range(TAU_BASELINE_DRAWS):
         mask = np.zeros(n, dtype=bool)
         mask[rng.choice(n, n_test, replace=False)] = True
         for space, x in mats.items():
@@ -91,7 +93,6 @@ def _best_of_n_seed(
     mats: dict[str, np.ndarray],
     feasible: np.ndarray,
     n_test: int,
-    n_samples: int,
     rng: np.random.Generator,
 ) -> np.ndarray:
     n = next(iter(mats.values())).shape[0]
@@ -99,15 +100,18 @@ def _best_of_n_seed(
     if n_test >= n_feasible:
         return feasible
 
-    u = rng.random((n_samples, n_feasible), dtype=np.float32)
+    u = rng.random((TAU_N_SEED_SAMPLES, n_feasible), dtype=np.float32)
     pick_local = np.argpartition(u, n_test, axis=1)[:, :n_test]
     pick_abs = feasible[pick_local]
     n_train = n - n_test
 
-    masks = np.zeros((n_samples, n), dtype=bool)
-    masks[np.repeat(np.arange(n_samples), n_test), pick_abs.ravel()] = True
+    masks = np.zeros((TAU_N_SEED_SAMPLES, n), dtype=bool)
+    masks[
+        np.repeat(np.arange(TAU_N_SEED_SAMPLES), n_test),
+        pick_abs.ravel(),
+    ] = True
     masks_f = masks.astype(np.float32)
-    total = np.zeros(n_samples, dtype=np.float64)
+    total = np.zeros(TAU_N_SEED_SAMPLES, dtype=np.float64)
     for x in mats.values():
         sum_test = masks_f @ x
         sum_all = x.sum(0, keepdims=True)
@@ -121,13 +125,8 @@ def _refine_mmd_stochastic(
     mats: dict[str, np.ndarray],
     feasible: np.ndarray,
     test_idx: np.ndarray,
-    *,
-    n_steps: int,
-    seed: int,
-    t0: float | None = None,
-    tf: float = 1e-10,
 ) -> np.ndarray:
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(TAU_SEED)
     n = next(iter(mats.values())).shape[0]
     space_mats = list(mats.values())
     test_idx = np.asarray(test_idx, dtype=np.int64).copy()
@@ -163,20 +162,19 @@ def _refine_mmd_stochastic(
     best_mmd = cur_mmd
     best_test_idx = test_idx.copy()
 
-    if t0 is None:
-        samples = []
-        for _ in range(100):
-            a = int(rng.integers(0, n_test))
-            i_out = int(test_idx[a])
-            j_in = non_test_feasible[
-                int(rng.integers(0, len(non_test_feasible)))
-            ]
-            samples.append(abs(delta_mmd(i_out, j_in)))
-        t0 = max(float(np.median(samples)), 1e-10)
+    samples = []
+    for _ in range(100):
+        a = int(rng.integers(0, n_test))
+        i_out = int(test_idx[a])
+        j_in = non_test_feasible[
+            int(rng.integers(0, len(non_test_feasible)))
+        ]
+        samples.append(abs(delta_mmd(i_out, j_in)))
+    t0 = max(float(np.median(samples)), 1e-10)
 
-    log_ratio = np.log(max(tf, 1e-30) / max(t0, 1e-30))
-    for step in range(n_steps):
-        temp = t0 * np.exp(log_ratio * step / n_steps)
+    log_ratio = np.log(max(TAU_ANNEAL_TF, 1e-30) / max(t0, 1e-30))
+    for step in range(TAU_ANNEAL_STEPS):
+        temp = t0 * np.exp(log_ratio * step / TAU_ANNEAL_STEPS)
         a = int(rng.integers(0, n_test))
         i_out = int(test_idx[a])
         jb = int(rng.integers(0, len(non_test_feasible)))
@@ -208,26 +206,16 @@ def _log_distance(ratio: float, target: float) -> float:
 
 def select_tau_indices(
     mats: dict[str, np.ndarray],
-    *,
-    tier: str,
-    target_frac: float,
-    target_ratio: float,
-    baseline_draws: int,
-    n_seed_samples: int,
-    anneal_steps: int,
-    seed: int,
 ) -> tuple[np.ndarray, dict[str, float]]:
     n = next(iter(mats.values())).shape[0]
-    n_test = int(round(target_frac * n))
+    n_test = int(round(TAU_TARGET_FRAC * n))
     lonely_worst = _lonely_worst_percentile(mats)
     baseline_per_space, baseline_mean = _random_baseline(
         mats,
         n_test=n_test,
-        seed=seed,
-        n_draws=baseline_draws,
     )
 
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(TAU_SEED)
     sweep = []
     for percentile in ADAPTIVE_PERCENTILES:
         tau = float(np.quantile(lonely_worst, percentile / 100.0))
@@ -238,15 +226,12 @@ def select_tau_indices(
             mats,
             feasible,
             n_test,
-            n_seed_samples,
             rng,
         )
         refined = _refine_mmd_stochastic(
             mats,
             feasible,
             seed_test,
-            n_steps=anneal_steps,
-            seed=seed,
         )
         mask = np.zeros(n, dtype=bool)
         mask[refined] = True
@@ -268,7 +253,10 @@ def select_tau_indices(
 
     chosen = min(
         sweep,
-        key=lambda row: _log_distance(row["ratio_to_random"], target_ratio),
+        key=lambda row: _log_distance(
+            row["ratio_to_random"],
+            TAU_TARGET_RATIO,
+        ),
     )
     refined = np.asarray(chosen["test_idx"], dtype=np.int64)
     mask = np.zeros(n, dtype=bool)
@@ -277,8 +265,8 @@ def select_tau_indices(
     mmd_mean = float(np.mean(list(mmd_per_space.values())))
     selection = {
         "criterion": "mmd_matched_log_closest",
-        "tier": tier,
-        "target_ratio_x_random": float(target_ratio),
+        "tier": TAU_TIER,
+        "target_ratio_x_random": TAU_TARGET_RATIO,
         "tau": float(chosen["tau"]),
         "percentile": float(chosen["percentile"]),
         "mmd2_mean": mmd_mean,
@@ -292,33 +280,16 @@ def build_tau_split(
     *,
     image_ids: list[str],
     mats: dict[str, np.ndarray],
-    tier: str,
-    target_frac: float,
-    baseline_draws: int,
-    n_seed_samples: int,
-    anneal_steps: int,
-    seed: int,
-    output_name: str,
 ) -> dict:
-    target_ratio = TARGET_RATIOS[tier]
-    test_idx, selection = select_tau_indices(
-        mats,
-        tier=tier,
-        target_frac=target_frac,
-        target_ratio=target_ratio,
-        baseline_draws=baseline_draws,
-        n_seed_samples=n_seed_samples,
-        anneal_steps=anneal_steps,
-        seed=seed,
-    )
+    test_idx, selection = select_tau_indices(mats)
     test = [image_ids[int(i)] for i in test_idx]
     payload = make_single_variant_split(
-        name=output_name,
+        name=TAU_OUTPUT_NAME,
         pool_label=pool_label(pool),
         splitter=TAU_SPLITTER,
         params={
             "method": TAU_METHOD,
-            "criterion": TAU_CRITERION[tier],
+            "criterion": TAU_CRITERION,
             "adaptive_selection": selection,
         },
         train=ordered_complement(image_ids, test),
@@ -332,75 +303,36 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_write_check_args(parser)
     add_stimuli_arg(parser)
-    parser.add_argument(
-        "--spaces",
-        default="CLIP,DreamSim,DINOv2",
-        help="Comma-separated feature spaces used for tau isolation/MMD.",
+    add_feature_runtime_args(
+        parser,
+        extract_help="Extract missing features from task-images_stimuli.h5.",
     )
-    parser.add_argument(
-        "--cache-dir",
-        type=Path,
-        default=Path("temp/split_feature_cache"),
-        help="Feature cache directory.",
-    )
-    parser.add_argument(
-        "--extract-missing",
-        action="store_true",
-        help="Extract missing features from task-images_stimuli.h5.",
-    )
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--device", default="cuda")
-    parser.add_argument("--clip-model", default="ViT-L-14-CLIPA")
-    parser.add_argument("--clip-pretrained", default="datacomp1b")
-    parser.add_argument("--dinov2-model", default="vit_base_patch14_dinov2.lvd142m")
-    parser.add_argument("--tier", choices=tuple(TARGET_RATIOS), default="balanced")
-    parser.add_argument("--output-name", default="tau")
-    parser.add_argument("--target-frac", type=float, default=0.20)
-    parser.add_argument("--baseline-draws", type=int, default=50)
-    parser.add_argument("--n-seed-samples", type=int, default=1500)
-    parser.add_argument("--anneal-steps", type=int, default=30000)
-    parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
     stimuli_dir = require_stimuli_dir(args.stimuli_dir)
     rows = load_stimulus_metadata(stimuli_dir)
-    spaces = [x.strip() for x in args.spaces.split(",") if x.strip()]
     write = should_write(args)
 
     for pool in POOLS:
         image_ids = pool_image_ids(rows, pool)
         mats = load_feature_mats(
-            spaces=spaces,
+            spaces=TAU_SPACES,
             rows=rows,
             stimuli_dir=stimuli_dir,
             image_ids=image_ids,
-            cache_dir=args.cache_dir,
-            extract_missing=args.extract_missing,
-            batch_size=args.batch_size,
-            device=args.device,
-            clip_model=args.clip_model,
-            clip_pretrained=args.clip_pretrained,
-            dinov2_model=args.dinov2_model,
-            use_release_embeddings=False,
+            **feature_runtime_kwargs(args),
         )
         payload = build_tau_split(
             pool,
             image_ids=image_ids,
             mats=mats,
-            tier=args.tier,
-            target_frac=args.target_frac,
-            baseline_draws=args.baseline_draws,
-            n_seed_samples=args.n_seed_samples,
-            anneal_steps=args.anneal_steps,
-            seed=args.seed,
-            output_name=args.output_name,
         )
         check_or_write(
-            split_path(pool, args.output_name, args.data_dir),
+            split_path(pool, TAU_OUTPUT_NAME, args.data_dir),
             payload,
             write=write,
         )
-        print(f"{pool}: {args.output_name} ok")
+        print(f"{pool}: {TAU_OUTPUT_NAME} ok")
 
 
 if __name__ == "__main__":

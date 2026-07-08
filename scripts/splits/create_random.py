@@ -35,23 +35,21 @@ def build_random_splits(
     pool: str,
     *,
     image_ids: list[str],
-    seed: int = RANDOM_SEED,
-    folds: int = RANDOM_FOLDS,
 ) -> list[tuple[str, dict]]:
     """Return ``random_*`` split payloads for one pool."""
 
     shuffled = np.array(image_ids, dtype=object)
-    np.random.default_rng(seed).shuffle(shuffled)
+    np.random.default_rng(RANDOM_SEED).shuffle(shuffled)
 
     payloads = []
-    for fold, test_arr in enumerate(np.array_split(shuffled, folds)):
+    for fold, test_arr in enumerate(np.array_split(shuffled, RANDOM_FOLDS)):
         name = f"random_{fold}"
         test = [str(x) for x in test_arr.tolist()]
         payload = make_single_variant_split(
             name=name,
             pool_label=pool_label(pool),
             splitter=RANDOM_SPLITTER,
-            params=random_params(fold, folds=folds, seed=seed),
+            params=random_params(fold),
             train=ordered_complement(image_ids, test),
             test=test,
         )
@@ -65,18 +63,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_write_check_args(parser)
     add_stimuli_arg(parser)
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=RANDOM_SEED,
-        help="Shuffle seed used for the K-fold partition.",
-    )
-    parser.add_argument(
-        "--folds",
-        type=int,
-        default=RANDOM_FOLDS,
-        help="Number of shuffled CV folds to generate.",
-    )
     args = parser.parse_args()
 
     stimuli_dir = require_stimuli_dir(args.stimuli_dir)
@@ -85,18 +71,13 @@ def main() -> None:
 
     for pool in POOLS:
         image_ids = pool_image_ids(rows, pool)
-        for name, payload in build_random_splits(
-            pool,
-            image_ids=image_ids,
-            seed=args.seed,
-            folds=args.folds,
-        ):
+        for name, payload in build_random_splits(pool, image_ids=image_ids):
             check_or_write(
                 split_path(pool, name, args.data_dir),
                 payload,
                 write=write,
             )
-        print(f"{pool}: random_0..random_{args.folds - 1} ok")
+        print(f"{pool}: random_0..random_{RANDOM_FOLDS - 1} ok")
 
 
 if __name__ == "__main__":
