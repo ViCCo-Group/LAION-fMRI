@@ -17,8 +17,9 @@ Splits
 
 The same 12 split names exist in every pool:
 
-* ``random_0`` … ``random_4`` — five seeded uniform-random partitions
-  (re:vision *baseline*).
+* ``random_0`` … ``random_4`` — the five held-out folds of one shuffled
+  5-fold CV partition. Test folds are mutually exclusive and cover the pool
+  exactly once (re:vision *baseline*).
 * ``cluster_k5_0`` … ``cluster_k5_4`` — five hold-out-cluster partitions
   (CLIP-feature k-means; one cluster held out as test). re:vision
   *Method 2*.
@@ -78,7 +79,7 @@ _SUBJECT_POOLS: Tuple[str, ...] = (
 )
 _SHARED_POOL = "shared"
 
-# All split names available in every pool. 12 names × 6 pools = 72 JSONs.
+# All split names available in every pool. 12 names x 6 pools = 72 JSONs.
 _SPLIT_NAMES: Tuple[str, ...] = (
     "random_0", "random_1", "random_2", "random_3", "random_4",
     "cluster_k5_0", "cluster_k5_1", "cluster_k5_2",
@@ -209,7 +210,7 @@ def list_pools() -> List[str]:
 
 
 def list_splits() -> List[str]:
-    """Return the 11 split names available in every pool."""
+    """Return the 12 split names available in every pool."""
     return list(_SPLIT_NAMES)
 
 
@@ -270,8 +271,9 @@ def get_train_test_ids(
     """Convenience: return ``(train_ids, test_ids)`` for one variant.
 
     Most splits have a single ``variant_id=0``. The five ``random_*``
-    and the five ``cluster_k5_*`` splits each ARE the variants — pick
-    the split name; ``variant_id`` stays 0.
+    names are the five folds of one shuffled CV partition, and the five
+    ``cluster_k5_*`` splits each hold out one cluster; pick the split
+    name and leave ``variant_id`` at 0.
 
     Parameters
     ----------

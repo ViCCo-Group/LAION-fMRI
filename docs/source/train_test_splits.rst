@@ -21,8 +21,9 @@ three methods of the `re:vision initiative <https://re-vision-initiative.org/gen
   :func:`~laion_fmri.splits.get_train_test_ids` /
   :func:`~laion_fmri.splits.get_split_masks`.
 * **Random** baselines (``random_0`` … ``random_4``) are also
-  bundled - comparing them against ``tau`` quantifies how much
-  of a model's score depends on train/test similarity.
+  bundled as one shuffled five-fold CV partition - comparing them
+  against ``tau`` quantifies how much of a model's score depends on
+  train/test similarity.
 
 .. figure:: _static/splits_summary_panel.png
    :align: center
@@ -93,13 +94,18 @@ Twelve names exist in every pool - see
        categories and how to filter to a subset of them.
    * - ``random_0`` … ``random_4``
      - baseline
-     - Five seeded uniform-random 80/20 partitions. Use them as a
-       baseline for any generalization metric.
+     - One seeded shuffled five-fold CV partition. The validation
+       folds are disjoint and together cover the full regular pool.
+       Use them as a baseline for any generalization metric.
 
 Split sizes:
 
-* ``random_*`` and ``tau`` are fixed at 80/20 of the pool - that's
-  897 / 224 for the shared pool and 4666 / 1167 per subject.
+* ``tau`` is fixed at 80/20 of the pool - that's 897 / 224 for the
+  shared pool and 4666 / 1167 per subject.
+* ``random_*`` are five-fold CV folds. For ``shared``, ``random_0`` is
+  896 / 225 and ``random_1`` … ``random_4`` are 897 / 224. For subject
+  pools, ``random_0`` … ``random_2`` are 4666 / 1167 and ``random_3`` …
+  ``random_4`` are 4667 / 1166.
 * ``cluster_k5_*`` test sizes vary with cluster population; train
   + test always equals the pool size.
 * ``ood`` test = **371** for every pool. Train = the pool itself

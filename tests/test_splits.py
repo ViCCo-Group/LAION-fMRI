@@ -56,7 +56,7 @@ def test_every_split_loads_for_every_pool(pool):
 
 
 @pytest.mark.parametrize("name", ["random_0", "tau"])
-def test_random_and_tau_are_fixed_size(name):
+def test_random_0_and_tau_sizes(name):
     sp = load_split(name, pool="sub-01")
     assert sp.n_train == 4666
     assert sp.n_test == 1167
@@ -80,6 +80,39 @@ def test_split_family():
         == "cluster_k5"
     )
     assert load_split("tau", pool="sub-01").split_family == "tau"
+
+
+def test_split_metadata_matches_split_family():
+    random = load_split("random_0", pool="shared")
+    assert random.splitter == "random_kfold"
+    assert random.params == {
+        "method": "shuffled_5fold_cv",
+        "k": 5,
+        "seed": 42,
+        "fold": 0,
+    }
+
+    cluster = load_split("cluster_k5_2", pool="sub-05")
+    assert cluster.splitter == "kmeans_cluster_holdout"
+    assert cluster.params == {
+        "method": "kmeans_clip_k5_holdout",
+        "feature_space": "CLIP",
+        "n_clusters": 5,
+        "seed": 2026,
+        "n_init": 5,
+        "held_out_cluster": 2,
+    }
+
+    tau = load_split("tau", pool="shared")
+    assert tau.splitter == "min_nn_stochastic"
+    assert tau.params["method"] == "min_nn_filter + stochastic_mmd_swap"
+
+    ood = load_split("ood", pool="shared")
+    assert ood.splitter == "ood_holdout"
+    assert ood.params == {
+        "method": "ood_dataset_holdout",
+        "ood_types": list_ood_types(),
+    }
 
 
 def test_load_all_splits_returns_twelve():
@@ -171,6 +204,26 @@ def test_variant_train_test_disjoint_for_random_split():
     assert len(v.train_ids) == sp.n_train
     assert len(v.test_ids) == sp.n_test
     assert not (set(v.train_ids) & set(v.test_ids))
+
+
+@pytest.mark.parametrize("pool", list_pools())
+def test_random_splits_are_disjoint_five_fold_cv(pool):
+    splits = [load_split(f"random_{k}", pool=pool) for k in range(5)]
+    test_sets = [set(sp.variants[0].test_ids) for sp in splits]
+    train_sets = [set(sp.variants[0].train_ids) for sp in splits]
+
+    all_test_ids = set().union(*test_sets)
+    expected_n = (
+        _POOL_SIZE_SHARED if pool == "shared" else _POOL_SIZE_PER_SUBJECT
+    )
+    assert len(all_test_ids) == expected_n
+    assert sum(len(s) for s in test_sets) == expected_n
+    assert max(len(s) for s in test_sets) - min(len(s) for s in test_sets) <= 1
+
+    for i, left in enumerate(test_sets):
+        assert train_sets[i] == all_test_ids - left
+        for right in test_sets[i + 1:]:
+            assert not (left & right)
 
 
 def test_get_train_test_ids_returns_tuple_of_lists():

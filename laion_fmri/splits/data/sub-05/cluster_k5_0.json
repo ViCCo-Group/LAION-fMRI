@@ -1,9 +1,13 @@
 {
   "name": "cluster_k5_0",
   "pool": "sub-03 full pool (unique + LAION non-OOD shared)",
-  "splitter": "min_nn_stochastic",
+  "splitter": "kmeans_cluster_holdout",
   "params": {
     "method": "kmeans_clip_k5_holdout",
+    "feature_space": "CLIP",
+    "n_clusters": 5,
+    "seed": 2026,
+    "n_init": 5,
     "held_out_cluster": 0
   },
   "n_train": 4617,
