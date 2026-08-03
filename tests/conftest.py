@@ -16,6 +16,12 @@ Layout:
     │   ├── images/   (10x10 PNGs)
     │   ├── stimuli.tsv
     │   └── stimuli.json
+    ├── sub-XX/                           (raw BIDS root)
+    │   └── ses-XX/
+    │       ├── func/  (per run, per echo: mag _bold + _sbref +
+    │       │          .json sidecars, plus one _events.tsv per run)
+    │       ├── fmap/  (placeholder magnitude1 NIfTI + JSON)
+    │       └── anat/  (placeholder MEGRE NIfTI + JSON)
     └── derivatives/
         ├── glmsingle-tedana/sub-XX/
         │   ├── <subject-level brain mask .nii.gz>
@@ -83,6 +89,12 @@ SUBJECT_NC_DESC = "Noiseceiling12rep"
 # ROI categories on disk under derivatives/rois/{sub}/{category}/
 VISUAL_CATEGORY = "visualcat"
 HLVIS_CATEGORY = "hlviscat"
+
+# Raw BIDS scaffold parameters.
+N_RUNS_PER_SESSION = 2
+N_ECHOES = 2
+N_RAW_TRIALS_PER_RUN = 4
+RAW_TASK = "images"
 
 # Surface mesh sizes used by GIFTI / FreeSurfer-label fixtures
 N_VERTICES_L = 8
@@ -602,6 +614,137 @@ def _build_anatomical(data_dir, sub_id, rng):
         )
 
 
+# ── Raw BIDS scaffold ───────────────────────────────────────────
+
+
+def _raw_bold_filename(sub, ses, run, echo, part="mag"):
+    return (
+        f"{sub}_{ses}_task-{RAW_TASK}_run-{run:02d}_echo-{echo}"
+        f"_part-{part}_bold.nii.gz"
+    )
+
+
+def _raw_sbref_filename(sub, ses, run, echo, part="mag"):
+    return (
+        f"{sub}_{ses}_task-{RAW_TASK}_run-{run:02d}_echo-{echo}"
+        f"_part-{part}_sbref.nii.gz"
+    )
+
+
+def _raw_events_filename(sub, ses, run):
+    return f"{sub}_{ses}_task-{RAW_TASK}_run-{run:02d}_events.tsv"
+
+
+def _make_raw_events(run, n_trials=N_RAW_TRIALS_PER_RUN):
+    """Return a raw BIDS events DataFrame for one run."""
+    rows = []
+    for trial in range(n_trials):
+        rows.append({
+            "onset": float(trial * 3.0),
+            "duration": 2.5,
+            "trial_type": "image",
+            "stimulus_id": f"stim_{run:02d}_{trial:03d}",
+            "response": trial % 2,
+            "response_time": 0.5 + 0.1 * trial,
+        })
+    return pd.DataFrame(rows)
+
+
+def _build_raw_bids(data_dir, sub_id, rng):
+    """Populate raw BIDS tree at ``{data_dir}/{sub_id}/``.
+
+    Per session: two runs, each with two echoes, magnitude-only BOLD
+    plus per-echo sbref. One events TSV per run. Fieldmap and MEGRE
+    raw are represented by single placeholder NIfTIs with JSON
+    sidecars -- enough to exercise the download walk without
+    inflating fixture size.
+    """
+    for ses_idx in range(N_SESSIONS):
+        ses_id = f"ses-{ses_idx + 1:02d}"
+
+        func_dir = data_dir / sub_id / ses_id / "func"
+        fmap_dir = data_dir / sub_id / ses_id / "fmap"
+        anat_dir = data_dir / sub_id / ses_id / "anat"
+        func_dir.mkdir(parents=True)
+        fmap_dir.mkdir(parents=True)
+        anat_dir.mkdir(parents=True)
+
+        for run in range(1, N_RUNS_PER_SESSION + 1):
+            for echo in range(1, N_ECHOES + 1):
+                bold_arr = rng.standard_normal(
+                    BRAIN_SHAPE + (N_RAW_TRIALS_PER_RUN,),
+                ).astype(np.float32)
+                _save_nifti(
+                    bold_arr,
+                    func_dir / _raw_bold_filename(
+                        sub_id, ses_id, run, echo,
+                    ),
+                    dtype=np.float32,
+                )
+                _write_json_sidecar(
+                    func_dir / _raw_bold_filename(
+                        sub_id, ses_id, run, echo,
+                    ).replace(".nii.gz", ".json"),
+                    {
+                        "EchoTime": 0.011 + 0.018 * (echo - 1),
+                        "RepetitionTime": 1.9,
+                        "TaskName": RAW_TASK,
+                    },
+                )
+
+                sbref_arr = rng.standard_normal(BRAIN_SHAPE).astype(
+                    np.float32,
+                )
+                _save_nifti(
+                    sbref_arr,
+                    func_dir / _raw_sbref_filename(
+                        sub_id, ses_id, run, echo,
+                    ),
+                    dtype=np.float32,
+                )
+                _write_json_sidecar(
+                    func_dir / _raw_sbref_filename(
+                        sub_id, ses_id, run, echo,
+                    ).replace(".nii.gz", ".json"),
+                    {
+                        "EchoTime": 0.011 + 0.018 * (echo - 1),
+                        "TaskName": RAW_TASK,
+                    },
+                )
+
+            events = _make_raw_events(run)
+            events.to_csv(
+                func_dir / _raw_events_filename(sub_id, ses_id, run),
+                sep="\t", index=False,
+            )
+
+        fmap_arr = rng.standard_normal(BRAIN_SHAPE).astype(np.float32)
+        _save_nifti(
+            fmap_arr,
+            fmap_dir / f"{sub_id}_{ses_id}_run-01_magnitude1.nii.gz",
+            dtype=np.float32,
+        )
+        _write_json_sidecar(
+            fmap_dir / f"{sub_id}_{ses_id}_run-01_magnitude1.json",
+            {"EchoTime": 0.005},
+        )
+
+        megre_arr = rng.standard_normal(BRAIN_SHAPE).astype(np.float32)
+        _save_nifti(
+            megre_arr,
+            anat_dir / f"{sub_id}_{ses_id}_MEGRE.nii.gz",
+            dtype=np.float32,
+        )
+        _write_json_sidecar(
+            anat_dir / f"{sub_id}_{ses_id}_MEGRE.json",
+            {"EchoTime": 0.004},
+        )
+
+
+def _write_json_sidecar(path, payload):
+    path.write_text(json.dumps(payload))
+
+
 # ── Fixtures ────────────────────────────────────────────────────
 
 @pytest.fixture
@@ -643,12 +786,13 @@ def synthetic_data_dir(tmp_path):
     stimuli_dir = data_dir / "stimuli"
     _save_placeholder_stimulus_archive(stimuli_dir, stim_meta)
 
-    # Per-subject derivatives
+    # Per-subject derivatives + raw BIDS
     for sub_id in ["sub-01", "sub-03"]:
         _build_subject(data_dir, sub_id, brain_mask, stim_meta, rng)
         _build_rois(data_dir, sub_id, brain_mask)
         _build_freesurfer(data_dir, sub_id)
         _build_anatomical(data_dir, sub_id, rng)
+        _build_raw_bids(data_dir, sub_id, rng)
 
     return data_dir
 

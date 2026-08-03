@@ -9,6 +9,14 @@ from laion_fmri._paths import (
     license_marker_path,
     participants_tsv_path,
     r2mean_path,
+    raw_anat_dir,
+    raw_bold_path,
+    raw_events_path,
+    raw_fmap_dir,
+    raw_func_dir,
+    raw_sbref_path,
+    raw_session_dir,
+    raw_subject_dir,
     roi_freesurfer_label_path,
     roi_mask_path,
     roi_surface_path,
@@ -199,4 +207,80 @@ def test_participants_tsv_path():
 def test_license_marker_path():
     assert license_marker_path("/data") == Path(
         "/data/.laion_fmri/license_accepted"
+    )
+
+
+# ── Raw BIDS path resolvers ────────────────────────────────────
+
+
+def test_raw_subject_dir():
+    assert raw_subject_dir("/data", "sub-03") == Path("/data/sub-03")
+
+
+def test_raw_session_dir():
+    assert raw_session_dir(
+        "/data", "sub-03", "ses-04",
+    ) == Path("/data/sub-03/ses-04")
+
+
+def test_raw_func_dir():
+    assert raw_func_dir(
+        "/data", "sub-03", "ses-04",
+    ) == Path("/data/sub-03/ses-04/func")
+
+
+def test_raw_fmap_dir():
+    assert raw_fmap_dir(
+        "/data", "sub-03", "ses-04",
+    ) == Path("/data/sub-03/ses-04/fmap")
+
+
+def test_raw_anat_dir():
+    assert raw_anat_dir(
+        "/data", "sub-03", "ses-04",
+    ) == Path("/data/sub-03/ses-04/anat")
+
+
+def test_raw_bold_path_default_part_mag():
+    """``part`` defaults to ``"mag"`` for the standard magnitude BOLD."""
+    result = raw_bold_path(
+        "/data", "sub-03", "ses-04", run=1, echo=2,
+    )
+    assert result == Path(
+        "/data/sub-03/ses-04/func/"
+        "sub-03_ses-04_task-images_run-01_echo-2_"
+        "part-mag_bold.nii.gz"
+    )
+
+
+def test_raw_bold_path_phase():
+    """``part="phase"`` selects the phase-encoded companion file."""
+    result = raw_bold_path(
+        "/data", "sub-03", "ses-04", run=1, echo=2, part="phase",
+    )
+    assert result == Path(
+        "/data/sub-03/ses-04/func/"
+        "sub-03_ses-04_task-images_run-01_echo-2_"
+        "part-phase_bold.nii.gz"
+    )
+
+
+def test_raw_sbref_path_default_part_mag():
+    result = raw_sbref_path(
+        "/data", "sub-03", "ses-04", run=1, echo=1,
+    )
+    assert result == Path(
+        "/data/sub-03/ses-04/func/"
+        "sub-03_ses-04_task-images_run-01_echo-1_"
+        "part-mag_sbref.nii.gz"
+    )
+
+
+def test_raw_events_path():
+    result = raw_events_path(
+        "/data", "sub-03", "ses-04", run=3,
+    )
+    assert result == Path(
+        "/data/sub-03/ses-04/func/"
+        "sub-03_ses-04_task-images_run-03_events.tsv"
     )

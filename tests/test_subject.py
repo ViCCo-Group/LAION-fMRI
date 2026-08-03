@@ -11,7 +11,10 @@ from laion_fmri.subject import Subject, load_subject
 from tests.conftest import (
     N_ANATOMICAL_BRAIN_VOXELS,
     N_BRAIN_VOXELS,
+    N_ECHOES,
     N_HLVIS_VOXELS,
+    N_RAW_TRIALS_PER_RUN,
+    N_RUNS_PER_SESSION,
     N_SESSIONS,
     N_SHARED,
     N_STIMULI,
@@ -1007,3 +1010,156 @@ def test_sub_metadata_per_session_breakdown(configured_subject):
     assert set(by_session) == {"ses-01", "ses-02"}
     for n in by_session.values():
         assert n == N_TRIALS_PER_SESSION
+
+
+# ── Raw BIDS access ────────────────────────────────────────────
+
+
+def test_has_raw_true_when_present(configured_subject):
+    """Synthetic fixture writes the raw tree -- has_raw is True."""
+    assert configured_subject.has_raw() is True
+
+
+def test_has_raw_false_when_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """Subject without a raw BIDS directory reports False."""
+    import shutil
+
+    raw_dir = synthetic_data_dir / "sub-01"
+    shutil.rmtree(raw_dir)
+    assert configured_subject.has_raw() is False
+
+
+def test_has_raw_session_scoped_true(configured_subject):
+    """``has_raw(session=...)`` narrows to a specific session."""
+    assert configured_subject.has_raw(session="ses-01") is True
+
+
+def test_has_raw_session_scoped_false(
+    configured_subject, synthetic_data_dir,
+):
+    """``has_raw(session=...)`` returns False when that session absent."""
+    import shutil
+
+    ses_dir = synthetic_data_dir / "sub-01" / "ses-01"
+    shutil.rmtree(ses_dir)
+    assert configured_subject.has_raw(session="ses-01") is False
+
+
+def test_get_events_single_run_returns_dataframe(configured_subject):
+    """Single-run call returns exactly that run's event table."""
+    df = configured_subject.get_events(session="ses-01", run="01")
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == N_RAW_TRIALS_PER_RUN
+
+
+def test_get_events_bids_columns_present(configured_subject):
+    """The BIDS core columns (onset, duration, trial_type) survive."""
+    df = configured_subject.get_events(session="ses-01", run="01")
+    for col in ("onset", "duration", "trial_type"):
+        assert col in df.columns
+
+
+def test_get_events_no_run_concatenates_all_runs_with_run_column(
+    configured_subject,
+):
+    """``run=None`` concatenates every run in the session and tags
+    each row with the ``run`` it came from.
+    """
+    df = configured_subject.get_events(session="ses-01")
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == N_RAW_TRIALS_PER_RUN * N_RUNS_PER_SESSION
+    assert "run" in df.columns
+    assert set(df["run"].unique()) == {"run-01", "run-02"}
+
+
+def test_get_events_accepts_bare_run_value(configured_subject):
+    """``run=1`` or ``run="1"`` should work as well as ``run="01"``."""
+    df = configured_subject.get_events(session="ses-01", run=1)
+    assert len(df) == N_RAW_TRIALS_PER_RUN
+
+
+def test_get_events_missing_raises_data_not_downloaded(
+    configured_subject, synthetic_data_dir,
+):
+    """No events on disk for the requested session -> clear error."""
+    import shutil
+
+    ses_dir = synthetic_data_dir / "sub-01" / "ses-01"
+    shutil.rmtree(ses_dir)
+    with pytest.raises(DataNotDownloadedError, match="events"):
+        configured_subject.get_events(session="ses-01", run="01")
+
+
+def test_get_events_requires_session(configured_subject):
+    """Empty ``session`` argument raises a clear error."""
+    with pytest.raises(ValueError, match="session"):
+        configured_subject.get_events(session=None)
+
+
+def test_get_raw_bold_shape_matches_mask(configured_subject):
+    """Raw BOLD comes back as ``(n_volumes, n_mask_voxels)`` float32."""
+    arr = configured_subject.get_raw_bold(
+        session="ses-01", run="01", echo="1",
+    )
+    assert arr.shape == (
+        N_RAW_TRIALS_PER_RUN, N_ANATOMICAL_BRAIN_VOXELS,
+    )
+    assert arr.dtype == np.float32
+
+
+def test_get_raw_bold_defaults_to_mag_part(
+    configured_subject,
+):
+    """The default ``part`` is ``"mag"`` (the standard magnitude BOLD)."""
+    default = configured_subject.get_raw_bold(
+        session="ses-01", run="01", echo="1",
+    )
+    explicit = configured_subject.get_raw_bold(
+        session="ses-01", run="01", echo="1", part="mag",
+    )
+    assert np.array_equal(default, explicit)
+
+
+def test_get_raw_bold_missing_raises_data_not_downloaded(
+    configured_subject, synthetic_data_dir,
+):
+    """No raw BOLD file for the requested echo -> clear error."""
+    import shutil
+
+    ses_dir = synthetic_data_dir / "sub-01" / "ses-01"
+    shutil.rmtree(ses_dir)
+    with pytest.raises(DataNotDownloadedError, match="raw"):
+        configured_subject.get_raw_bold(
+            session="ses-01", run="01", echo="1",
+        )
+
+
+def test_get_sbref_returns_expected_shape(configured_subject):
+    """SBRef comes back as a 1-D vector over the brain mask."""
+    arr = configured_subject.get_sbref(
+        session="ses-01", run="01", echo="1",
+    )
+    assert arr.shape == (N_ANATOMICAL_BRAIN_VOXELS,)
+    assert arr.dtype == np.float32
+
+
+def test_get_sbref_defaults_to_mag_part(configured_subject):
+    """The default ``part`` is ``"mag"`` for sbref too."""
+    default = configured_subject.get_sbref(
+        session="ses-01", run="01", echo="1",
+    )
+    explicit = configured_subject.get_sbref(
+        session="ses-01", run="01", echo="1", part="mag",
+    )
+    assert np.array_equal(default, explicit)
+
+
+def test_raw_all_echoes_readable(configured_subject):
+    """Every echo in the synthetic fixture is reachable through the API."""
+    for echo in range(1, N_ECHOES + 1):
+        arr = configured_subject.get_raw_bold(
+            session="ses-01", run="01", echo=str(echo),
+        )
+        assert arr.shape[0] == N_RAW_TRIALS_PER_RUN
