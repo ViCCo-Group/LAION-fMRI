@@ -18,6 +18,7 @@ Download
        include_stimuli=False,    # also pull the stimuli
        include_freesurfer=False, # also pull derivatives/freesurfer/
        include_anatomical=False, # also pull derivatives/anatomical/
+       include_raw=False,        # also pull raw BIDS tree (sub-XX/)
        n_jobs=1,                 # parallel `aws s3 cp` workers
    )
 
@@ -46,6 +47,13 @@ Arguments
   ``Subject.get_t1w`` / ``get_t2w`` /
   ``get_anatomical_brain_mask`` and the ``source="anatomical"``
   brain mask on the voxel-axis accessors; see :doc:`load`.
+* ``include_raw=True`` pulls the raw BIDS tree under
+  ``sub-XX/`` (multi-echo BOLD, sbref, per-run
+  ``events.tsv``, fieldmaps, raw MEGRE). Combine with
+  ``ses`` / ``run`` / ``echo`` / ``part`` / ``suffix`` /
+  ``extension`` filters to narrow the fetch. Use
+  :func:`download_raw` when you want the raw tree without
+  the default derivative walk.
 
 Filter semantics
 ================
@@ -98,6 +106,51 @@ detected, warn, and fall back to a working value.
 
 ``n_jobs`` does not affect the stimuli — it's a single
 HDF5 streamed sequentially.
+
+Raw BIDS downloads
+==================
+
+The raw BIDS tree under ``sub-XX/`` holds the multi-echo BOLD
+timeseries, single-band references, per-run ``events.tsv``,
+fieldmaps, and the raw MEGRE anatomical. Reach it two ways:
+
+* :func:`download` with ``include_raw=True`` -- fetches raw on
+  top of the default derivative walk.
+* :func:`download_raw` -- fetches raw only, no derivatives.
+
+Both apply the BIDS filters below; raw-specific entities
+(``run``, ``echo``, ``part``) are how you narrow to one run,
+one echo, or magnitude vs. phase-encoded companion files.
+
+.. code-block:: python
+
+   from laion_fmri.download import download, download_raw
+
+   # additive: derivatives + one run of raw BOLD/events
+   download(
+       subject="sub-01",
+       include_raw=True,
+       ses="ses-01",
+       run="01",
+       suffix=["bold", "events"],
+   )
+
+   # raw only: no derivative walk
+   download_raw(
+       subject="sub-01",
+       ses="ses-01",
+       run="01",
+       echo="1",
+       part="mag",
+   )
+
+   # all events TSVs for one session (any run)
+   download_raw(
+       subject="sub-01",
+       ses="ses-01",
+       suffix="events",
+       extension="tsv",
+   )
 
 Stimulus-side downloads
 =======================
@@ -193,6 +246,7 @@ console script (installed by ``pip``/``uv``):
    laion-fmri download-embeddings
    laion-fmri download-segmentations
    laion-fmri download-captions
+   laion-fmri download-raw --subject sub-03
    laion-fmri request-access          # standalone DUA form, no download
    laion-fmri login --request-id lfm_...
    laion-fmri logout
