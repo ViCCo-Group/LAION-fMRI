@@ -572,3 +572,33 @@ else:
         "PyTorch dataset needs stimulus images; skipping until "
         "the bucket's stimuli/ is populated."
     )
+
+# %%
+# Raw BIDS events
+# ---------------
+#
+# ``sub.get_trial_info(session=...)`` returns the beta-aligned
+# GLMsingle trial table -- one row per beta volume, with a
+# ``label`` column that joins to the stimulus metadata. The raw
+# BIDS ``events.tsv`` sits in a different tree
+# (``sub-XX/ses-XX/func/*_events.tsv``) and carries the columns
+# you need for behavioural analyses: ``onset``, ``duration``,
+# ``trial_type``, and per-experiment extras such as response and
+# reaction time.
+#
+# The raw tree is not fetched by default. Pull it either with
+# ``download(subject=..., include_raw=True)`` alongside the
+# derivatives, or with ``download_raw(subject=...)`` on its own,
+# then read via ``Subject.get_events``.
+
+if sub.has_raw(session=session):
+    events = sub.get_events(session=session)
+    print(f"raw events shape: {events.shape}")
+    print(f"raw events columns: {list(events.columns)}")
+    print(events.head())
+else:
+    print(
+        "Raw BIDS not on disk; run "
+        f"`laion-fmri download-raw --subject {sub.subject_id} "
+        f"--ses {session}` to fetch it, then re-run this cell."
+    )
