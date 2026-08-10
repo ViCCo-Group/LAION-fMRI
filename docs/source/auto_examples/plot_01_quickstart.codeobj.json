@@ -237,7 +237,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "dataset_initialize"
   }
  ],
@@ -253,7 +253,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "describe"
   }
  ],
@@ -565,7 +565,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "get_data_dir"
   }
  ],
@@ -581,7 +581,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "get_subjects"
   }
  ],
@@ -1004,6 +1004,29 @@
    "name": "_ColorPalette"
   }
  ],
+ "pathlib.Path": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePath"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path"
+  }
+ ],
  "plotting.plot_anat": [
   {
    "is_class": false,
@@ -1155,6 +1178,45 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "list"
+  }
+ ],
+ "scratch_dir": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PosixPath"
+  }
+ ],
+ "scratch_dir.mkdir": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PosixPath.mkdir"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path.mkdir"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePosixPath.mkdir"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePath.mkdir"
   }
  ],
  "session": [

@@ -5,7 +5,7 @@ Initialize the data directory
 ``dataset_initialize(path)`` records ``path`` as the local
 mirror of the bucket. The choice is persisted across Python
 sessions, so subsequent calls on the same machine are
-unnecessary -- ``Subject`` / ``Group`` loaders pick the
+unnecessary, ``Subject`` / ``Group`` loaders pick the
 configured directory up automatically.
 
 .. code-block:: python
@@ -24,11 +24,12 @@ Requirements
 ============
 
 * **The directory must already exist.** ``dataset_initialize``
-  raises ``FileNotFoundError`` if the path is missing -- it
+  raises ``FileNotFoundError`` if the path is missing, it
   doesn't create the directory for you, so a typo can't
   silently scatter dataset files in the wrong place. Create it
   yourself first (e.g. ``mkdir -p ./laion_fmri_data``).
-* The path argument must be a string -- ``TypeError`` otherwise.
+* The path argument must be a string, otherwise ``TypeError``
+  is raised.
 
 What gets created
 =================
@@ -47,7 +48,7 @@ Switching data directories
 Calling ``dataset_initialize`` again with a different path
 overwrites the persisted choice and points all subsequent
 loaders at the new location. The *old* directory is left on
-disk untouched -- ``laion_fmri`` never deletes data for you.
+disk untouched, ``laion_fmri`` never deletes data for you.
 
 .. code-block:: python
 

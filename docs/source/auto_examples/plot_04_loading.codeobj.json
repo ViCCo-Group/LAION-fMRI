@@ -1,6 +1,41 @@
 {
  "DataLoader": [
   {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data.dataloader",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "typing",
+   "module_short": "typing",
+   "name": "Generic"
+  },
+  {
    "is_class": false,
    "is_explicit": false,
    "module": "torch.utils.data",
@@ -424,6 +459,15 @@
    "name": "list"
   }
  ],
+ "batch": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "dict"
+  }
+ ],
  "beta_path": [
   {
    "is_class": false,
@@ -645,6 +689,22 @@
    "name": "str"
   }
  ],
+ "dataset": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.torch_data",
+   "module_short": "laion_fmri.torch_data",
+   "name": "LaionFMRIDataset"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "LaionFMRIDataset"
+  }
+ ],
  "dataset_initialize": [
   {
    "is_class": false,
@@ -657,7 +717,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "dataset_initialize"
   }
  ],
@@ -775,6 +835,22 @@
    "module": "nilearn",
    "module_short": "nilearn",
    "name": "BaseSlicer.add_contours"
+  }
+ ],
+ "download": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri.download",
+   "name": "download"
   }
  ],
  "face_rois": [
@@ -1005,7 +1081,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "get_data_dir"
   }
  ],
@@ -1030,7 +1106,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.group",
-   "module_short": "laion_fmri.group",
+   "module_short": "laion_fmri",
    "name": "Group"
   },
   {
@@ -1046,7 +1122,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.group",
-   "module_short": "laion_fmri.group",
+   "module_short": "laion_fmri",
    "name": "Group.get_shared_betas"
   },
   {
@@ -1096,6 +1172,33 @@
    "module": "importlib.util",
    "module_short": "importlib.util",
    "name": "find_spec"
+  }
+ ],
+ "laion_fmri.group.Group": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.group",
+   "module_short": "laion_fmri",
+   "name": "Group"
+  }
+ ],
+ "laion_fmri.subject.Subject": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject"
+  }
+ ],
+ "laion_fmri.subject.load_subject": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "load_subject"
   }
  ],
  "legend_ax": [
@@ -1292,8 +1395,38 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.group",
-   "module_short": "laion_fmri.group",
+   "module_short": "laion_fmri",
    "name": "load_subjects"
+  }
+ ],
+ "loader": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.utils.data.dataloader",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.utils",
+   "module_short": "torch.utils",
+   "name": "DataLoader"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "DataLoader"
   }
  ],
  "mean_betas": [
@@ -1725,6 +1858,29 @@
    "name": "_ColorPalette"
   }
  ],
+ "pathlib.Path": [
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path"
+  },
+  {
+   "is_class": true,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePath"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path"
+  }
+ ],
  "pial": [
   {
    "is_class": false,
@@ -2028,6 +2184,54 @@
    "module": "builtins",
    "module_short": "builtins",
    "name": "builtin_function_or_method"
+  }
+ ],
+ "sample": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "dict"
+  }
+ ],
+ "scratch_dir": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PosixPath"
+  }
+ ],
+ "scratch_dir.mkdir": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PosixPath.mkdir"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "Path.mkdir"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePosixPath.mkdir"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "pathlib",
+   "module_short": "pathlib",
+   "name": "PurePath.mkdir"
   }
  ],
  "session": [
