@@ -16,7 +16,7 @@ with the THINGS fMRI / MEG release (Hebart et al., 2023), so analyses on
 the LAION-fMRI shared set can be compared against results from that
 dataset as well. The shared set is supplemented with
 a 371-image out-of-distribution (OOD) test set - visual illusions,
-Gabor patches, shape stimuli, cropped textures, and similarly unusual
+Gabor patches, shape stimuli, isolated object cutouts, and similarly unusual
 configurations - intended as a stress test for encoding and decoding
 models trained on the natural-image pool.
 
@@ -67,7 +67,7 @@ the main experiment; the full selection procedure is in
    * - OOD
      - 371
      - 4
-     - Visual illusions, Gabor patches, cropped textures, shape stimuli,
+     - Visual illusions, Gabor patches, isolated object cutouts, shape stimuli,
        unusual spatial configurations, gaudy patterns
 
 .. list-table:: Subject-unique set (4,712 images per participant, sampled disjointly across the five participants)
@@ -150,8 +150,8 @@ distribution. The set covers several visually distinct subcategories:
 * **Gabor patches** - at different orientations, spatial frequencies,
   and contrasts.
 * **Shape stimuli** - simple coloured shapes on plain backgrounds.
-* **Cropped textures** - repetitive patterns and material textures
-  with no scene context.
+* **Cropped objects** - isolated object cutouts with transparent backgrounds
+  and no scene context.
 * **Unusual spatial configurations** - objects in implausible
   positions, scale violations, etc.
 * **Gaudy / high-saturation patterns** - strongly chromatic
