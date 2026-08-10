@@ -111,6 +111,7 @@ def _image_batches(
         )
 
     import h5py
+    from laion_fmri.stimuli import as_displayed_rgb
 
     with h5py.File(h5_path, "r") as h5:
         images = h5["images"]
@@ -119,7 +120,9 @@ def _image_batches(
             pil_images = []
             for name in names:
                 raw = bytes(images[lookup[name]])
-                pil_images.append(Image.open(BytesIO(raw)).convert("RGB"))
+                pil_images.append(
+                    as_displayed_rgb(Image.open(BytesIO(raw))),
+                )
             yield names, pil_images
 
 

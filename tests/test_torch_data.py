@@ -62,6 +62,20 @@ def test_torch_dataset_image_shape(configured_subject):
     assert item["image"].shape[0] == 3  # CHW
 
 
+def test_torch_dataset_composites_rgba_on_presentation_grey(
+    configured_subject,
+):
+    ds = LaionFMRIDataset(
+        configured_subject, session="ses-01", roi="hlvis",
+    )
+    image = ds[0]["image"]
+    expected_grey = torch.tensor([128 / 255] * 3)
+    assert torch.allclose(image[:, 0, 0], expected_grey)
+    assert torch.equal(image[:, 0, 1], torch.tensor([1.0, 0.0, 0.0]))
+    expected_blend = torch.tensor([192 / 255, 64 / 255, 64 / 255])
+    assert torch.allclose(image[:, 0, 2], expected_blend)
+
+
 def test_torch_dataset_session_field(configured_subject):
     ds = LaionFMRIDataset(
         configured_subject, session="ses-01", roi="hlvis",

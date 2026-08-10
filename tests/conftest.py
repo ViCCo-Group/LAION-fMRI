@@ -228,9 +228,18 @@ def _save_placeholder_stimulus_archive(stimuli_dir, stim_meta):
             "images", (n,), dtype=h5py.vlen_dtype(np.uint8),
         )
         for i in range(n):
-            arr = rng.integers(0, 255, (10, 10, 3), dtype=np.uint8)
             buf = io.BytesIO()
-            Image.fromarray(arr).save(buf, format="JPEG")
+            if i == 0:
+                # Mirror the production archive's RGBA OOD stimuli. The
+                # first pixel is fully transparent red, the second opaque
+                # red, and the remainder partially transparent red.
+                arr = np.full((10, 10, 4), (255, 0, 0, 128), dtype=np.uint8)
+                arr[0, 0] = (255, 0, 0, 0)
+                arr[0, 1] = (255, 0, 0, 255)
+                Image.fromarray(arr, mode="RGBA").save(buf, format="PNG")
+            else:
+                arr = rng.integers(0, 255, (10, 10, 3), dtype=np.uint8)
+                Image.fromarray(arr).save(buf, format="JPEG")
             ds[i] = np.frombuffer(buf.getvalue(), dtype=np.uint8)
 
 

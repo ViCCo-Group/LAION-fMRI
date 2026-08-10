@@ -112,7 +112,13 @@ class Group:
         from laion_fmri.stimuli import Stimuli
         meta = self.get_shared_stimulus_metadata()
         with Stimuli(data_dir=self._data_dir()) as stim:
-            images = [stim.images.get(name) for name in meta["image_name"]]
+            images = [
+                stim.images.get(
+                    name,
+                    as_displayed=(format == "numpy"),
+                )
+                for name in meta["image_name"]
+            ]
         if format == "pil":
             return images
         if format == "numpy":

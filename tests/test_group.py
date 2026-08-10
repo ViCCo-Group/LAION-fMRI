@@ -110,6 +110,12 @@ def test_get_shared_images(configured_group):
     assert isinstance(images[0], Image.Image)
 
 
+def test_get_shared_images_numpy_composites_rgba(configured_group):
+    images = configured_group.get_shared_images(format="numpy")
+    assert images.shape == (N_SHARED, 10, 10, 3)
+    assert tuple(images[0, 0, 0]) == (128, 128, 128)
+
+
 def test_get_shared_stimulus_metadata(configured_group):
     meta = configured_group.get_shared_stimulus_metadata()
     assert isinstance(meta, pd.DataFrame)

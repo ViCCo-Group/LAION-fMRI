@@ -8,7 +8,7 @@ The :class:`Stimuli` object is a single entry point for everything
 that is attached *per stimulus image*:
 
 * ``stim.metadata``      -- the stimulus index (image_name, dataset, …)
-* ``stim.images``        -- the JPEG images themselves
+* ``stim.images``        -- the encoded stimulus images themselves
 * ``stim.embeddings``    -- pretrained image embeddings (CLIP, DINOv2, …)
 * ``stim.segmentations`` -- object-level segmentation masks
 * ``stim.captions``      -- human + AI captions (text)
@@ -52,11 +52,49 @@ if TYPE_CHECKING:
     from laion_fmri.segmentations import Segmentations
 
 
+# PsychoPy's default ``rgb=(0, 0, 0)`` window is middle grey. The scanner
+# display used that default, which maps to approximately 128 per channel in
+# an 8-bit RGB image.
+PRESENTATION_BACKGROUND_RGB8 = (128, 128, 128)
+
+
+def as_displayed_rgb(image):
+    """Return a stimulus image as it appeared during presentation.
+
+    RGB images are converted normally. Images with an alpha channel are
+    composited over the experiment's middle-grey PsychoPy window background
+    before conversion to RGB. The input image is not modified.
+
+    Parameters
+    ----------
+    image : PIL.Image.Image
+        Decoded stimulus image.
+
+    Returns
+    -------
+    PIL.Image.Image
+        Three-channel RGB image.
+    """
+    from PIL import Image
+
+    if "A" not in image.getbands():
+        return image.convert("RGB")
+
+    rgba = image.convert("RGBA")
+    background = Image.new(
+        "RGBA",
+        rgba.size,
+        (*PRESENTATION_BACKGROUND_RGB8, 255),
+    )
+    return Image.alpha_composite(background, rgba).convert("RGB")
+
+
 class _StimulusImages:
     """Per-image access namespace owned by :class:`Stimuli`.
 
-    Reached via ``stim.images``. Exposes raw JPEG bytes (``stim.images[name]``)
-    and decoded :class:`PIL.Image.Image` (``stim.images.get(name)``).
+    Reached via ``stim.images``. Exposes raw encoded image bytes
+    (``stim.images[name]``) and decoded :class:`PIL.Image.Image`
+    (``stim.images.get(name)``).
     """
 
     def __init__(self, stim: "Stimuli"):
@@ -71,12 +109,22 @@ class _StimulusImages:
         return len(self._stim.metadata)
 
     def __getitem__(self, key) -> bytes:
-        """Raw JPEG bytes for one stimulus, by integer index or image_name."""
+        """Raw encoded bytes for one stimulus, by index or image name."""
         idx = self._stim._resolve(key)
         return bytes(self._stim._images_ds()[idx])
 
-    def get(self, key):
+    def get(self, key, *, as_displayed=False):
         """Decoded :class:`PIL.Image.Image` for one stimulus.
+
+        Parameters
+        ----------
+        key : int or str
+            Integer stimulus index or image name.
+        as_displayed : bool, default=False
+            If true, return a three-channel RGB image matching scanner
+            presentation. RGBA stimuli are alpha-composited over the
+            middle-grey PsychoPy window background. If false, preserve the
+            encoded image mode, including alpha.
 
         Requires Pillow, which is installed with ``laion-fmri``.
         """
@@ -88,7 +136,10 @@ class _StimulusImages:
                 "`laion-fmri` dependency. Reinstall the package or install "
                 "Pillow in this environment."
             ) from exc
-        return Image.open(BytesIO(self[key]))
+        image = Image.open(BytesIO(self[key]))
+        if as_displayed:
+            return as_displayed_rgb(image)
+        return image
 
     def __contains__(self, key) -> bool:
         if isinstance(key, str):
@@ -98,7 +149,7 @@ class _StimulusImages:
         return False
 
     def __iter__(self) -> Iterator[tuple[str, bytes]]:
-        """Iterate ``(image_name, raw_jpeg_bytes)`` in metadata order."""
+        """Iterate ``(image_name, raw_encoded_bytes)`` in metadata order."""
         names = self._stim.metadata["image_name"].tolist()
         ds = self._stim._images_ds()
         for i, name in enumerate(names):

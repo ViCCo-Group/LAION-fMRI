@@ -192,7 +192,7 @@ Data Formats
      - Tab-separated, BIDS-compliant
    * - Stimulus images
      - HDF5 (.h5)
-     - Single packed file with raw JPEG bytes, row-aligned to
+     - Single packed file with raw encoded JPEG/PNG bytes, row-aligned to
        ``task-images_metadata.csv`` and accessible by image name through
        :func:`laion_fmri.load_stimuli`.
    * - Stimulus metadata

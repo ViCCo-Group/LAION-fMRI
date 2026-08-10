@@ -111,7 +111,7 @@ class LaionFMRIDataset:
         )
 
         global_trial = int(self._session_rows.iloc[idx]["global_trial"])
-        img = self._subject.images.get(global_trial).convert("RGB")
+        img = self._subject.images.get(global_trial, as_displayed=True)
         img_array = np.array(img, dtype=np.float32) / 255.0
         img_tensor = self._torch.tensor(
             img_array.transpose(2, 0, 1),
