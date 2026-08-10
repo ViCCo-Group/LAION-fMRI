@@ -113,10 +113,7 @@ class Group:
         meta = self.get_shared_stimulus_metadata()
         with Stimuli(data_dir=self._data_dir()) as stim:
             images = [
-                stim.images.get(
-                    name,
-                    as_displayed=(format == "numpy"),
-                )
+                stim.images.get(name)
                 for name in meta["image_name"]
             ]
         if format == "pil":

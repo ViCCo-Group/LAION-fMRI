@@ -281,8 +281,8 @@ embeddings, captions, or segmentation masks aligned to the betas. The
    #          unique_or_shared, dataset, (+ events.tsv extras).
    # The row index is the "trial index" used everywhere below.
 
-   sub.images.get(42)                          # original PIL.Image
-   sub.images.get(42, as_displayed=True)       # displayed RGB image
+   sub.images.get(42)                          # displayed RGB image
+   sub.images.get(42, as_displayed=False)      # original PIL.Image
    sub.images[42]                              # raw encoded image bytes
    sub.images.array(session="ses-01")          # (n, 1000, 1000, 3) uint8 stack
    sub.images.all()                            # iterator, length n_trials

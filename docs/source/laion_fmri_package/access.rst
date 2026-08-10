@@ -94,8 +94,8 @@ For the full API see :doc:`load`. The short version:
    import laion_fmri
    stim = laion_fmri.load_stimuli()
    stim.images["shared_12rep_LAION_cluster_1003_i0.jpg"]  # raw encoded bytes
-   stim.images.get(0)                                     # original PIL.Image
-   stim.images.get(0, as_displayed=True)                  # displayed RGB
+   stim.images.get(0)                                     # displayed RGB
+   stim.images.get(0, as_displayed=False)                 # original PIL.Image
 
 Together with fMRI in one call
 ------------------------------

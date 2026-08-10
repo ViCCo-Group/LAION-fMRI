@@ -1077,11 +1077,12 @@ class _SubjectImages:
         name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
         return self._subject._stim().images[name]
 
-    def get(self, trial_idx, *, as_displayed=False):
+    def get(self, trial_idx, *, as_displayed=True):
         """Decoded :class:`PIL.Image.Image` for trial ``trial_idx``.
 
-        Set ``as_displayed=True`` to alpha-composite RGBA stimuli over the
-        middle-grey presentation background and return RGB.
+        By default, RGBA stimuli are alpha-composited over the middle-grey
+        presentation background and returned as RGB. Set
+        ``as_displayed=False`` to preserve the encoded image mode.
         """
         name = self._subject.metadata.iloc[int(trial_idx)]["image_name"]
         return self._subject._stim().images.get(
@@ -1089,14 +1090,14 @@ class _SubjectImages:
             as_displayed=as_displayed,
         )
 
-    def all(self, session=None, *, as_displayed=False):
+    def all(self, session=None, *, as_displayed=True):
         """Iterator yielding PIL images in trial order.
 
         Parameters
         ----------
         session : str, optional
             Restrict to one session ID (e.g. ``"ses-01"``).
-        as_displayed : bool, default=False
+        as_displayed : bool, default=True
             Return three-channel presentation-faithful RGB images.
         """
         meta = _filter_metadata(self._subject.metadata, session)

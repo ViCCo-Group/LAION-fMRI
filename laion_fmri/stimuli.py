@@ -113,18 +113,18 @@ class _StimulusImages:
         idx = self._stim._resolve(key)
         return bytes(self._stim._images_ds()[idx])
 
-    def get(self, key, *, as_displayed=False):
+    def get(self, key, *, as_displayed=True):
         """Decoded :class:`PIL.Image.Image` for one stimulus.
 
         Parameters
         ----------
         key : int or str
             Integer stimulus index or image name.
-        as_displayed : bool, default=False
+        as_displayed : bool, default=True
             If true, return a three-channel RGB image matching scanner
             presentation. RGBA stimuli are alpha-composited over the
-            middle-grey PsychoPy window background. If false, preserve the
-            encoded image mode, including alpha.
+            middle-grey PsychoPy window background. Set to false to preserve
+            the encoded image mode, including alpha.
 
         Requires Pillow, which is installed with ``laion-fmri``.
         """

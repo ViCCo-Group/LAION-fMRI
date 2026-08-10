@@ -112,14 +112,14 @@ The PsychoPy window used its default middle-grey background
 (``color=(0, 0, 0)`` in PsychoPy's ``rgb`` colour space, equivalent to
 0.5 per channel in normalized RGB). During presentation, transparent
 and partially transparent PNG pixels were alpha-composited over that
-background. Raw image access preserves the original RGBA data; pass
-``as_displayed=True`` to reconstruct the three-channel image shown in
-the scanner:
+background. Decoded image access reconstructs the three-channel image
+shown in the scanner by default. Pass ``as_displayed=False`` to preserve
+the original image mode and RGBA data:
 
 .. code-block:: python
 
-   raw_image = stim.images.get(name)                       # RGB or RGBA
-   displayed_image = stim.images.get(name, as_displayed=True)  # RGB
+   displayed_image = stim.images.get(name)                 # RGB
+   original_image = stim.images.get(name, as_displayed=False)  # RGB or RGBA
 
 The PyTorch dataset and the stacked NumPy image accessors apply this
 presentation composite automatically.
