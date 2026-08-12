@@ -10,7 +10,11 @@ from laion_fmri._constants import (
     resolve_subject_id,
 )
 from laion_fmri._errors import LicenseNotAcceptedError, NoMatchingDataError
-from laion_fmri._laion_fmri_fetch import _clamp_n_jobs, fetch_laion_fmri
+from laion_fmri._laion_fmri_fetch import (
+    _clamp_n_jobs,
+    fetch_laion_fmri,
+    fetch_laion_fmri_raw,
+)
 from laion_fmri._paths import (
     captions_path,
     embeddings_h5_path,
@@ -535,6 +539,7 @@ def download(
     include_embeddings=False,
     include_freesurfer=False,
     include_anatomical=False,
+    include_raw=False,
     n_jobs=1,
 ):
     """Download fMRI dataset files for a subject, narrowed by BIDS entities.
@@ -587,6 +592,14 @@ def download(
         subject. Unlocks ``Subject.get_t1w``, ``get_t2w``,
         ``get_anatomical_brain_mask``, and
         ``mask_source="anatomical"`` on the voxel-axis accessors.
+    include_raw : bool
+        If True, also pull the raw BIDS tree under ``sub-XX/``
+        (multi-echo BOLD, sbref, events, fieldmaps, raw MEGRE).
+        Hundreds of GB per subject when unfiltered. Combine with
+        ``ses`` / ``run`` / ``echo`` / ``part`` / ``suffix`` /
+        ``extension`` filters to narrow. Use
+        :func:`download_raw` when you want the raw files without
+        the default derivative walk.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (AWS CLI copy subprocesses). ``1`` (default) is sequential.
@@ -638,6 +651,7 @@ def download(
             n_jobs=n_jobs,
             include_freesurfer=include_freesurfer,
             include_anatomical=include_anatomical,
+            include_raw=include_raw,
         )
 
     if include_stimuli:
@@ -649,4 +663,76 @@ def download(
         )
         download_embeddings(
             models=models, data_dir=data_dir, n_jobs=n_jobs,
+        )
+
+
+def download_raw(
+    subject,
+    ses=None,
+    task=None,
+    run=None,
+    echo=None,
+    part=None,
+    suffix=None,
+    extension=None,
+    n_jobs=1,
+):
+    """Download raw BIDS files for a subject (no derivatives).
+
+    Walks ``sub-{subject}/`` on the S3 bucket -- multi-echo BOLD,
+    sbref, per-run ``events.tsv``, fieldmaps, raw MEGRE -- and
+    applies the BIDS-entity filters below to narrow the fetch. Use
+    :func:`download` (with ``include_raw=True`` if needed) when
+    you also want the derivative trees.
+
+    Parameters
+    ----------
+    subject : str or "all"
+        Subject identifier (BIDS ID, e.g. ``"sub-01"`` / ``"01"``,
+        or ``"all"`` to iterate every subject).
+    ses, task, run, echo, part, suffix, extension : str or list[str], optional
+        BIDS-entity filters. ``run``/``echo``/``part`` narrow to a
+        specific run, echo, or magnitude/phase companion.
+    n_jobs : int
+        Number of parallel AWS CLI copy workers.
+
+    Raises
+    ------
+    SubjectNotFoundError
+        If the subject identifier is invalid.
+    LicenseNotAcceptedError
+        If the CC0 dataset license is declined.
+    NoMatchingDataError
+        If no raw files match the filters for a subject.
+    """
+    data_dir = get_data_dir()
+    _check_data_dir_drift(data_dir)
+
+    if subject != "all":
+        resolve_subject_id(subject)
+
+    accept_license()
+
+    if subject == "all":
+        subjects = get_subjects()
+        if not subjects:
+            raise NoMatchingDataError(
+                "No LAION-fMRI subjects were found in the public S3 "
+                "bucket. Check network access and the bucket layout."
+            )
+    else:
+        subjects = [resolve_subject_id(subject)]
+
+    for sub_id in subjects:
+        fetch_laion_fmri_raw(
+            data_dir,
+            subject=sub_id,
+            ses=ses,
+            task=task,
+            run=run,
+            echo=echo,
+            part=part,
+            suffix=suffix,
+            extension=extension,
+            n_jobs=n_jobs,
         )
