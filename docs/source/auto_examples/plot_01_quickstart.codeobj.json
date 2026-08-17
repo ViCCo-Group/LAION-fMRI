@@ -237,7 +237,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "dataset_initialize"
   }
  ],
@@ -253,7 +253,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "describe"
   }
  ],
@@ -387,6 +387,22 @@
    "module": "laion_fmri.download",
    "module_short": "laion_fmri.download",
    "name": "download"
+  }
+ ],
+ "download_raw": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri.download",
+   "name": "download_raw"
   }
  ],
  "fig": [
@@ -565,7 +581,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "get_data_dir"
   }
  ],
@@ -581,7 +597,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "get_subjects"
   }
  ],
@@ -670,6 +686,15 @@
    "name": "Image.size"
   }
  ],
+ "laion_fmri.download.download_raw": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri.download",
+   "name": "download_raw"
+  }
+ ],
  "laion_fmri.subject.Subject": [
   {
    "is_class": false,
@@ -677,6 +702,15 @@
    "module": "laion_fmri.subject",
    "module_short": "laion_fmri",
    "name": "Subject"
+  }
+ ],
+ "laion_fmri.subject.Subject.get_events": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject.Subject",
+   "module_short": "laion_fmri.subject.Subject",
+   "name": "get_events"
   }
  ],
  "load_subject": [

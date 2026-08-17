@@ -9,15 +9,16 @@ Every accessor maps to one file in the bucket: it returns the raw
 contents of the file you pick. Combining sessions, averaging
 across trials, or rebinning is the caller's responsibility.
 
-Two brain-mask sources are available. The default is **derived
-on the fly** from the subject-level mean-R^2 map
-(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``): voxels with
-any non-zero GLMsingle fit are considered "in brain". An
-anatomically-derived alternative ships under
-``derivatives/anatomical/`` and is selected with
-``source="anatomical"`` on the brain-mask accessor (or
-``mask_source="anatomical"`` on the loader accessors that
-filter on the voxel axis).
+Two brain-mask sources are available. The default is the
+**anatomically-derived** mask shipped under
+``derivatives/anatomical/`` (selected via ``source="anatomical"``
+on the brain-mask accessor, or ``mask_source="anatomical"`` on
+the loader accessors that filter on the voxel axis). The
+alternative is derived on the fly from the subject-level
+mean-R^2 map
+(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``); voxels with
+any non-zero GLMsingle fit are considered "in brain". Pass
+``source="rsquare"`` (or ``mask_source="rsquare"``) to opt in.
 
 .. note::
 
@@ -31,6 +32,12 @@ filter on the voxel axis).
 # %%
 # Bind the quickstart's data directory
 # -------------------------------------
+#
+# Point this example at the directory populated by
+# :doc:`plot_01_quickstart`. During a gallery build the path is
+# passed via ``LAION_FMRI_EXAMPLE_DATA_DIR``; when running locally
+# it defaults to a ``laion_fmri_quickstart`` folder in the current
+# directory.
 
 import os
 
@@ -46,6 +53,12 @@ dataset_initialize(data_dir)
 # %%
 # Load a subject and pick a session
 # ----------------------------------
+#
+# ``load_subject`` returns a :class:`~laion_fmri.subject.Subject`
+# bound to the data directory. All voxel-axis accessors below
+# default to the anatomically-derived brain mask shipped under
+# ``derivatives/anatomical/``; pass ``mask_source="rsquare"`` to
+# use the functional mean-R^2 mask instead.
 
 from laion_fmri.subject import load_subject
 
@@ -67,11 +80,12 @@ print(f"Primary ROI: {roi}")
 # Every voxel-axis accessor exposes a ``mask_source`` choice with
 # the same default:
 #
-# * ``mask_source="rsquare"`` (default) -- voxels with any non-zero
+# * ``mask_source="anatomical"`` (default) -- the
+#   anatomically-derived brain mask shipped under
+#   ``derivatives/anatomical/``. Usually wider, since brain
+#   voxels with no functional fit come along.
+# * ``mask_source="rsquare"`` -- voxels with any non-zero
 #   GLMsingle fit. Smaller, functional-only.
-# * ``mask_source="anatomical"`` -- the anatomically-derived brain
-#   mask shipped under ``derivatives/anatomical/``. Usually wider,
-#   since brain voxels with no functional fit come along.
 #
 # The same kwarg cascades through ``get_betas``,
 # ``get_noise_ceiling``, ``to_nifti``, and
@@ -418,14 +432,20 @@ print(
 # %%
 # Trial info and stimulus metadata
 # ----------------------------------
+#
+# ``get_trial_info(session=...)`` returns the beta-aligned trial
+# table for one session (``session``, ``run``, ``beta_index``,
+# ``label``). ``Subject.metadata`` extends that table across every
+# session on disk and joins it against the stimulus metadata CSV,
+# so each row carries ``image_name``, ``session_trial``,
+# ``stim_idx``, and ``unique_or_shared``.
 
 trial_info = sub.get_trial_info(session=session)
 print(f"Trials in {session}: {len(trial_info)}")
 print(trial_info.head())
 
 if sub.has_stimuli():
-    # The subject's full trial table -- one row per trial across all
-    # sessions, with the image_name already joined in.
+    # One row per trial across all sessions, with image_name joined in.
     trials = sub.metadata
     print(f"Trial table rows: {len(trials)} (across all sessions)")
     print(trials[
@@ -570,3 +590,26 @@ else:
         "PyTorch dataset needs stimulus images; skipping until "
         "the bucket's stimuli/ is populated."
     )
+
+# %%
+# Raw BIDS events
+# ---------------
+#
+# ``sub.get_trial_info(session=...)`` returns the beta-aligned
+# GLMsingle trial table, one row per beta volume, with a
+# ``label`` column that joins to the stimulus metadata. The raw
+# BIDS ``events.tsv`` sits under
+# ``sub-XX/ses-XX/func/*_events.tsv`` and carries the columns
+# needed for behavioural analyses: ``onset``, ``duration``,
+# ``trial_type``, and per-experiment extras such as response and
+# reaction time.
+#
+# The raw tree is opt-in. Pull it with
+# ``download(subject=..., include_raw=True)`` alongside the
+# derivatives, or with ``download_raw(subject=...)`` for a
+# raw-only fetch, then read via ``Subject.get_events``.
+
+events = sub.get_events(session=session)
+print(f"raw events shape: {events.shape}")
+print(f"raw events columns: {list(events.columns)}")
+print(events.head())

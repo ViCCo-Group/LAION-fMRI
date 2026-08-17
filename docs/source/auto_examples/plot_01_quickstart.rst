@@ -154,7 +154,7 @@ first download into a given data directory.
 See also :doc:`plot_04_loading` for the full set of brain-mask,
 ROI, and noise-ceiling kwargs plus surface ROI loading.
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-120
+.. GENERATED FROM PYTHON SOURCE LINES 95-126
 
 .. code-block:: Python
 
@@ -164,10 +164,10 @@ ROI, and noise-ceiling kwargs plus surface ROI loading.
     subject_id = "sub-01"
     session_id = "ses-01"
     print(f"Downloading {subject_id} / {session_id}")
-    # Most workflows only need the files the loaders read directly --
+    # Most workflows only need the files the loaders read directly:
     # trial info, statmaps, and ROI masks. Asking for the suffix
     # subset below keeps a session pull around a few hundred MB
-    # instead of the multi-GB you'd get pulling everything; drop
+    # instead of the multi-GB you would get pulling everything; drop
     # ``suffix`` if you also want the raw GLMsingle model dump or
     # the JSON sidecars. ``include_anatomical=True`` brings in the
     # anatomical T1w used as the backdrop for the visualizations
@@ -183,6 +183,12 @@ ROI, and noise-ceiling kwargs plus surface ROI loading.
         n_jobs=4,
     )
 
+    if os.environ.get("LAION_FMRI_BUILD_EXAMPLES"):
+        from laion_fmri.download import download_raw
+        download_raw(
+            subject=subject_id, ses=session_id, suffix="events", n_jobs=4,
+        )
+
 
 
 
@@ -197,21 +203,41 @@ ROI, and noise-ceiling kwargs plus surface ROI loading.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 121-132
+.. GENERATED FROM PYTHON SOURCE LINES 127-145
+
+Raw BIDS (optional)
+--------------------
+
+The ``download`` call above pulls only derivatives (betas, masks,
+trial info).
+To also fetch raw multi-echo BOLD, sbref, and per-run ``events.tsv`` files,
+pass ``include_raw=True``::
+
+    download(subject=subject_id, ses=session_id, include_raw=True)
+
+Or use :func:`~laion_fmri.download.download_raw` for a raw-only
+fetch::
+
+    from laion_fmri.download import download_raw
+    download_raw(subject=subject_id, ses=session_id, suffix="events")
+
+See :doc:`plot_04_loading` for the full loading walkthrough including
+:meth:`~laion_fmri.subject.Subject.get_events`.
+
+.. GENERATED FROM PYTHON SOURCE LINES 147-157
 
 Load the subject
 -----------------
 
 Once data is on disk, load a :class:`~laion_fmri.subject.Subject`
-and inspect its sessions and available ROIs. The brain mask is
-derived on the fly from the subject-level mean-R^2 file
-(``..._stat-rsquare_desc-R2mean_statmap.nii.gz``) -- voxels with
-any non-zero GLMsingle fit are considered "in brain". Pass
-``source="anatomical"`` to switch to the wider anatomically-
-derived mask instead (see :doc:`plot_04_loading` for the full
-cascading-kwarg story).
+and inspect its sessions and available ROIs. The brain mask
+defaults to the anatomically-derived mask shipped under
+``derivatives/anatomical/``. Pass ``source="rsquare"`` to
+switch to the functional mean-R^2 derived mask instead
+(every voxel with a non-zero GLMsingle fit; see
+:doc:`plot_04_loading` for the full cascading-kwarg story).
 
-.. GENERATED FROM PYTHON SOURCE LINES 132-144
+.. GENERATED FROM PYTHON SOURCE LINES 157-169
 
 .. code-block:: Python
 
@@ -223,7 +249,7 @@ cascading-kwarg story).
     print(f"Sessions:  {sub.get_sessions()}")
     print(
         f"Voxels:    {sub.get_n_voxels()} "
-        f"(anatomical: {sub.get_n_voxels(source='anatomical')})"
+        f"(rsquare: {sub.get_n_voxels(source='rsquare')})"
     )
     print(f"ROIs:      {sub.get_available_rois()}")
 
@@ -237,13 +263,13 @@ cascading-kwarg story).
 
     Subject:   sub-01
     Sessions:  ['ses-01']
-    Voxels:    271557 (anatomical: 272080)
+    Voxels:    272080 (rsquare: 271557)
     ROIs:      ['EBA', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 145-154
+.. GENERATED FROM PYTHON SOURCE LINES 170-179
 
 Single-trial betas
 -------------------
@@ -255,7 +281,7 @@ In practice you should always pass an ``roi=`` filter to keep the
 array small (face-area ROI, e.g. ~1000 voxels, drops the call to
 a few MB).
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-172
+.. GENERATED FROM PYTHON SOURCE LINES 179-197
 
 .. code-block:: Python
 
@@ -285,13 +311,13 @@ a few MB).
 
  .. code-block:: none
 
-    ses-01 betas (full mask): (1044, 271557)
+    ses-01 betas (full mask): (1044, 272080)
     ses-01 betas (face ROIs): (1044, 1100)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 173-182
+.. GENERATED FROM PYTHON SOURCE LINES 198-207
 
 Save a derived map back to NIfTI
 ----------------------------------
@@ -303,7 +329,7 @@ external tools can read it), pass the array to
 ``Subject.to_nifti``: it scatters the values into a
 ``(X, Y, Z)`` volume and writes the file.
 
-.. GENERATED FROM PYTHON SOURCE LINES 182-188
+.. GENERATED FROM PYTHON SOURCE LINES 207-213
 
 .. code-block:: Python
 
@@ -326,7 +352,7 @@ external tools can read it), pass the array to
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 189-200
+.. GENERATED FROM PYTHON SOURCE LINES 214-225
 
 Visualize the first three trials
 ---------------------------------
@@ -340,7 +366,7 @@ range, signal concentrated in cortex rather than at edges or
 in white matter, and the three trials looking distinct from
 each other rather than suspiciously similar.
 
-.. GENERATED FROM PYTHON SOURCE LINES 200-252
+.. GENERATED FROM PYTHON SOURCE LINES 225-277
 
 .. code-block:: Python
 
@@ -408,7 +434,7 @@ each other rather than suspiciously similar.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 253-267
+.. GENERATED FROM PYTHON SOURCE LINES 278-292
 
 Three category-selective ROIs
 ------------------------------
@@ -425,7 +451,7 @@ See also :doc:`plot_04_loading` for the multi-format ROI
 accessor (volume ``.nii.gz`` / surface ``.func.gii`` /
 FreeSurfer ``.label``).
 
-.. GENERATED FROM PYTHON SOURCE LINES 267-297
+.. GENERATED FROM PYTHON SOURCE LINES 292-322
 
 .. code-block:: Python
 
@@ -471,12 +497,17 @@ FreeSurfer ``.label``).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 298-300
+.. GENERATED FROM PYTHON SOURCE LINES 323-330
 
 Per-session noise ceiling
 --------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 300-307
+``get_noise_ceiling`` returns the per-voxel noise ceiling for
+one session as a 1-D array over the brain mask. High values mark
+voxels with reliable stimulus-driven responses across the
+session's repetitions.
+
+.. GENERATED FROM PYTHON SOURCE LINES 330-337
 
 .. code-block:: Python
 
@@ -495,12 +526,12 @@ Per-session noise ceiling
 
  .. code-block:: none
 
-    NC: shape=(271557,), range=[0.000, 95.076]
+    NC: shape=(272080,), range=[0.000, 95.076]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 308-317
+.. GENERATED FROM PYTHON SOURCE LINES 338-347
 
 Visualize the noise-ceiling map
 --------------------------------
@@ -512,7 +543,7 @@ noise. Looking at this map before any decoding or RSA work
 helps you decide whether to threshold by NC, restrict to
 high-NC voxels, or stay with ROI-based analyses.
 
-.. GENERATED FROM PYTHON SOURCE LINES 317-349
+.. GENERATED FROM PYTHON SOURCE LINES 347-379
 
 .. code-block:: Python
 
@@ -560,7 +591,7 @@ high-NC voxels, or stay with ROI-based analyses.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 350-364
+.. GENERATED FROM PYTHON SOURCE LINES 380-394
 
 Stimulus images
 ----------------
@@ -577,7 +608,7 @@ inspect the image locally.
 See also :doc:`plot_05_segmentations` for per-image object-level
 segmentation masks.
 
-.. GENERATED FROM PYTHON SOURCE LINES 364-373
+.. GENERATED FROM PYTHON SOURCE LINES 394-403
 
 .. code-block:: Python
 
@@ -606,7 +637,7 @@ segmentation masks.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 54.700 seconds)
+   **Total running time of the script:** (16 minutes 21.681 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_01_quickstart.py:

@@ -126,10 +126,12 @@ available at the access-service URL.
 
     Full license text: https://creativecommons.org/publicdomain/zero/1.0/
 
-    NOTE: Stimulus images are NOT covered by CC0. They are gated by a
+    NOTE: Raw stimulus images are NOT covered by CC0. They are gated by a
     separate Data Use Agreement enforced by the access service at
     https://laion-fmri.hebartlab.com/terms — see
-    ``laion-fmri request-access`` to obtain a download.
+    ``laion-fmri request-access`` to obtain an image download. Stimulus
+    metadata, captions, embeddings, and segmentations are public
+    stimulus-derived files.
 
     ---
     Stimulus terms: https://laion-fmri.hebartlab.com/terms
@@ -283,7 +285,7 @@ reachable from your network.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 15.237 seconds)
+   **Total running time of the script:** (0 minutes 14.031 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_02_initialization.py:

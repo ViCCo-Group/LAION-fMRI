@@ -227,13 +227,19 @@ when discovery returns surprises.
  .. code-block:: none
 
     Bucket: s3://laion-fmri
-    Top-level prefixes (2):
+    Top-level prefixes (7):
       derivatives/
       stimuli/
+      sub-01/
+      sub-03/
+      sub-05/
+      sub-06/
+      sub-07/
     derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
     derivatives/rois/: 5 entries, 5 sub-* entries
     derivatives/freesurfer/: 5 entries, 5 sub-* entries
     derivatives/anatomical/: 5 entries, 5 sub-* entries
+    sub-*/  (raw BIDS root): 7 entries, 5 sub-* entries
 
 
 
@@ -315,9 +321,9 @@ call.
     Split:    random_0
     Pool:     shared
     Family:   random
-    n_train:  897
-    n_test:   224
-    Loaded:   897 train / 224 test ids
+    n_train:  896
+    n_test:   225
+    Loaded:   896 train / 225 test ids
 
 
 
@@ -354,53 +360,60 @@ test set.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-197
+.. GENERATED FROM PYTHON SOURCE LINES 154-164
 
-Per-subject queries that need local data
------------------------------------------
+Per-subject queries
+--------------------
 
-Discovery covers what is *available*; once you commit to working
-with a specific subject, the per-subject API on
-:class:`~laion_fmri.subject.Subject` is what you reach for. Those
-methods read on-disk files, so they presuppose a download. The
-block below is **commented out** to keep this example offline --
-copy the lines you need into your own script after running
-``download(...)`` for the subject and session you care about.
+:doc:`plot_01_quickstart` downloaded ``sub-01 / ses-01`` to the
+shared data directory, so the per-subject accessors below run
+without a re-fetch. If you are running this example in
+isolation, call ``download(subject="sub-01", ses="ses-01")``
+first. To also pull raw multi-echo BOLD and events files, add
+``include_raw=True`` or use
+:func:`~laion_fmri.download.download_raw`.
 
-.. code-block:: python
+.. GENERATED FROM PYTHON SOURCE LINES 164-183
 
-    from laion_fmri.download import download
-    # one session for one subject (~few hundred MB):
-    download(subject="sub-01", ses="ses-01")
+.. code-block:: Python
+
 
     from laion_fmri.subject import load_subject
-    sub = load_subject("sub-01")
+
+    sub = load_subject(SUBJECT)
 
     # Sessions present on disk
-    print(sub.get_sessions())                      # ['ses-01', ...]
+    print(sub.get_sessions())
 
     # Trial info: runs, repetitions, stimulus labels
     trials = sub.get_trial_info(session="ses-01")
     # columns: session, run, beta_index, label
     print(trials.columns.tolist())
-    print(trials["run"].unique())                  # runs in this session
-    print(len(trials))                             # trial count
+    print(trials["run"].unique())
+    print(len(trials))
 
-    # Single-trial betas with the multi-level ROI grammar
-    betas_one  = sub.get_betas(session="ses-01", roi="FFA1")
-    betas_face = sub.get_betas(session="ses-01", roi="face")
-    betas_all  = sub.get_betas(session="ses-01", roi="all")
+    # Single-trial betas for one ROI
+    betas = sub.get_betas(session="ses-01", roi="FFA1")
+    print(f"FFA1 betas shape: {betas.shape}")
 
-    # Multi-format ROI loading
-    roi = sub.get_roi_data("FFA1", format="all", hemi="all")
-    # roi["FFA1"] is a nested dict:
-    # {
-    #   "volume": <1-D bool>,
-    #   "gii": {"hemi-L": {"func.gii": ..., "label": ...},
-    #           "hemi-R": {...}},
-    # }
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-205
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    ['ses-01']
+    ['session', 'run', 'beta_index', 'label']
+    [ 1  2  3  4  5  6  7  8  9 10 11 12]
+    1044
+    FFA1 betas shape: (1044, 222)
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 184-190
 
 Cross-subject discovery
 ------------------------
@@ -409,7 +422,7 @@ Loop ``get_subjects()`` to ask the same questions of every subject
 in the bucket. ROI counts can differ across subjects (some ROIs
 don't exist for everyone).
 
-.. GENERATED FROM PYTHON SOURCE LINES 205-211
+.. GENERATED FROM PYTHON SOURCE LINES 190-196
 
 .. code-block:: Python
 
@@ -436,39 +449,45 @@ don't exist for everyone).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 212-228
+.. GENERATED FROM PYTHON SOURCE LINES 197-215
 
 Stimulus metadata
 ------------------
 
 Trial-level stimulus metadata is exposed as a
-``pandas.DataFrame`` via the ``Subject.metadata`` property --
+``pandas.DataFrame`` via the ``Subject.metadata`` property, with
 one row per single-trial beta, indexed by global trial index
 (``0 .. n_total_trials-1``). Columns combine the per-session
-events TSV with derived fields like ``image_name``, ``session``,
-``session_trial``, ``stim_idx``, and ``unique_or_shared``. The
-same table is what :doc:`plot_04_loading` uses to align betas
-with images.
+trial info with derived fields like ``image_name``, ``session``,
+``session_trial``, ``stim_idx``, and ``unique_or_shared``. To
+read the raw BIDS ``events.tsv`` directly (``onset``,
+``duration``, ``trial_type``, etc.), use
+:meth:`~laion_fmri.subject.Subject.get_events` after a
+``download_raw(...)`` fetch (see :doc:`plot_04_loading`).
 
-This reads ``sub-01`` from the shared data directory that
-:doc:`plot_01_quickstart` populates; if you're running plot_03
-in isolation, run plot_01 first (or call ``download(...)``
-yourself).
+``Subject.metadata`` joins the trial table against the stimulus
+metadata CSV, so it needs the stimulus archive on disk. Use
+``has_stimuli()`` as a guard when the archive may not have been
+fetched yet.
 
-.. GENERATED FROM PYTHON SOURCE LINES 228-238
+.. GENERATED FROM PYTHON SOURCE LINES 215-229
 
 .. code-block:: Python
 
 
-    from laion_fmri.subject import load_subject
-
-    sub = load_subject(SUBJECT)
-    df = sub.metadata
-    print(df.head())
-    print(f"Total trials: {len(df)}")
-    shared = (df["unique_or_shared"] == "shared").sum()
-    print(f"Shared:       {shared}")
-    print(f"Per session:  {df['session'].value_counts().to_dict()}")
+    if sub.has_stimuli():
+        df = sub.metadata
+        print(df.head())
+        print(f"Total trials: {len(df)}")
+        shared = (df["unique_or_shared"] == "shared").sum()
+        print(f"Shared:       {shared}")
+        print(f"Per session:  {df['session'].value_counts().to_dict()}")
+    else:
+        print(
+            "Stimulus metadata not on disk; call "
+            "`download_stimuli()` (or `download(..., include_stimuli=True)`) "
+            "to populate the archive, then re-run this cell."
+        )
 
 
 
@@ -495,7 +514,7 @@ yourself).
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 53.590 seconds)
+   **Total running time of the script:** (2 minutes 15.719 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:

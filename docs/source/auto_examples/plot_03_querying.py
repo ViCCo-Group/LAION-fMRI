@@ -151,49 +151,34 @@ _, test_shape = get_train_test_ids(
 print(f"OOD shape only:  test ids = {len(test_shape)}")
 
 # %%
-# Per-subject queries that need local data
-# -----------------------------------------
+# Per-subject queries
+# --------------------
 #
-# Discovery covers what is *available*; once you commit to working
-# with a specific subject, the per-subject API on
-# :class:`~laion_fmri.subject.Subject` is what you reach for. Those
-# methods read on-disk files, so they presuppose a download. The
-# block below is **commented out** to keep this example offline --
-# copy the lines you need into your own script after running
-# ``download(...)`` for the subject and session you care about.
-#
-# .. code-block:: python
-#
-#     from laion_fmri.download import download
-#     # one session for one subject (~few hundred MB):
-#     download(subject="sub-01", ses="ses-01")
-#
-#     from laion_fmri.subject import load_subject
-#     sub = load_subject("sub-01")
-#
-#     # Sessions present on disk
-#     print(sub.get_sessions())                      # ['ses-01', ...]
-#
-#     # Trial info: runs, repetitions, stimulus labels
-#     trials = sub.get_trial_info(session="ses-01")
-#     # columns: session, run, beta_index, label
-#     print(trials.columns.tolist())
-#     print(trials["run"].unique())                  # runs in this session
-#     print(len(trials))                             # trial count
-#
-#     # Single-trial betas with the multi-level ROI grammar
-#     betas_one  = sub.get_betas(session="ses-01", roi="FFA1")
-#     betas_face = sub.get_betas(session="ses-01", roi="face")
-#     betas_all  = sub.get_betas(session="ses-01", roi="all")
-#
-#     # Multi-format ROI loading
-#     roi = sub.get_roi_data("FFA1", format="all", hemi="all")
-#     # roi["FFA1"] is a nested dict:
-#     # {
-#     #   "volume": <1-D bool>,
-#     #   "gii": {"hemi-L": {"func.gii": ..., "label": ...},
-#     #           "hemi-R": {...}},
-#     # }
+# :doc:`plot_01_quickstart` downloaded ``sub-01 / ses-01`` to the
+# shared data directory, so the per-subject accessors below run
+# without a re-fetch. If you are running this example in
+# isolation, call ``download(subject="sub-01", ses="ses-01")``
+# first. To also pull raw multi-echo BOLD and events files, add
+# ``include_raw=True`` or use
+# :func:`~laion_fmri.download.download_raw`.
+
+from laion_fmri.subject import load_subject
+
+sub = load_subject(SUBJECT)
+
+# Sessions present on disk
+print(sub.get_sessions())
+
+# Trial info: runs, repetitions, stimulus labels
+trials = sub.get_trial_info(session="ses-01")
+# columns: session, run, beta_index, label
+print(trials.columns.tolist())
+print(trials["run"].unique())
+print(len(trials))
+
+# Single-trial betas for one ROI
+betas = sub.get_betas(session="ses-01", roi="FFA1")
+print(f"FFA1 betas shape: {betas.shape}")
 
 # %%
 # Cross-subject discovery
@@ -213,25 +198,31 @@ for sub_id in get_subjects():
 # ------------------
 #
 # Trial-level stimulus metadata is exposed as a
-# ``pandas.DataFrame`` via the ``Subject.metadata`` property --
+# ``pandas.DataFrame`` via the ``Subject.metadata`` property, with
 # one row per single-trial beta, indexed by global trial index
 # (``0 .. n_total_trials-1``). Columns combine the per-session
-# events TSV with derived fields like ``image_name``, ``session``,
-# ``session_trial``, ``stim_idx``, and ``unique_or_shared``. The
-# same table is what :doc:`plot_04_loading` uses to align betas
-# with images.
+# trial info with derived fields like ``image_name``, ``session``,
+# ``session_trial``, ``stim_idx``, and ``unique_or_shared``. To
+# read the raw BIDS ``events.tsv`` directly (``onset``,
+# ``duration``, ``trial_type``, etc.), use
+# :meth:`~laion_fmri.subject.Subject.get_events` after a
+# ``download_raw(...)`` fetch (see :doc:`plot_04_loading`).
 #
-# This reads ``sub-01`` from the shared data directory that
-# :doc:`plot_01_quickstart` populates; if you're running plot_03
-# in isolation, run plot_01 first (or call ``download(...)``
-# yourself).
+# ``Subject.metadata`` joins the trial table against the stimulus
+# metadata CSV, so it needs the stimulus archive on disk. Use
+# ``has_stimuli()`` as a guard when the archive may not have been
+# fetched yet.
 
-from laion_fmri.subject import load_subject
-
-sub = load_subject(SUBJECT)
-df = sub.metadata
-print(df.head())
-print(f"Total trials: {len(df)}")
-shared = (df["unique_or_shared"] == "shared").sum()
-print(f"Shared:       {shared}")
-print(f"Per session:  {df['session'].value_counts().to_dict()}")
+if sub.has_stimuli():
+    df = sub.metadata
+    print(df.head())
+    print(f"Total trials: {len(df)}")
+    shared = (df["unique_or_shared"] == "shared").sum()
+    print(f"Shared:       {shared}")
+    print(f"Per session:  {df['session'].value_counts().to_dict()}")
+else:
+    print(
+        "Stimulus metadata not on disk; call "
+        "`download_stimuli()` (or `download(..., include_stimuli=True)`) "
+        "to populate the archive, then re-run this cell."
+    )

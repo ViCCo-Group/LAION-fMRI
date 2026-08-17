@@ -68,7 +68,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "dataset_initialize"
   }
  ],
@@ -84,7 +84,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "describe"
   }
  ],
@@ -100,7 +100,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.config",
-   "module_short": "laion_fmri.config",
+   "module_short": "laion_fmri",
    "name": "get_data_dir"
   }
  ],
@@ -116,7 +116,7 @@
    "is_class": false,
    "is_explicit": false,
    "module": "laion_fmri.discovery",
-   "module_short": "laion_fmri.discovery",
+   "module_short": "laion_fmri",
    "name": "get_subjects"
   }
  ],

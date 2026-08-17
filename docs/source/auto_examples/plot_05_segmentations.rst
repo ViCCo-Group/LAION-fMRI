@@ -77,7 +77,7 @@ the first time it runs and is a no-op afterwards.
 
  .. code-block:: none
 
-    [laion-fmri] segmentations already up to date.
+    [laion-fmri] Downloading 2 segmentation file(s):
 
     {'h5': PosixPath('/path/to/laion-fmri-data/stimuli/task-images_desc-segmentations.h5'), 'metadata': PosixPath('/path/to/laion-fmri-data/stimuli/task-images_desc-segmentations_metadata.csv')}
 
@@ -229,7 +229,7 @@ was a subject-unique stimulus.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 2.194 seconds)
+   **Total running time of the script:** (0 minutes 30.562 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_05_segmentations.py:

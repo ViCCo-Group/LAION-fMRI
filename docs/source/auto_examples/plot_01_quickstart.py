@@ -98,10 +98,10 @@ from laion_fmri.download import download
 subject_id = "sub-01"
 session_id = "ses-01"
 print(f"Downloading {subject_id} / {session_id}")
-# Most workflows only need the files the loaders read directly --
+# Most workflows only need the files the loaders read directly:
 # trial info, statmaps, and ROI masks. Asking for the suffix
 # subset below keeps a session pull around a few hundred MB
-# instead of the multi-GB you'd get pulling everything; drop
+# instead of the multi-GB you would get pulling everything; drop
 # ``suffix`` if you also want the raw GLMsingle model dump or
 # the JSON sidecars. ``include_anatomical=True`` brings in the
 # anatomical T1w used as the backdrop for the visualizations
@@ -117,18 +117,43 @@ download(
     n_jobs=4,
 )
 
+if os.environ.get("LAION_FMRI_BUILD_EXAMPLES"):
+    from laion_fmri.download import download_raw
+    download_raw(
+        subject=subject_id, ses=session_id, suffix="events", n_jobs=4,
+    )
+
+# %%
+# Raw BIDS (optional)
+# --------------------
+#
+# The ``download`` call above pulls only derivatives (betas, masks,
+# trial info).
+# To also fetch raw multi-echo BOLD, sbref, and per-run ``events.tsv`` files,
+# pass ``include_raw=True``::
+#
+#     download(subject=subject_id, ses=session_id, include_raw=True)
+#
+# Or use :func:`~laion_fmri.download.download_raw` for a raw-only
+# fetch::
+#
+#     from laion_fmri.download import download_raw
+#     download_raw(subject=subject_id, ses=session_id, suffix="events")
+#
+# See :doc:`plot_04_loading` for the full loading walkthrough including
+# :meth:`~laion_fmri.subject.Subject.get_events`.
+
 # %%
 # Load the subject
 # -----------------
 #
 # Once data is on disk, load a :class:`~laion_fmri.subject.Subject`
-# and inspect its sessions and available ROIs. The brain mask is
-# derived on the fly from the subject-level mean-R^2 file
-# (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``) -- voxels with
-# any non-zero GLMsingle fit are considered "in brain". Pass
-# ``source="anatomical"`` to switch to the wider anatomically-
-# derived mask instead (see :doc:`plot_04_loading` for the full
-# cascading-kwarg story).
+# and inspect its sessions and available ROIs. The brain mask
+# defaults to the anatomically-derived mask shipped under
+# ``derivatives/anatomical/``. Pass ``source="rsquare"`` to
+# switch to the functional mean-R^2 derived mask instead
+# (every voxel with a non-zero GLMsingle fit; see
+# :doc:`plot_04_loading` for the full cascading-kwarg story).
 
 from laion_fmri.subject import load_subject
 
@@ -137,7 +162,7 @@ print(f"Subject:   {sub.subject_id}")
 print(f"Sessions:  {sub.get_sessions()}")
 print(
     f"Voxels:    {sub.get_n_voxels()} "
-    f"(anatomical: {sub.get_n_voxels(source='anatomical')})"
+    f"(rsquare: {sub.get_n_voxels(source='rsquare')})"
 )
 print(f"ROIs:      {sub.get_available_rois()}")
 
@@ -297,6 +322,11 @@ plt.show()
 # %%
 # Per-session noise ceiling
 # --------------------------
+#
+# ``get_noise_ceiling`` returns the per-voxel noise ceiling for
+# one session as a 1-D array over the brain mask. High values mark
+# voxels with reliable stimulus-driven responses across the
+# session's repetitions.
 
 nc = sub.get_noise_ceiling(session=session)
 print(
