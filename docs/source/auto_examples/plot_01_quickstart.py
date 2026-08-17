@@ -154,6 +154,38 @@ download(
     n_jobs=4,
 )
 
+if os.environ.get("LAION_FMRI_BUILD_EXAMPLES"):
+    from laion_fmri.download import download_raw
+    download_raw(
+        subject=subject_id, ses=session_id, suffix="events", n_jobs=4,
+    )
+
+# %%
+# Raw BIDS (optional)
+# -------------------
+#
+# The ``download`` call above pulls the derivative tree only
+# (single-trial betas, ROI masks, trial info). Some analyses
+# also need the raw side of the dataset: multi-echo BOLD, sbref,
+# per-run ``events.tsv``, fieldmaps, and raw MEGRE anatomicals.
+# Those are opt-in because a full raw subject is hundreds of GB,
+# and most modeling workflows never touch them.
+#
+# Two entry points make the raw tree reachable. Pass
+# ``include_raw=True`` to :func:`download` when the raw files
+# should come alongside the derivatives in one call::
+#
+#     download(subject=subject_id, ses=session_id, include_raw=True)
+#
+# For a raw-only fetch, use :func:`~laion_fmri.download.download_raw`::
+#
+#     from laion_fmri.download import download_raw
+#     download_raw(subject=subject_id, ses=session_id, suffix="events")
+#
+# The loading side is covered in :doc:`plot_04_loading` via
+# :meth:`~laion_fmri.subject.Subject.get_events` and
+# :meth:`~laion_fmri.subject.Subject.get_raw_bold`.
+
 # %%
 # Load the subject
 # ----------------

@@ -189,7 +189,7 @@ accepted, they do not block any subsequent calls. The full
 set of brain-mask, ROI, and noise-ceiling kwargs plus
 surface ROI loading is covered in :doc:`plot_04_loading`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 130-157
+.. GENERATED FROM PYTHON SOURCE LINES 130-163
 
 .. code-block:: Python
 
@@ -220,6 +220,12 @@ surface ROI loading is covered in :doc:`plot_04_loading`.
         n_jobs=4,
     )
 
+    if os.environ.get("LAION_FMRI_BUILD_EXAMPLES"):
+        from laion_fmri.download import download_raw
+        download_raw(
+            subject=subject_id, ses=session_id, suffix="events", n_jobs=4,
+        )
+
 
 
 
@@ -234,7 +240,34 @@ surface ROI loading is covered in :doc:`plot_04_loading`.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-179
+.. GENERATED FROM PYTHON SOURCE LINES 164-188
+
+Raw BIDS (optional)
+-------------------
+
+The ``download`` call above pulls the derivative tree only
+(single-trial betas, ROI masks, trial info). Some analyses
+also need the raw side of the dataset: multi-echo BOLD, sbref,
+per-run ``events.tsv``, fieldmaps, and raw MEGRE anatomicals.
+Those are opt-in because a full raw subject is hundreds of GB,
+and most modeling workflows never touch them.
+
+Two entry points make the raw tree reachable. Pass
+``include_raw=True`` to :func:`download` when the raw files
+should come alongside the derivatives in one call::
+
+    download(subject=subject_id, ses=session_id, include_raw=True)
+
+For a raw-only fetch, use :func:`~laion_fmri.download.download_raw`::
+
+    from laion_fmri.download import download_raw
+    download_raw(subject=subject_id, ses=session_id, suffix="events")
+
+The loading side is covered in :doc:`plot_04_loading` via
+:meth:`~laion_fmri.subject.Subject.get_events` and
+:meth:`~laion_fmri.subject.Subject.get_raw_bold`.
+
+.. GENERATED FROM PYTHON SOURCE LINES 190-211
 
 Load the subject
 ----------------
@@ -258,7 +291,7 @@ print below reports both counts so the difference can be
 seen at a glance. The full cascading-kwarg story is in
 :doc:`plot_04_loading`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 179-192
+.. GENERATED FROM PYTHON SOURCE LINES 211-224
 
 .. code-block:: Python
 
@@ -291,7 +324,7 @@ seen at a glance. The full cascading-kwarg story is in
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 193-214
+.. GENERATED FROM PYTHON SOURCE LINES 225-246
 
 Single-trial betas
 ------------------
@@ -315,7 +348,7 @@ Two calls are shown below: one over the full brain mask with
 one restricted to the face ROIs. The second pattern is the
 one to reach for in real workflows.
 
-.. GENERATED FROM PYTHON SOURCE LINES 214-232
+.. GENERATED FROM PYTHON SOURCE LINES 246-264
 
 .. code-block:: Python
 
@@ -351,7 +384,7 @@ one to reach for in real workflows.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 233-248
+.. GENERATED FROM PYTHON SOURCE LINES 265-280
 
 Save a derived map back to NIfTI
 --------------------------------
@@ -369,7 +402,7 @@ save the resulting voxel-mean map. Any other per-voxel
 summary (decoding accuracy, model R^2, contrast estimates)
 can be saved the same way.
 
-.. GENERATED FROM PYTHON SOURCE LINES 248-265
+.. GENERATED FROM PYTHON SOURCE LINES 280-297
 
 .. code-block:: Python
 
@@ -403,7 +436,7 @@ can be saved the same way.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 266-282
+.. GENERATED FROM PYTHON SOURCE LINES 298-314
 
 Visualize the first three trials
 --------------------------------
@@ -422,7 +455,7 @@ signal concentrated in cortex rather than at the edges or
 in white matter, and the three trials looking distinct from
 each other rather than suspiciously similar.
 
-.. GENERATED FROM PYTHON SOURCE LINES 282-343
+.. GENERATED FROM PYTHON SOURCE LINES 314-375
 
 .. code-block:: Python
 
@@ -499,7 +532,7 @@ each other rather than suspiciously similar.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 344-362
+.. GENERATED FROM PYTHON SOURCE LINES 376-394
 
 Three category-selective ROIs
 -----------------------------
@@ -520,7 +553,7 @@ into a downstream model. The multi-format ROI accessor
 (volume ``.nii.gz`` / surface ``.func.gii`` / FreeSurfer
 ``.label``) is covered in :doc:`plot_04_loading`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 362-399
+.. GENERATED FROM PYTHON SOURCE LINES 394-431
 
 .. code-block:: Python
 
@@ -573,7 +606,7 @@ into a downstream model. The multi-format ROI accessor
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 400-410
+.. GENERATED FROM PYTHON SOURCE LINES 432-442
 
 Per-session noise ceiling
 -------------------------
@@ -586,7 +619,7 @@ could possibly explain, given the trial-to-trial reliability
 of the responses. Voxels with a low ceiling will not produce
 good models no matter how clever the analysis is.
 
-.. GENERATED FROM PYTHON SOURCE LINES 410-418
+.. GENERATED FROM PYTHON SOURCE LINES 442-450
 
 .. code-block:: Python
 
@@ -611,7 +644,7 @@ good models no matter how clever the analysis is.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 419-429
+.. GENERATED FROM PYTHON SOURCE LINES 451-461
 
 Visualize the noise-ceiling map
 -------------------------------
@@ -624,7 +657,7 @@ informs the next step in an analysis: thresholding by NC,
 restricting to high-NC voxels, or staying with ROI-based
 selections.
 
-.. GENERATED FROM PYTHON SOURCE LINES 429-467
+.. GENERATED FROM PYTHON SOURCE LINES 461-499
 
 .. code-block:: Python
 
@@ -678,7 +711,7 @@ selections.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 468-486
+.. GENERATED FROM PYTHON SOURCE LINES 500-518
 
 Stimulus images
 ---------------
@@ -699,7 +732,7 @@ not redistribute stimulus content; uncomment it to inspect
 the image locally. For object-level segmentation masks that
 go with each image, see :doc:`plot_05_segmentations`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 486-497
+.. GENERATED FROM PYTHON SOURCE LINES 518-529
 
 .. code-block:: Python
 
@@ -730,7 +763,7 @@ go with each image, see :doc:`plot_05_segmentations`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 17.833 seconds)
+   **Total running time of the script:** (11 minutes 31.608 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_01_quickstart.py:

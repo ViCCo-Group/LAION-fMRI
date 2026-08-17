@@ -1062,7 +1062,7 @@ gated behind the ``[torch]`` add-on:
 
     uv pip install "laion-fmri[torch]"
 
-.. GENERATED FROM PYTHON SOURCE LINES 734-766
+.. GENERATED FROM PYTHON SOURCE LINES 734-767
 
 .. code-block:: Python
 
@@ -1102,6 +1102,7 @@ gated behind the ``[torch]`` add-on:
 
 
 
+
 .. rst-class:: sphx-glr-script-out
 
  .. code-block:: none
@@ -1115,10 +1116,66 @@ gated behind the ``[torch]`` add-on:
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 768-789
+
+Raw BIDS events
+---------------
+
+``get_trial_info(session=...)`` above returns the beta-aligned
+GLMsingle trial table, one row per beta volume, with a
+``label`` column that joins to the stimulus metadata. For
+behavioural work the raw BIDS ``events.tsv`` is usually the
+right file instead, since it carries the columns those
+analyses depend on: ``onset``, ``duration``, ``trial_type``,
+and per-experiment extras such as response, reaction time,
+and stimulus onset/duration.
+
+Those files live under ``sub-XX/ses-XX/func/*_events.tsv``,
+in the raw side of the dataset. The raw tree is opt-in
+because a full raw subject is hundreds of GB; pull it with
+``download(subject=..., include_raw=True)`` alongside the
+derivatives, or with
+:func:`~laion_fmri.download.download_raw` for a raw-only
+fetch. :meth:`~laion_fmri.subject.Subject.get_events` then
+reads the per-run TSVs and returns a concatenated DataFrame
+with an added ``run`` column.
+
+.. GENERATED FROM PYTHON SOURCE LINES 789-795
+
+.. code-block:: Python
+
+
+    # load the raw BIDS events for the picked session
+    events = sub.get_events(session=session)
+    print(f"raw events shape: {events.shape}")
+    print(f"raw events columns: {list(events.columns)}")
+    print(events.head())
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    raw events shape: (1128, 19)
+    raw events columns: ['onset', 'duration', 'trial_number', 'trial_type', 'response', 'response_correct', 'response_changed', 'response_time', 'stim_number', 'stim_name', 'stim_occurrence', 'stim_occurrence_run', 'stim_occurrence_session', 'stim_duration', 'isi_onset', 'isi_duration', 'pulse_number', 'pulse_onset', 'run']
+         onset  duration  trial_number trial_type  ...  isi_duration  pulse_number             pulse_onset     run
+    0  12.0493    2.9998             1        new  ...           0.5           [8]             ['13.2994']  run-01
+    1  15.0491    2.9999             2        new  ...           0.5       [9, 10]  ['15.1992', '17.0991']  run-01
+    2  18.0491    2.9999             3        new  ...           0.5      [11, 12]  ['18.9991', '20.8991']  run-01
+    3  21.0490    2.9999             4        new  ...           0.5          [13]              ['22.799']  run-01
+    4  24.0489    2.9999             5        new  ...           0.5      [14, 15]  ['24.6991', '26.5989']  run-01
+
+    [5 rows x 19 columns]
+
+
+
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (19 minutes 49.984 seconds)
+   **Total running time of the script:** (19 minutes 27.153 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_04_loading.py:

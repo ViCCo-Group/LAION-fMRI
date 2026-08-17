@@ -387,6 +387,13 @@
    "module": "laion_fmri.download",
    "module_short": "laion_fmri.download",
    "name": "download"
+  },
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "download"
   }
  ],
  "download_raw": [
@@ -711,6 +718,15 @@
    "module": "laion_fmri.subject.Subject",
    "module_short": "laion_fmri.subject.Subject",
    "name": "get_events"
+  }
+ ],
+ "laion_fmri.subject.Subject.get_raw_bold": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject.Subject",
+   "module_short": "laion_fmri.subject.Subject",
+   "name": "get_raw_bold"
   }
  ],
  "load_subject": [
