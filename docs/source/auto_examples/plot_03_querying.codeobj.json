@@ -26,7 +26,7 @@
    "name": "list"
   }
  ],
- "betas": [
+ "betas_all": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -35,7 +35,43 @@
    "name": "ndarray"
   }
  ],
- "betas.shape": [
+ "betas_all.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "betas_face": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "betas_face.shape": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "tuple"
+  }
+ ],
+ "betas_one": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ndarray"
+  }
+ ],
+ "betas_one.shape": [
   {
    "is_class": false,
    "is_explicit": false,
@@ -281,22 +317,20 @@
    "name": "inspect_bucket"
   }
  ],
- "laion_fmri.download.download_raw": [
+ "laion_fmri.subject.Subject": [
   {
    "is_class": false,
    "is_explicit": true,
-   "module": "laion_fmri.download",
-   "module_short": "laion_fmri.download",
-   "name": "download_raw"
-  }
- ],
- "laion_fmri.subject.Subject.get_events": [
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject"
+  },
   {
    "is_class": false,
    "is_explicit": true,
-   "module": "laion_fmri.subject.Subject",
-   "module_short": "laion_fmri.subject.Subject",
-   "name": "get_events"
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject"
   }
  ],
  "list_ood_types": [
@@ -545,6 +579,24 @@
    "name": "join"
   }
  ],
+ "roi": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "dict"
+  }
+ ],
+ "roi.keys": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "builtin_function_or_method"
+  }
+ ],
  "rois": [
   {
    "is_class": false,
@@ -663,6 +715,22 @@
    "name": "Subject.get_betas"
   }
  ],
+ "sub.get_roi_data": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_roi_data"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.get_roi_data"
+  }
+ ],
  "sub.get_sessions": [
   {
    "is_class": false,
@@ -693,22 +761,6 @@
    "module": "laion_fmri",
    "module_short": "laion_fmri",
    "name": "Subject.get_trial_info"
-  }
- ],
- "sub.has_stimuli": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri.subject",
-   "module_short": "laion_fmri",
-   "name": "Subject.has_stimuli"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "laion_fmri",
-   "module_short": "laion_fmri",
-   "name": "Subject.has_stimuli"
   }
  ],
  "sub.metadata": [

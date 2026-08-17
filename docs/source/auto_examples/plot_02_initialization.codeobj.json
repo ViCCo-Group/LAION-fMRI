@@ -154,13 +154,6 @@
    "module": "laion_fmri.download",
    "module_short": "laion_fmri",
    "name": "request_stimulus_access"
-  },
-  {
-   "is_class": false,
-   "is_explicit": true,
-   "module": "laion_fmri.download",
-   "module_short": "laion_fmri",
-   "name": "request_stimulus_access"
   }
  ],
  "os.environ.get": [

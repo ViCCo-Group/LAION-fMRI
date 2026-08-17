@@ -21,21 +21,30 @@
 Querying the Dataset
 =====================
 
-Discover what is in the dataset without downloading anything.
+A dataset is much easier to work with once it is clear what is
+in it: which subjects exist, which ROIs ship per subject,
+which train/test splits are bundled, and so on. This example
+introduces the two discovery APIs the package exposes for that
+purpose, and then shows how to inspect a single subject's
+on-disk data once a target has been picked.
 
-Most cells in this example query the S3 bucket directly
-(``laion_fmri.discovery``) or read bundled metadata that ships with
-the package (``laion_fmri.splits``) -- no subject data is fetched.
-The stimulus-metadata cell below is the one exception: it reads
-``Subject.metadata`` from a subject already on disk (the quickstart
-example downloads ``sub-01 / ses-01`` into a shared data
-directory). For other Subject-API calls the corresponding
-``download(...)`` invocations are shown **commented out**, so you
-can copy them without this script triggering a download.
+The plan is to start at the dataset-wide level (no downloads
+needed) and then zoom in on a single subject. Concretely:
 
-Pick the subject you want to look at on the line below:
+1. Use ``laion_fmri.discovery`` to talk to the S3 bucket and
+   list subjects, ROIs, and the bucket layout.
+2. Use ``laion_fmri.splits`` to look at the train/test
+   partitions that ship with the package.
+3. Use :class:`~laion_fmri.subject.Subject` to read ``sub-01 /
+   ses-01`` from disk: trial info, betas, ROI data, stimulus
+   metadata.
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-22
+The bottom half reuses the ``sub-01 / ses-01`` data that
+:doc:`plot_01_quickstart` populates, so plot_01 should be run
+first if plot_03 is being run in isolation. The subject to
+inspect is picked on the line below:
+
+.. GENERATED FROM PYTHON SOURCE LINES 28-31
 
 .. code-block:: Python
 
@@ -49,16 +58,20 @@ Pick the subject you want to look at on the line below:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-29
+.. GENERATED FROM PYTHON SOURCE LINES 32-42
 
 Initialize a data directory
-----------------------------
+---------------------------
 
-Discovery and split listings don't need data on disk, but
-``dataset_initialize`` is still required so that any subsequent
-(commented-out) ``download(...)`` would have a destination.
+The discovery and split helpers used in the cells below do not
+read anything from disk (they talk to the bucket or load
+bundled metadata), so strictly speaking ``dataset_initialize``
+is not needed for those calls. It is still set up here for two
+reasons: it makes the script consistent with the other gallery
+examples (same data directory, same data on disk), and any
+follow-up ``download(...)`` call needs a destination.
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-48
+.. GENERATED FROM PYTHON SOURCE LINES 42-62
 
 .. code-block:: Python
 
@@ -67,6 +80,7 @@ Discovery and split listings don't need data on disk, but
 
     from laion_fmri.config import dataset_initialize
 
+    # define and initialize the data directory
     data_dir = os.environ.get(
         "LAION_FMRI_EXAMPLE_DATA_DIR",
         os.path.join(os.getcwd(), "laion_fmri_quickstart"),
@@ -88,16 +102,20 @@ Discovery and split listings don't need data on disk, but
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-55
+.. GENERATED FROM PYTHON SOURCE LINES 63-73
 
 Top-level summary
-------------------
+-----------------
 
-``describe()`` prints a one-screen overview: bucket name, subject
-count, and the first subject's ROI list. Run it first to confirm
-the bucket is reachable.
+A good starting point at the beginning of any session is
+``describe()``. It prints a one-screen overview (bucket
+name, subject count, the first subject's ROI list) and is
+the quickest way to confirm that the bucket is actually
+reachable from the current network. If it returns without
+error, every other discovery call in this example will work
+too.
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-58
+.. GENERATED FROM PYTHON SOURCE LINES 73-76
 
 .. code-block:: Python
 
@@ -120,17 +138,20 @@ the bucket is reachable.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-66
+.. GENERATED FROM PYTHON SOURCE LINES 77-87
 
 Subjects in the bucket
------------------------
+----------------------
 
-``get_subjects`` lists every subject the bucket exposes,
-including ones whose data is only partially uploaded -- so the
-count matches the dataset's published size, not just the
-subjects with complete data.
+Picking the analysis cohort is usually the next decision a
+user makes. ``get_subjects`` answers that question. It lists
+every subject the bucket exposes, including those whose data
+is only partially uploaded. The count therefore matches the
+dataset's published size rather than just the subjects with
+complete data, worth remembering when filtering down to a
+clean subset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 66-70
+.. GENERATED FROM PYTHON SOURCE LINES 87-91
 
 .. code-block:: Python
 
@@ -152,26 +173,34 @@ subjects with complete data.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 71-78
+.. GENERATED FROM PYTHON SOURCE LINES 92-105
 
 ROI queries: specific / category / all
----------------------------------------
+--------------------------------------
 
-ROIs ship in eight categories on the bucket. Use the
-``category=`` filter when you want to scope a query to one
-functional family (e.g. just the face-area ROIs); call
-``get_rois`` without a filter when you want the full inventory.
+Most downstream analyses scope themselves to a subset of ROIs
+rather than the whole brain, so the next thing worth knowing
+is which ROIs ship per subject and how they are grouped.
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-91
+The dataset organizes ROIs into eight categories on the
+bucket (body-, face-, place-areas, ...). ``get_rois`` is the
+accessor for them. With no filter it returns the full
+inventory; with ``category=`` it returns one functional family
+at a time, which is the most common pattern when picking a
+voxel mask for an analysis.
+
+.. GENERATED FROM PYTHON SOURCE LINES 105-120
 
 .. code-block:: Python
 
 
+    # define the ROI categories on the bucket
     ROI_CATEGORIES = (
         "body", "character", "face", "laion",
         "motion", "object", "place", "retinotopy",
     )
 
+    # list all ROIs and then iterate per category
     print(f"All ROIs ({len(get_rois(SUBJECT))}):")
     print(get_rois(SUBJECT))
     print()
@@ -202,16 +231,20 @@ functional family (e.g. just the face-area ROIs); call
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-98
+.. GENERATED FROM PYTHON SOURCE LINES 121-131
 
 Bucket diagnostic listing
---------------------------
+-------------------------
 
-``inspect_bucket`` prints the immediate top-level prefixes plus a
-count of subject directories under each derivative tree -- useful
-when discovery returns surprises.
+When the discovery results look unexpected (a subject that
+should be there is missing, an ROI count is off), it helps to
+look at the bucket layout itself. ``inspect_bucket`` is the
+low-level helper for that. It prints the immediate top-level
+prefixes plus a count of subject directories under each
+derivative tree, so structural quirks (missing derivatives, an
+extra prefix) show up at a glance.
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-101
+.. GENERATED FROM PYTHON SOURCE LINES 131-134
 
 .. code-block:: Python
 
@@ -227,33 +260,33 @@ when discovery returns surprises.
  .. code-block:: none
 
     Bucket: s3://laion-fmri
-    Top-level prefixes (7):
+    Top-level prefixes (2):
       derivatives/
       stimuli/
-      sub-01/
-      sub-03/
-      sub-05/
-      sub-06/
-      sub-07/
     derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
     derivatives/rois/: 5 entries, 5 sub-* entries
     derivatives/freesurfer/: 5 entries, 5 sub-* entries
     derivatives/anatomical/: 5 entries, 5 sub-* entries
-    sub-*/  (raw BIDS root): 7 entries, 5 sub-* entries
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-108
+.. GENERATED FROM PYTHON SOURCE LINES 135-147
 
 Bundled train/test splits (no download required)
--------------------------------------------------
+------------------------------------------------
 
-``laion_fmri.splits`` ships predefined train/test partitions of
-the stimulus set so callers can compare against the published
-baselines without re-running any clustering or sampling.
+A lot of modeling work hinges on which trials count as train
+and which as test. To make that choice reproducible, and to
+make published baselines directly comparable, the package
+ships a set of pre-computed train/test partitions over the
+stimulus set under ``laion_fmri.splits``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 108-121
+The data backing these splits is bundled with the package, so
+the helpers below work offline; no bucket round-trip and no
+subject data needs to be on disk.
+
+.. GENERATED FROM PYTHON SOURCE LINES 147-161
 
 .. code-block:: Python
 
@@ -266,6 +299,7 @@ baselines without re-running any clustering or sampling.
         load_split,
     )
 
+    # list the available pools, splits, and OOD types
     print(f"Pools:     {list_pools()}")
     print(f"Splits:    {list_splits()}")
     print(f"OOD types: {list_ood_types()}")
@@ -285,21 +319,25 @@ baselines without re-running any clustering or sampling.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-129
+.. GENERATED FROM PYTHON SOURCE LINES 162-172
 
 Inspect one split
-------------------
+-----------------
 
-``load_split(name, pool=...)`` returns a ``Split`` describing the
-split's sizes and family. ``get_train_test_ids`` is the
-convenience wrapper that gives you the actual ID lists in one
-call.
+Once a split has been picked, two helpers cover the common
+uses. ``load_split(name, pool=...)`` returns a ``Split``
+object describing the split's sizes and family, useful when
+the analysis needs to log what was used.
+``get_train_test_ids`` is the matching shortcut. It returns
+the actual train and test ID lists in one call, ready to be
+used to filter the metadata table or beta arrays downstream.
 
-.. GENERATED FROM PYTHON SOURCE LINES 129-140
+.. GENERATED FROM PYTHON SOURCE LINES 172-185
 
 .. code-block:: Python
 
 
+    # load and inspect one split
     split = load_split("random_0", pool="shared")
     print(f"Split:    {split.name}")
     print(f"Pool:     {split.pool}")
@@ -307,6 +345,7 @@ call.
     print(f"n_train:  {split.n_train}")
     print(f"n_test:   {split.n_test}")
 
+    # fetch the matching train / test ID lists
     train_ids, test_ids = get_train_test_ids("random_0", pool="shared")
     print(f"Loaded:   {len(train_ids)} train / {len(test_ids)} test ids")
 
@@ -321,27 +360,31 @@ call.
     Split:    random_0
     Pool:     shared
     Family:   random
-    n_train:  896
-    n_test:   225
-    Loaded:   896 train / 225 test ids
+    n_train:  897
+    n_test:   224
+    Loaded:   897 train / 224 test ids
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 141-147
+.. GENERATED FROM PYTHON SOURCE LINES 186-195
 
 OOD splits with a type filter
-------------------------------
+-----------------------------
 
-The ``ood`` split partitions held-out stimuli by category; the
-``ood_types=`` argument restricts which categories are kept in the
-test set.
+A particularly useful split family is ``ood``, since it partitions
+the test set by stimulus category, so models can be evaluated
+on the categories the training data did not contain. For
+focused analyses on one category at a time, the
+``ood_types=`` argument restricts which category labels are
+kept on the test side; everything else is dropped.
 
-.. GENERATED FROM PYTHON SOURCE LINES 147-153
+.. GENERATED FROM PYTHON SOURCE LINES 195-202
 
 .. code-block:: Python
 
 
+    # restrict the OOD test set to a single category
     _, test_shape = get_train_test_ids(
         "ood", pool="shared", ood_types=["shape"],
     )
@@ -360,41 +403,65 @@ test set.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-164
+.. GENERATED FROM PYTHON SOURCE LINES 203-219
 
-Per-subject queries
---------------------
+Per-subject queries that need local data
+----------------------------------------
 
-:doc:`plot_01_quickstart` downloaded ``sub-01 / ses-01`` to the
-shared data directory, so the per-subject accessors below run
-without a re-fetch. If you are running this example in
-isolation, call ``download(subject="sub-01", ses="ses-01")``
-first. To also pull raw multi-echo BOLD and events files, add
-``include_raw=True`` or use
-:func:`~laion_fmri.download.download_raw`.
+The cells above answer "what is available?" without touching
+the disk. Once the analysis commits to a specific subject,
+the questions shift to "what does this subject's data
+actually look like?", such as which sessions, which runs,
+which voxels, which stimuli. That second class of question is
+answered by :class:`~laion_fmri.subject.Subject`, and the
+methods read on-disk files rather than the bucket.
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-183
+The cells below reuse the ``sub-01 / ses-01`` data that
+:doc:`plot_01_quickstart` already downloaded into the shared
+data directory; if plot_03 is being run in isolation, run
+plot_01 first (or call ``download(subject="sub-01",
+ses="ses-01")`` directly).
+
+.. GENERATED FROM PYTHON SOURCE LINES 219-256
 
 .. code-block:: Python
 
 
     from laion_fmri.subject import load_subject
 
+    # load the subject
     sub = load_subject(SUBJECT)
 
-    # Sessions present on disk
-    print(sub.get_sessions())
+    # list the sessions present on disk
+    print(f"Sessions on disk: {sub.get_sessions()}")
 
-    # Trial info: runs, repetitions, stimulus labels
+    # fetch the trial info (runs, repetitions, stimulus labels);
+    # columns include: session, run, beta_index, label
     trials = sub.get_trial_info(session="ses-01")
-    # columns: session, run, beta_index, label
-    print(trials.columns.tolist())
-    print(trials["run"].unique())
-    print(len(trials))
+    print(f"Trial-info columns: {trials.columns.tolist()}")
+    print(f"Runs in ses-01:     {trials['run'].unique()}")
+    print(f"Trials in ses-01:   {len(trials)}")
 
-    # Single-trial betas for one ROI
-    betas = sub.get_betas(session="ses-01", roi="FFA1")
-    print(f"FFA1 betas shape: {betas.shape}")
+    # load single-trial betas with the multi-level ROI grammar.
+    # Shapes are (n_trials, n_voxels), voxel count depends on
+    # the ROI (or ROI union for category / 'all' queries).
+    betas_one = sub.get_betas(session="ses-01", roi="FFA1")
+    betas_face = sub.get_betas(session="ses-01", roi="face")
+    betas_all = sub.get_betas(session="ses-01", roi="all")
+    print(f"FFA1 betas:      {betas_one.shape}")
+    print(f"face union:      {betas_face.shape}")
+    print(f"all-ROI union:   {betas_all.shape}")
+
+    # load multi-format ROI data. ``roi["FFA1"]`` is a nested dict:
+    # {
+    #   "volume": <1-D bool>,
+    #   "gii": {"hemi-L": {"func.gii": ..., "label": ...},
+    #           "hemi-R": {...}},
+    # }
+    roi = sub.get_roi_data("FFA1", format="all", hemi="all")
+    print(f"ROI keys:        {list(roi.keys())}")
+    print(f"FFA1 formats:    {list(roi['FFA1'].keys())}")
+    print(f"FFA1 gii hemis:  {list(roi['FFA1']['gii'].keys())}")
 
 
 
@@ -404,29 +471,40 @@ first. To also pull raw multi-echo BOLD and events files, add
 
  .. code-block:: none
 
-    ['ses-01']
-    ['session', 'run', 'beta_index', 'label']
-    [ 1  2  3  4  5  6  7  8  9 10 11 12]
-    1044
-    FFA1 betas shape: (1044, 222)
+    Sessions on disk: ['ses-01']
+    Trial-info columns: ['session', 'run', 'beta_index', 'label']
+    Runs in ses-01:     [ 1  2  3  4  5  6  7  8  9 10 11 12]
+    Trials in ses-01:   1044
+    FFA1 betas:      (1044, 222)
+    face union:      (1044, 1100)
+    all-ROI union:   (1044, 16569)
+    ROI keys:        ['FFA1']
+    FFA1 formats:    ['volume', 'gii']
+    FFA1 gii hemis:  ['hemi-L', 'hemi-R']
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-190
+.. GENERATED FROM PYTHON SOURCE LINES 257-268
 
 Cross-subject discovery
-------------------------
+-----------------------
 
-Loop ``get_subjects()`` to ask the same questions of every subject
-in the bucket. ROI counts can differ across subjects (some ROIs
-don't exist for everyone).
+The same discovery helpers can be applied at scale by looping
+over the full subject list. This is the right pattern for
+sanity checks across the cohort, for instance confirming
+that an ROI the analysis depends on actually exists for every
+subject. The cell below uses it to print per-subject ROI
+totals and face-area counts; ROI counts can differ across
+subjects, so a quick scan like this catches the difference
+before it surfaces in a downstream model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 190-196
+.. GENERATED FROM PYTHON SOURCE LINES 268-275
 
 .. code-block:: Python
 
 
+    # count total / face ROIs per subject
     for sub_id in get_subjects():
         n_face = len(get_rois(sub_id, category="face"))
         n_total = len(get_rois(sub_id))
@@ -449,45 +527,45 @@ don't exist for everyone).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 197-215
+.. GENERATED FROM PYTHON SOURCE LINES 276-297
 
 Stimulus metadata
-------------------
+-----------------
 
-Trial-level stimulus metadata is exposed as a
-``pandas.DataFrame`` via the ``Subject.metadata`` property, with
-one row per single-trial beta, indexed by global trial index
-(``0 .. n_total_trials-1``). Columns combine the per-session
-trial info with derived fields like ``image_name``, ``session``,
-``session_trial``, ``stim_idx``, and ``unique_or_shared``. To
-read the raw BIDS ``events.tsv`` directly (``onset``,
-``duration``, ``trial_type``, etc.), use
-:meth:`~laion_fmri.subject.Subject.get_events` after a
-``download_raw(...)`` fetch (see :doc:`plot_04_loading`).
+The final question is usually about the stimuli themselves:
+which image was shown on which trial, which trials are shared
+across subjects, which session a given trial belongs to. The
+``Subject.metadata`` property is the answer, a
+``pandas.DataFrame`` with one row per single-trial beta,
+indexed by global trial index (``0 .. n_total_trials-1``).
 
-``Subject.metadata`` joins the trial table against the stimulus
-metadata CSV, so it needs the stimulus archive on disk. Use
-``has_stimuli()`` as a guard when the archive may not have been
-fetched yet.
+The columns combine the per-session events TSV with derived
+fields like ``image_name``, ``session``, ``session_trial``,
+``stim_idx``, and ``unique_or_shared``, which makes it the
+natural pivot table for aligning betas, stimuli, and splits.
+The same table is used in :doc:`plot_04_loading` to pair
+betas with images.
 
-.. GENERATED FROM PYTHON SOURCE LINES 215-229
+This reads ``sub-01`` from the shared data directory that
+:doc:`plot_01_quickstart` populates; if plot_03 is being run
+in isolation, run plot_01 first (or call ``download(...)``
+directly).
+
+.. GENERATED FROM PYTHON SOURCE LINES 297-308
 
 .. code-block:: Python
 
 
-    if sub.has_stimuli():
-        df = sub.metadata
-        print(df.head())
-        print(f"Total trials: {len(df)}")
-        shared = (df["unique_or_shared"] == "shared").sum()
-        print(f"Shared:       {shared}")
-        print(f"Per session:  {df['session'].value_counts().to_dict()}")
-    else:
-        print(
-            "Stimulus metadata not on disk; call "
-            "`download_stimuli()` (or `download(..., include_stimuli=True)`) "
-            "to populate the archive, then re-run this cell."
-        )
+    from laion_fmri.subject import load_subject
+
+    # load the subject and inspect the metadata table
+    sub = load_subject(SUBJECT)
+    df = sub.metadata
+    print(df.head())
+    print(f"Total trials: {len(df)}")
+    shared = (df["unique_or_shared"] == "shared").sum()
+    print(f"Shared:       {shared}")
+    print(f"Per session:  {df['session'].value_counts().to_dict()}")
 
 
 
@@ -514,7 +592,7 @@ fetched yet.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 15.719 seconds)
+   **Total running time of the script:** (6 minutes 56.043 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:

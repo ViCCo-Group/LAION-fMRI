@@ -32,7 +32,24 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=2.0", "torchvision>=0.15"]
+torch = [
+    # Intel Mac (x86_64 darwin): PyTorch dropped x86_64 macOS
+    # wheels from 2.3 onward, so cap torch < 2.3 / torchvision <
+    # 0.18 to keep installs resolvable. torch 2.2.x was built
+    # against numpy 1.x, so also pin numpy < 2 here -- otherwise
+    # ``torch.tensor(np_array)`` for a numpy >= 2 array raises
+    # ``Could not infer dtype of numpy.float32``. All three pins
+    # apply together on Intel Mac so the [torch] extra installs a
+    # working triple.
+    "torch>=2.0,<2.3; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "torchvision>=0.15,<0.18; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "numpy<2; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    # Other platforms (Linux x86_64 / aarch64, Apple Silicon, Win):
+    # modern torch wheels exist and are built against numpy 2.x,
+    # so resolve unconstrained beyond the floor.
+    "torch>=2.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "torchvision>=0.15; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+]
 bids = ["pybids>=0.16"]
 # Template-space transforms: T1w volume -> MNI305 / fsaverage via
 # the FreeSurfer recon ``Subject.to_template`` reads.

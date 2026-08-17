@@ -16,6 +16,7 @@ Download
        suffix=None,              # str | list, e.g. "statmap"
        extension=None,           # str | list, e.g. "nii.gz"
        include_stimuli=False,    # also pull the stimuli
+       include_embeddings=False, # also pull stimulus embeddings
        include_freesurfer=False, # also pull derivatives/freesurfer/
        include_anatomical=False, # also pull derivatives/anatomical/
        include_raw=False,        # also pull raw BIDS tree (sub-XX/)
@@ -36,6 +37,12 @@ Arguments
   single HDF5 covering all subjects), so this just calls
   :func:`download_stimuli` after the per-subject fetch. See
   :doc:`access`.
+* ``include_embeddings`` additionally fetches the dataset-wide
+  stimulus embeddings after the fMRI download. Pass ``True``
+  for every shipped model, or a model label / list of labels
+  to narrow (e.g. ``include_embeddings="clip"``). Defaults to
+  ``False`` (skip embeddings). Calls
+  :func:`download_embeddings` under the hood.
 * ``include_freesurfer=True`` pulls the per-subject FreeSurfer
   recon under ``derivatives/freesurfer/{subject}/`` (a few
   hundred MB per subject). Required by ``Subject.to_template``;
@@ -74,9 +81,9 @@ Filter semantics
    download(subject="sub-03", ses=["ses-01", "averages"])    # both
 
 The subject-level mean-R^2 file is automatically included
-whenever ``ses`` filters to specific sessions -- the loader
-needs it to derive the brain mask, so the strict ``ses``
-filter doesn't drop it.
+whenever ``ses`` filters to specific sessions, since the
+loader needs it to derive the brain mask. The strict ``ses``
+filter therefore doesn't drop it.
 
 Idempotent re-runs
 ==================
@@ -104,8 +111,8 @@ of 4 typically opens ~40 concurrent S3 connections.
 Bad inputs (``n_jobs=0``, negative, very large, non-int) are
 detected, warn, and fall back to a working value.
 
-``n_jobs`` does not affect the stimuli — it's a single
-HDF5 streamed sequentially.
+``n_jobs`` does not affect the stimuli; the stimuli are a
+single HDF5 streamed sequentially.
 
 Raw BIDS downloads
 ==================
@@ -155,9 +162,9 @@ one echo, or magnitude vs. phase-encoded companion files.
 Stimulus-side downloads
 =======================
 
-Everything attached to the stimulus images -- the JPEGs themselves,
+Everything attached to the stimulus images (the JPEGs themselves,
 the pretrained embeddings, the object-segmentation masks, and the
-captions -- is dataset-wide (one set of files for all subjects), so
+captions) is dataset-wide (one set of files for all subjects), so
 each comes with its own subject-independent download function.
 
 .. list-table::
@@ -177,7 +184,7 @@ each comes with its own subject-independent download function.
    * - :func:`download_embeddings`
      - ``download-embeddings``
      - No (CC0)
-     - One HDF5 per pretrained model -- CLIP, DINOv2, PEcore,
+     - One HDF5 per pretrained model: CLIP, DINOv2, PEcore,
        SigLIP2 (~50 MB each, ~210 MB total).
    * - :func:`download_segmentations`
      - ``download-segmentations``
@@ -189,8 +196,8 @@ each comes with its own subject-independent download function.
      - No (CC0)
      - One CSV with human + AI captions per stimulus.
 
-All four are independent -- you only need ``download_stimuli`` first
-if you want to load images themselves. The public auxiliaries
+All four are independent; you only need ``download_stimuli`` first
+if you want to load the images themselves. The public auxiliaries
 (``download_embeddings``, ``download_segmentations``,
 ``download_captions``) need no DUA and pull anonymously over public
 S3.

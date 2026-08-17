@@ -15,14 +15,14 @@ responsibility.
 
 Two brain masks are available:
 
-* ``source="anatomical"`` *(default)* -- the
+* ``source="anatomical"`` *(default)*: the
   anatomically-derived brain mask shipped under
   ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/
   ..._res-1pt8_desc-brain_mask.nii.gz``. Wider than the
   rsquare-derived mask (it includes voxels with no GLMsingle
   signal too). Requires
   ``download(include_anatomical=True)``.
-* ``source="rsquare"`` -- derived on the fly from
+* ``source="rsquare"``: derived on the fly from
   the subject-level mean-R^2 map
   (``..._stat-rsquare_desc-R2mean_statmap.nii.gz``). Voxels
   with any non-zero GLMsingle fit are considered "in brain".
@@ -39,7 +39,7 @@ voxel axis (within one ``source``).
    sub.get_brain_mask(res=None)               # full-resolution anat mask
    sub.get_n_voxels(source="rsquare")         # n voxels under rsquare
 
-``res`` defaults to ``"1pt8"`` -- the functional grid -- so the
+``res`` defaults to ``"1pt8"`` (the functional grid), so the
 returned mask aligns with the voxel axis of ``get_betas`` and
 ``get_noise_ceiling`` and with the rsquare-derived mask. Pass
 ``res=None`` to read the full-resolution anatomical mask
@@ -77,17 +77,17 @@ Core accessors
 Filters on ``get_betas``
 ========================
 
-* ``roi="..."`` or list -- ROI mask(s); see "ROI queries"
+* ``roi="..."`` or list: ROI mask(s); see "ROI queries"
   below for the full grammar.
-* ``mask=ndarray[bool]`` -- custom voxel mask.
-* ``nc_threshold=0.2`` -- keep voxels whose per-session noise
+* ``mask=ndarray[bool]``: custom voxel mask.
+* ``nc_threshold=0.2``: keep voxels whose per-session noise
   ceiling exceeds the threshold.
-* ``stimuli="shared"`` / ``"unique"`` -- restrict to trials
+* ``stimuli="shared"`` / ``"unique"``: restrict to trials
   whose stimulus is in the shared/unique subset.
 * ``streaming=False`` (default) materializes the full 4-D
   NIfTI in RAM and then masks it. One-shot decompression of
   the ``.nii.gz``, fastest when memory is plentiful, but peak
-  RAM is the full file plus the masked output -- roughly
+  RAM is the full file plus the masked output, roughly
   12 GB for a real session.
 * ``streaming=True`` reads the file volume-by-volume and
   applies the combined brain + ROI + NC mask inline. Peak
@@ -102,15 +102,15 @@ ROI queries
 
 ROI inputs accept three forms (or a list mixing them):
 
-* ``"FFA1"``  -- a specific ROI name.
-* ``"face"``  -- every ROI in that category (the bucket groups
+* ``"FFA1"``: a specific ROI name.
+* ``"face"``: every ROI in that category (the bucket groups
   ROIs into ``body``, ``character``, ``face``, ``laion``,
   ``motion``, ``object``, ``place``, ``retinotopy``).
-* ``"all"``   -- every ROI for the subject.
+* ``"all"``: every ROI for the subject.
 
 Categories and ROI names are disjoint, so a single string
 disambiguates by lookup. Pass a list to combine several at
-once -- overlapping voxels appear only once in the result.
+once; overlapping voxels appear only once in the result.
 
 .. code-block:: python
 
@@ -173,7 +173,7 @@ Multi-session results
 Pass a list to any session-keyed accessor and you get a
 ``dict`` keyed by session ID, never a stacked array. Trial
 counts can differ per session, so a regular ndarray would be
-unsafe -- you stack yourself only when you know shapes match.
+unsafe, so you stack yourself only when you know shapes match.
 
 Multi-subject access
 ====================
@@ -192,7 +192,7 @@ Brain-space mapping
 
 .. code-block:: python
 
-   sub.to_nifti(per_voxel_array, "/tmp/out.nii.gz")
+   sub.to_nifti(per_voxel_array, "/path/to/out.nii.gz")
    sub.get_voxel_coordinates()                 # (n_voxels, 3)
 
 For projecting subject-T1w-space values onto fsaverage or MNI
@@ -243,7 +243,7 @@ of thumb:
   that's roughly 1 GB per call. Doable for one session on a
   laptop; multiplying by 30+ sessions per subject quickly
   reaches many tens of GB. Always pass an ``roi=`` filter when
-  you can -- it cuts memory by 1-2 orders of magnitude.
+  you can, it cuts memory by 1-2 orders of magnitude.
 * **ROI filters cut memory dramatically.** ``roi="visual"``
   typically reduces voxel count by an order of magnitude;
   combining with ``nc_threshold`` reduces it further.
@@ -255,7 +255,7 @@ of thumb:
   ``get_betas`` returns a ``dict[ses, ndarray]``. All sessions
   share the same brain mask within a subject, so the voxel
   axis matches and ``np.concatenate(list(out.values()),
-  axis=0)`` is the right stack -- you just have to align
+  axis=0)`` is the right stack; you just have to align
   trial-level metadata yourself when you do.
 
 PyTorch users: ``to_torch_dataset(...)`` exposes the same
@@ -265,8 +265,8 @@ proportional to batch size rather than the dataset.
 Per-trial stimulus access
 =========================
 
-For most analyses you don't want to talk to the stimulus set directly
--- you want, *for the trials this subject saw*, the images,
+For most analyses you don't want to talk to the stimulus set directly;
+you want, *for the trials this subject saw*, the images,
 embeddings, captions, or segmentation masks aligned to the betas. The
 ``Subject`` exposes those four modalities as namespaces, each keyed by
 **global trial index** (a row of :attr:`Subject.metadata`):
@@ -288,7 +288,7 @@ embeddings, captions, or segmentation masks aligned to the betas. The
 
    sub.embeddings.models                       # ['CLIP', 'DINOv2', ...]
    sub.embeddings.get("CLIP", 42)              # (D,) features for trial 42
-   sub.embeddings.all("CLIP")                  # (n_trials, D) — ready to regress
+   sub.embeddings.all("CLIP")                  # (n_trials, D), ready to regress
    sub.embeddings.all("CLIP", session="ses-01")
 
    sub.segmentations.nouns(42)                 # ['hand', 'piano', ...]
@@ -302,7 +302,7 @@ so the rows of ``sub.embeddings.all("CLIP")`` line up one-to-one with
 the rows of ``sub.get_betas(session=None)`` concatenated across
 sessions. That's the regression workflow in one expression.
 
-Single concrete example — fit CLIP features to betas:
+Single concrete example, fitting CLIP features to betas:
 
 .. code-block:: python
 
@@ -322,7 +322,7 @@ Single concrete example — fit CLIP features to betas:
 
    # Standard regression from here...
 
-Another typical pattern — pull masks only for shared-image trials,
+Another typical pattern: pull masks only for shared-image trials,
 since masks ship only for the shared set:
 
 .. code-block:: python
@@ -350,7 +350,7 @@ Stimuli: images, embeddings, segmentations (dataset-wide)
 The same modalities are also reachable through a dataset-wide hub,
 :func:`load_stimuli`, keyed by ``image_name`` rather than trial index.
 Use this when you want the full stimulus set independent of any
-subject's trial ordering -- e.g. computing similarity matrices on all
+subject's trial ordering, e.g. computing similarity matrices on all
 1,492 shared images, or pulling embeddings for arbitrary names.
 
 .. code-block:: python
@@ -421,7 +421,7 @@ CLI equivalents: ``laion-fmri download-stimuli``,
    Segmentations cover the **shared** stimulus set only (1,492 images
    viewed by every subject); subject-unique images carry no masks.
    The listing methods (``nouns``, ``for_image``, ``has_image``)
-   return empty results -- not errors -- for uncovered images, so
+   return empty results (not errors) for uncovered images, so
    loops across all trials need no special-casing.
 
    Captions cover every stimulus image with human captions: shared
@@ -431,7 +431,7 @@ CLI equivalents: ``laion-fmri download-stimuli``,
    ``None`` for unique-image and OOD trials.
 
 See :doc:`/stimulus_data` for the per-model embedding details
-(feature dimensions, normalisation, exact model identifiers) and a
+(feature dimensions, normalization, exact model identifiers) and a
 deeper tour of the segmentation file layout.
 
 Common workflow: per-session z-scoring + train/test split
@@ -473,7 +473,7 @@ prefer it without the manual ``label`` parse:
    test = sub.get_betas(session=ses, stimuli="shared")
 
 For ROI-restricted variants, add ``roi="visual"`` (or any
-``mask=`` / ``nc_threshold=`` filter) to the same calls --
+``mask=`` / ``nc_threshold=`` filter) to the same calls;
 voxel selection composes naturally and applies before the
 z-score.
 
@@ -539,7 +539,7 @@ The package raises a small, named exception hierarchy from
    Raised by ``download`` / ``accept_licenses`` when the
    dataset license is declined.
 
-Plain ``ValueError`` covers narrower mistakes -- for example,
+Plain ``ValueError`` covers narrower mistakes, for example
 asking ``get_betas`` for both ``roi`` and ``mask`` at once,
 passing an unknown ROI name, or specifying neither ``session``
 nor ``desc`` to ``get_noise_ceiling``.

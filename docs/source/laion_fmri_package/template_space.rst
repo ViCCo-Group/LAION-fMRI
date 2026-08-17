@@ -14,11 +14,11 @@ Template space
 a volume or surface template space using the FreeSurfer recon
 that ships with each subject. Two chains:
 
-* **Volume chain** -- T1w volume to MNI305 via
+* **Volume chain**: T1w volume to MNI305 via
   ``mri/transforms/talairach.lta`` (FreeSurfer's linear T1w to
   MNI305 affine; the ``talairach`` filename is historical and
   refers to MNI305, not true Talairach space).
-* **Surface chain** -- T1w volume to fsnative surface via
+* **Surface chain**: T1w volume to fsnative surface via
   ``nilearn.surface.vol_to_surf`` on the recon's white / pial
   meshes, then fsnative to fsaverage via
   ``nitransforms.surface.SurfaceResampler`` on the recon's
@@ -77,7 +77,7 @@ Volumetric accuracy
 The MNI305 hop is a 12-parameter linear affine from the
 subject's FreeSurfer recon (``mri/transforms/talairach.lta``).
 For sub-millimetre cortical alignment, prefer the
-``"fsaverage"`` surface target -- surface registration via the
+``"fsaverage"`` surface target: surface registration via the
 recon's ``sphere.reg`` aligns by cortical topology and is much
 sharper than any volumetric affine at the cortical sheet.
 
@@ -141,7 +141,7 @@ up front:
 array (with ``hemi="L"`` or ``"R"``) or a ``{"L": ..., "R": ...}``
 dict; the return shape matches the input shape. The input
 array's length must equal the recon's fsnative vertex count
-for that hemisphere -- a ``ValueError`` is raised otherwise.
+for that hemisphere, otherwise a ``ValueError`` is raised.
 
 Writing BIDS-conformant files
 =============================

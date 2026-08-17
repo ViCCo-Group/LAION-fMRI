@@ -11,7 +11,7 @@ LAION-fMRI has two release tracks with different rules:
   CC0. We give them to you only after you accept a short **Data Use
   Agreement** (DUA): https://laion-fmri.hebartlab.com/terms.
 
-Most of this page is about the DUA flow — the CC0 prompt is a single
+Most of this page is about the DUA flow, the CC0 prompt is a single
 ``"I AGREE"``.
 
 ------------------------------------------------------------
@@ -53,7 +53,7 @@ If you decline, the package raises
 The DUA flow (stimulus images)
 ==============================
 
-The stimulus images come from third-party web sources — we don't own
+The stimulus images come from third-party web sources, we don't own
 them. To give them to you we ask you to accept a short Data Use
 Agreement first. There's no login, no password, no email
 verification. You fill in a short form once; the ``laion_fmri``
@@ -81,7 +81,7 @@ description of your research purpose. The prompt links to both the
 Terms of Use and Privacy notice; type ``yes`` to accept the Terms and
 acknowledge the Privacy notice, and the download starts (~3 GB).
 
-Running the command again later just re-downloads what's missing — no
+Running the command again later just re-downloads what's missing, no
 form to re-fill.
 
 Reading the images
@@ -99,7 +99,7 @@ For the full API see :doc:`load`. The short version:
 Together with fMRI in one call
 ------------------------------
 
-Pass ``include_stimuli=True`` to the regular ``download()`` — the fMRI
+Pass ``include_stimuli=True`` to the regular ``download()``; the fMRI
 part runs first, the stimuli after:
 
 .. code-block:: python
@@ -133,14 +133,14 @@ You only need access state on the cluster if you also want to
 *re-download* there (e.g. after a dataset release update). In that
 case set the ``LAION_FMRI_REQUEST_ID`` environment variable to the
 value you can find in ``~/.cache/laion-fmri/auth.json`` on your
-laptop — but most workflows don't need this.
+laptop, but most workflows don't need this.
 
 If something goes wrong
 -----------------------
 
 * **We've updated the DUA.** The package prints a URL; open it, click
   *I accept*, and re-run the command.
-* **The download was interrupted.** Just run the command again — it
+* **The download was interrupted.** Just run the command again, it
   picks up where it left off.
 * **Anything else.** Open an issue on
   `GitHub <https://github.com/ViCCo-Group/LAION-fMRI/issues>`__. For
@@ -158,7 +158,7 @@ purpose) and a record of which files we sent you and when.
 
 **What we don't keep.** Your IP address or anything about your browser.
 
-**What we never do.** Send you email — there's no email verification,
+**What we never do.** Send you email. There's no email verification,
 no newsletter, no automated notifications.
 
 **What happens to your record over time.** After a year with no
@@ -166,5 +166,5 @@ downloads we automatically anonymise your form submission: name,
 email, institution, supervisor and research purpose are dropped while
 a minimal audit row (which files were sent, when) stays for governance.
 
-The full privacy notice — including the data-controller contact — is
+The full privacy notice, including the data-controller contact, is
 at https://laion-fmri.hebartlab.com/privacy.
