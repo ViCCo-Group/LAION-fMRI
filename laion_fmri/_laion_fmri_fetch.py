@@ -467,10 +467,10 @@ def _download_raw_prefix(
     """Walk ``sub-{subject}/`` (raw BIDS root) with BIDS filters applied.
 
     Shared by :func:`fetch_laion_fmri` (additive) and
-    :func:`fetch_laion_fmri_raw` (raw-only). Held-out sessions and
-    JSON sidecar handling reuse the generic ``_filtered_download``
-    machinery -- both are token-based so raw keys are handled
-    correctly without further changes.
+    :func:`fetch_laion_fmri_raw` (raw-only). Held-out session
+    filtering and JSON sidecar handling reuse the generic
+    ``_filtered_download`` machinery; both operate on BIDS-entity
+    tokens so raw keys are handled by the same path.
     """
     return _filtered_download(
         bucket, f"{subject}/",
@@ -490,12 +490,12 @@ def fetch_laion_fmri_raw(
     extension=None,
     n_jobs=1,
 ):
-    """Download raw BIDS files for one subject (no derivatives).
+    """Download raw BIDS files for one subject.
 
-    Walks ``sub-{subject}/`` on the S3 bucket, applying the same
-    BIDS-entity filter machinery used by
-    :func:`fetch_laion_fmri`. Held-out sessions
-    (``HELD_OUT_SESSIONS``) are excluded automatically.
+    Walks ``sub-{subject}/`` on the S3 bucket and applies the same
+    BIDS-entity filter grammar as :func:`fetch_laion_fmri`.
+    Held-out sessions (``HELD_OUT_SESSIONS``) are excluded
+    automatically.
 
     Parameters
     ----------

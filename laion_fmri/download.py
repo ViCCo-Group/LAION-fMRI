@@ -598,8 +598,7 @@ def download(
         Hundreds of GB per subject when unfiltered. Combine with
         ``ses`` / ``run`` / ``echo`` / ``part`` / ``suffix`` /
         ``extension`` filters to narrow. Use
-        :func:`download_raw` when you want the raw files without
-        the default derivative walk.
+        :func:`download_raw` for a raw-only fetch.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (AWS CLI copy subprocesses). ``1`` (default) is sequential.
@@ -677,10 +676,10 @@ def download_raw(
     extension=None,
     n_jobs=1,
 ):
-    """Download raw BIDS files for a subject (no derivatives).
+    """Download raw BIDS files for a subject.
 
-    Walks ``sub-{subject}/`` on the S3 bucket -- multi-echo BOLD,
-    sbref, per-run ``events.tsv``, fieldmaps, raw MEGRE -- and
+    Walks ``sub-{subject}/`` on the S3 bucket (multi-echo BOLD,
+    sbref, per-run ``events.tsv``, fieldmaps, raw MEGRE) and
     applies the BIDS-entity filters below to narrow the fetch. Use
     :func:`download` (with ``include_raw=True`` if needed) when
     you also want the derivative trees.
