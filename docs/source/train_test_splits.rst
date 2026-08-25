@@ -208,7 +208,7 @@ type                      n  what's in it
 ``shape``                82  abstract shape, colour and digit stimuli
 ``relations``            72  unusual spatial relations between objects
 ``unusual``              64  natural scenes with unusual content
-``cropped``              60  zoomed-in / cropped object close-ups
+``cropped``              60  isolated object cutouts with transparent backgrounds
 ``selfmade``             30  custom-shot stimuli
 ``gaudy``                24  highly saturated / patterned scenes
 ``illusion-classic``     21  textbook visual illusions

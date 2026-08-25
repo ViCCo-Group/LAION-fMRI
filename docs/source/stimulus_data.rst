@@ -11,12 +11,12 @@ procedure that promotes uniform coverage of CLIP feature space.
 Selection was anchored in two established neuroimaging benchmarks by
 incorporating images from the Natural Scenes Dataset (NSD;
 Allen et al., 2022) and from THINGS / THINGSplus (Hebart et al., 2019;
-Stoinski et al., 2024). The THINGS / THINGSplus images additionally
-overlap with the THINGS-data EEG + fMRI release (Hebart et al., 2023),
-so analyses on the LAION-fMRI shared set can be compared against
-results from that dataset as well. The shared set is supplemented with
+Stoinski et al., 2024). The original THINGS images additionally overlap
+with the THINGS fMRI / MEG release (Hebart et al., 2023), so analyses on
+the LAION-fMRI shared set can be compared against results from that
+dataset as well. The shared set is supplemented with
 a 371-image out-of-distribution (OOD) test set - visual illusions,
-Gabor patches, shape stimuli, cropped textures, and similarly unusual
+Gabor patches, shape stimuli, isolated object cutouts, and similarly unusual
 configurations - intended as a stress test for encoding and decoding
 models trained on the natural-image pool.
 
@@ -59,8 +59,7 @@ the main experiment; the full selection procedure is in
    * - THINGSplus
      - 240
      - 12
-     - CC0 object photographs from the THINGSplus extension; the same images
-       appear in the THINGS-data EEG + fMRI release
+     - CC0 object photographs from the THINGSplus extension
    * - NSD
      - 240
      - 4
@@ -68,7 +67,7 @@ the main experiment; the full selection procedure is in
    * - OOD
      - 371
      - 4
-     - Visual illusions, Gabor patches, cropped textures, shape stimuli,
+     - Visual illusions, Gabor patches, isolated object cutouts, shape stimuli,
        unusual spatial configurations, gaudy patterns
 
 .. list-table:: Subject-unique set (4,712 images per participant, sampled disjointly across the five participants)
@@ -87,12 +86,11 @@ the main experiment; the full selection procedure is in
      - 144
      - 4
      - Object photographs from the original THINGS database; also
-       present in the THINGS-data EEG + fMRI release
+       present in the THINGS fMRI / MEG release
    * - THINGSplus
      - 322
      - 4
-     - Additional CC0 object photographs from THINGSplus; also present in
-       the THINGS-data EEG + fMRI release
+     - Additional CC0 object photographs from THINGSplus
 
 Across all five participants the experiment encompasses **25,052
 distinct images** (1,492 shared + 5 × 4,712 unique). For cross-subject
@@ -103,10 +101,28 @@ set is available.
 Image Format
 ============
 
-All stimulus images are **1000 × 1000 px, RGB, JPEG-encoded**. They are
-stored as raw JPEG byte arrays inside ``task-images_stimuli.h5`` in the
-same row order as ``task-images_metadata.csv``; the package resolves
-image names to rows and decodes images on access.
+All stimulus images are **1000 × 1000 px**. The archive contains
+**24,921 RGB JPEGs** and **131 RGBA PNGs**. All PNGs belong to the OOD
+set. They are stored as raw encoded byte arrays inside
+``task-images_stimuli.h5`` in the same row order as
+``task-images_metadata.csv``; the package resolves image names to rows
+and decodes images on access.
+
+The PsychoPy window used its default middle-grey background
+(``color=(0, 0, 0)`` in PsychoPy's ``rgb`` colour space, equivalent to
+0.5 per channel in normalized RGB). During presentation, transparent
+and partially transparent PNG pixels were alpha-composited over that
+background. Decoded image access reconstructs the three-channel image
+shown in the scanner by default. Pass ``as_displayed=False`` to preserve
+the original image mode and RGBA data:
+
+.. code-block:: python
+
+   displayed_image = stim.images.get(name)                 # RGB
+   original_image = stim.images.get(name, as_displayed=False)  # RGB or RGBA
+
+The PyTorch dataset and the stacked NumPy image accessors apply this
+presentation composite automatically.
 
 Where the source image was not already square, the 1000 × 1000 region
 was selected with **DeepGaze** (Kümmerer et al.): for each candidate
@@ -134,8 +150,8 @@ distribution. The set covers several visually distinct subcategories:
 * **Gabor patches** - at different orientations, spatial frequencies,
   and contrasts.
 * **Shape stimuli** - simple coloured shapes on plain backgrounds.
-* **Cropped textures** - repetitive patterns and material textures
-  with no scene context.
+* **Cropped objects** - isolated object cutouts with transparent backgrounds
+  and no scene context.
 * **Unusual spatial configurations** - objects in implausible
   positions, scale violations, etc.
 * **Gaudy / high-saturation patterns** - strongly chromatic
@@ -160,7 +176,7 @@ and one row-aligned metadata CSV:
 .. code-block:: text
 
    stimuli/
-   ├── task-images_stimuli.h5    # raw JPEG bytes, indexed by image name
+   ├── task-images_stimuli.h5    # raw encoded image bytes, indexed by name
    └── task-images_metadata.csv  # per-image metadata, row-aligned to the HDF5
 
 Derived stimulus-side files, including image embeddings, captions, and
@@ -177,7 +193,7 @@ per image, with row order aligned to ``task-images_stimuli.h5``.
 The primary key is ``image_name``. Use it to join the metadata to the
 other stimulus-side files:
 
-* ``task-images_stimuli.h5`` stores raw JPEG bytes in the same row
+* ``task-images_stimuli.h5`` stores raw encoded image bytes in the same row
   order.
 * ``task-images_desc-*_embeddings.h5`` uses ``image_ids`` values that
   match ``image_name``.
@@ -314,7 +330,7 @@ by ``sub.images``.
    trial = 42  # global row index in sub.metadata
 
    img = sub.images.get(trial)                # PIL.Image
-   raw = sub.images[trial]                    # raw JPEG bytes
+   raw = sub.images[trial]                    # raw encoded image bytes
    session_imgs = sub.images.array("ses-01")  # (n, 1000, 1000, 3) uint8
 
 See :doc:`stimulus_derivatives` for pretrained embeddings, object

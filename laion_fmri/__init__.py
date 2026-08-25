@@ -28,7 +28,7 @@ from laion_fmri.discovery import describe, get_rois, get_subjects
 from laion_fmri.embeddings import Embeddings, load_embeddings
 from laion_fmri.group import Group, load_subjects
 from laion_fmri.segmentations import Segmentations
-from laion_fmri.stimuli import Stimuli, load_stimuli
+from laion_fmri.stimuli import Stimuli, as_displayed_rgb, load_stimuli
 from laion_fmri.subject import Subject, load_subject
 
 try:
@@ -64,6 +64,7 @@ __all__ = [
     "Subject",
     "SubjectNotFoundError",
     "__version__",
+    "as_displayed_rgb",
     "dataset_initialize",
     "describe",
     "download_captions",

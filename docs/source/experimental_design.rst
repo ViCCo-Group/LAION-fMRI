@@ -223,6 +223,13 @@ image was rendered at 1000 × 1000 pixels, which corresponds to about
 visual angle. The total viewing distance was 164.8-165.7 cm (3.9-4.6 cm
 from mirror to eye, plus 161 cm from mirror to screen).
 
+The PsychoPy window used the default ``color=(0, 0, 0)`` in PsychoPy's
+``rgb`` colour space. This is middle grey (0.5 per channel in normalized
+RGB), not black. It filled the display outside the stimulus as well as
+the inter-stimulus and blank-trial background. For the 131 RGBA PNGs in
+the OOD set, transparent and partially transparent pixels were
+alpha-composited over this same background during presentation.
+
 .. list-table::
    :widths: 30 70
    :stub-columns: 1
@@ -235,6 +242,8 @@ from mirror to eye, plus 161 cm from mirror to screen).
      - 1920 × 1080 (projector); 1000 × 1000 (stimulus)
    * - Refresh rate
      - 60 Hz
+   * - Background
+     - PsychoPy ``rgb=(0, 0, 0)`` (middle grey)
    * - Viewing distance
      - 164.8-165.7 cm
    * - Visual angle (stimulus)

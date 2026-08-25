@@ -25,6 +25,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from laion_fmri.stimuli import as_displayed_rgb
+
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("atlas")
 
@@ -42,7 +44,7 @@ def collect_stimuli(root: Path) -> list[Path]:
 def square_thumbnail(path: Path, tile_size: int) -> Image.Image:
     """Center-crop to a square then resize to tile_size."""
     with Image.open(path) as im:
-        im = im.convert("RGB")
+        im = as_displayed_rgb(im)
         w, h = im.size
         side = min(w, h)
         left = (w - side) // 2

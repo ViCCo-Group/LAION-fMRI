@@ -771,17 +771,32 @@ def test_sub_images_get_returns_pil(configured_subject):
     assert isinstance(img, Image.Image)
 
 
+def test_sub_images_get_can_preserve_rgba(configured_subject):
+    img = configured_subject.images.get(0, as_displayed=False)
+    assert img.mode == "RGBA"
+
+
+def test_sub_images_get_composites_rgba_by_default(configured_subject):
+    img = configured_subject.images.get(0)
+    assert img.mode == "RGB"
+    assert img.getpixel((0, 0)) == (128, 128, 128)
+    assert img.getpixel((1, 0)) == (255, 0, 0)
+    assert img.getpixel((2, 0)) == (192, 64, 64)
+
+
 def test_sub_images_array(configured_subject):
     arr = configured_subject.images.array()
     n_total = N_SESSIONS * N_TRIALS_PER_SESSION
     assert arr.shape[0] == n_total
     assert arr.shape[3] == 3
     assert arr.dtype == np.uint8
+    assert tuple(arr[0, 0, 0]) == (128, 128, 128)
 
 
 def test_sub_images_all_session_filter(configured_subject):
     images = list(configured_subject.images.all(session="ses-01"))
     assert len(images) == N_TRIALS_PER_SESSION
+    assert images[0].mode == "RGB"
 
 
 def test_sub_images_not_downloaded_raises(tmp_path, monkeypatch):
