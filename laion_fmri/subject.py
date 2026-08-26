@@ -22,6 +22,12 @@ from laion_fmri._paths import (
     glmsingle_subject_dir,
     parse_roi_label,
     r2mean_path,
+    raw_bold_path,
+    raw_events_path,
+    raw_func_dir,
+    raw_sbref_path,
+    raw_session_dir,
+    raw_subject_dir,
     roi_freesurfer_label_path,
     roi_mask_path,
     roi_surface_path,
@@ -48,6 +54,16 @@ _VALID_FORMATS = {
     "all", "volume", "nii.gz", "gii", "func.gii", "label",
 }
 _VALID_HEMIS = {"all", "L", "R"}
+
+
+def _run_token_from_filename(name):
+    """Extract the ``run-XX`` token from a raw BIDS filename."""
+    for part in name.split("_"):
+        if part.startswith("run-"):
+            return part
+    raise ValueError(
+        f"No BIDS run token found in filename {name!r}."
+    )
 
 
 def load_subject(subject):
@@ -845,6 +861,174 @@ class Subject:
                 "include_anatomical=True)"
             )
         return path
+
+    # ── Raw BIDS access ────────────────────────────────────────
+
+    def has_raw(self, session=None):
+        """Return True if raw BIDS files exist for this subject.
+
+        Parameters
+        ----------
+        session : str or None
+            Optional BIDS session ID to narrow the probe. ``None``
+            checks the subject-level ``sub-XX/`` directory.
+        """
+        if session is None:
+            return raw_subject_dir(
+                self._data_dir, self._subject_id,
+            ).is_dir()
+        return raw_session_dir(
+            self._data_dir, self._subject_id, session,
+        ).is_dir()
+
+    def get_events(self, session, run=None):
+        """Load raw BIDS events TSV(s) for a session.
+
+        Parameters
+        ----------
+        session : str
+            BIDS session ID (e.g. ``"ses-01"``).
+        run : str, int, or None
+            BIDS run identifier. ``None`` concatenates every run
+            for the session into a single DataFrame and adds a
+            ``run`` column tagging each row.
+
+        Returns
+        -------
+        pd.DataFrame
+
+        Raises
+        ------
+        DataNotDownloadedError
+            If no matching events TSV is found.
+        """
+        if not session:
+            raise ValueError(
+                "session is required: events live per session/run "
+                "in the raw BIDS tree."
+            )
+        if run is not None:
+            path = raw_events_path(
+                self._data_dir, self._subject_id, session, run,
+            )
+            if not path.is_file():
+                raise DataNotDownloadedError(
+                    f"Raw BIDS events TSV for {self._subject_id} "
+                    f"{session} run-{run} not found at {path}. "
+                    "Run: "
+                    f"laion-fmri download-raw --subject "
+                    f"{self._subject_id} --ses {session} "
+                    f"--suffix events --extension tsv"
+                )
+            return load_tsv(path)
+
+        func_dir = raw_func_dir(
+            self._data_dir, self._subject_id, session,
+        )
+        pattern = (
+            f"{self._subject_id}_{session}_task-*_"
+            f"run-*_events.tsv"
+        )
+        matches = (
+            sorted(func_dir.glob(pattern))
+            if func_dir.is_dir()
+            else []
+        )
+        if not matches:
+            raise DataNotDownloadedError(
+                f"No raw BIDS events TSV files found for "
+                f"{self._subject_id} {session} under {func_dir}. "
+                "Run: "
+                f"laion-fmri download-raw --subject "
+                f"{self._subject_id} --ses {session} "
+                f"--suffix events --extension tsv"
+            )
+        frames = []
+        for path in matches:
+            df = load_tsv(path)
+            df["run"] = _run_token_from_filename(path.name)
+            frames.append(df)
+        return pd.concat(frames, ignore_index=True)
+
+    def get_raw_bold(
+        self, session, run, echo, part="mag",
+        mask_source="anatomical",
+    ):
+        """Load one raw multi-echo BOLD file, brain-masked.
+
+        Parameters
+        ----------
+        session : str
+        run : int or str
+            Run identifier; bare integers are zero-padded.
+        echo : int or str
+            Echo index (``1``, ``2``, ``3`` for the release
+            protocol).
+        part : ``"mag"`` (default) | ``"phase"``
+            BIDS ``part-`` entity. Magnitude is the standard input
+            for analysis; phase is the NORDIC-input companion.
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+            Which brain mask to apply on the voxel axis.
+
+        Returns
+        -------
+        np.ndarray
+            Shape ``(n_volumes, n_mask_voxels)``, dtype float32.
+
+        Raises
+        ------
+        DataNotDownloadedError
+            If the requested raw BOLD file is not on disk.
+        """
+        path = raw_bold_path(
+            self._data_dir, self._subject_id, session,
+            run=run, echo=echo, part=part,
+        )
+        if not path.is_file():
+            raise DataNotDownloadedError(
+                f"Raw BOLD file for {self._subject_id} {session} "
+                f"run-{run} echo-{echo} part-{part} not found at "
+                f"{path}. Run: "
+                f"laion-fmri download-raw --subject "
+                f"{self._subject_id} --ses {session}"
+            )
+        mask = load_nifti_mask(self._brain_mask_path(mask_source))
+        return load_nifti_4d(path, mask)
+
+    def get_sbref(
+        self, session, run, echo, part="mag",
+        mask_source="anatomical",
+    ):
+        """Load one per-echo raw single-band reference volume.
+
+        Parameters
+        ----------
+        session, run, echo, part, mask_source :
+            See :meth:`get_raw_bold`.
+
+        Returns
+        -------
+        np.ndarray
+            Shape ``(n_mask_voxels,)``, dtype float32.
+
+        Raises
+        ------
+        DataNotDownloadedError
+            If the requested sbref file is not on disk.
+        """
+        path = raw_sbref_path(
+            self._data_dir, self._subject_id, session,
+            run=run, echo=echo, part=part,
+        )
+        if not path.is_file():
+            raise DataNotDownloadedError(
+                f"Raw sbref file for {self._subject_id} {session} "
+                f"run-{run} echo-{echo} part-{part} not found at "
+                f"{path}. Run: "
+                f"laion-fmri download-raw --subject "
+                f"{self._subject_id} --ses {session}"
+            )
+        return load_nifti_data(path, self._brain_mask_path(mask_source))
 
     @property
     def metadata(self):

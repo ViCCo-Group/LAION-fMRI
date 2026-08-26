@@ -317,6 +317,15 @@
    "name": "inspect_bucket"
   }
  ],
+ "laion_fmri.download.download_raw": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri.download",
+   "name": "download_raw"
+  }
+ ],
  "laion_fmri.subject.Subject": [
   {
    "is_class": false,
@@ -331,6 +340,15 @@
    "module": "laion_fmri.subject",
    "module_short": "laion_fmri",
    "name": "Subject"
+  }
+ ],
+ "laion_fmri.subject.Subject.get_events": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject.Subject",
+   "module_short": "laion_fmri.subject.Subject",
+   "name": "get_events"
   }
  ],
  "list_ood_types": [
@@ -761,6 +779,22 @@
    "module": "laion_fmri",
    "module_short": "laion_fmri",
    "name": "Subject.get_trial_info"
+  }
+ ],
+ "sub.has_stimuli": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.subject",
+   "module_short": "laion_fmri",
+   "name": "Subject.has_stimuli"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri",
+   "module_short": "laion_fmri",
+   "name": "Subject.has_stimuli"
   }
  ],
  "sub.metadata": [

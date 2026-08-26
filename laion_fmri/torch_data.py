@@ -123,7 +123,7 @@ class LaionFMRIDataset:
         return {
             "betas": betas_tensor,
             "image": img_tensor,
-            "image_name": self._session_rows.iloc[idx]["image_name"],
+            "stimulus_id": self._session_rows.iloc[idx]["image_name"],
             "session": self._session,
             "rep_index": int(self._rep_indices[idx]),
         }

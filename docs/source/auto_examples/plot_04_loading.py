@@ -763,3 +763,32 @@ else:
         "PyTorch dataset needs stimulus images; skipping until "
         "the bucket's stimuli/ is populated."
     )
+
+# %%
+# Raw BIDS events
+# ---------------
+#
+# ``get_trial_info(session=...)`` above returns the beta-aligned
+# GLMsingle trial table, one row per beta volume, with a
+# ``label`` column that joins to the stimulus metadata. For
+# behavioural work the raw BIDS ``events.tsv`` is usually the
+# right file instead, since it carries the columns those
+# analyses depend on: ``onset``, ``duration``, ``trial_type``,
+# and per-experiment extras such as response, reaction time,
+# and stimulus onset/duration.
+#
+# Those files live under ``sub-XX/ses-XX/func/*_events.tsv``,
+# in the raw side of the dataset. The raw tree is opt-in
+# because a full raw subject is hundreds of GB; pull it with
+# ``download(subject=..., include_raw=True)`` alongside the
+# derivatives, or with
+# :func:`~laion_fmri.download.download_raw` for a raw-only
+# fetch. :meth:`~laion_fmri.subject.Subject.get_events` then
+# reads the per-run TSVs and returns a concatenated DataFrame
+# with an added ``run`` column.
+
+# load the raw BIDS events for the picked session
+events = sub.get_events(session=session)
+print(f"raw events shape: {events.shape}")
+print(f"raw events columns: {list(events.columns)}")
+print(events.head())

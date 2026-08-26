@@ -11,6 +11,7 @@ from laion_fmri._laion_fmri_fetch import (
     _is_held_out,
     _matches_filters,
     fetch_laion_fmri,
+    fetch_laion_fmri_raw,
 )
 from laion_fmri._errors import NoMatchingDataError
 
@@ -1021,3 +1022,316 @@ def test_fetch_reraises_non_access_denied_errors(
 
     with pytest.raises(subprocess.CalledProcessError):
         fetch_laion_fmri(str(tmp_path), subject="sub-01")
+
+
+# ── raw BIDS fetch ──────────────────────────────────────────────
+
+
+RAW_BOLD_KEY = (
+    "sub-03/ses-01/func/"
+    "sub-03_ses-01_task-images_run-01_echo-1_part-mag_bold.nii.gz"
+)
+RAW_BOLD_JSON_KEY = (
+    "sub-03/ses-01/func/"
+    "sub-03_ses-01_task-images_run-01_echo-1_part-mag_bold.json"
+)
+RAW_EVENTS_KEY = (
+    "sub-03/ses-01/func/"
+    "sub-03_ses-01_task-images_run-01_events.tsv"
+)
+RAW_HELD_OUT_KEY = (
+    "sub-03/ses-31/func/"
+    "sub-03_ses-31_task-images_run-01_echo-1_part-mag_bold.nii.gz"
+)
+RAW_ECHO2_KEY = (
+    "sub-03/ses-01/func/"
+    "sub-03_ses-01_task-images_run-01_echo-2_part-mag_bold.nii.gz"
+)
+RAW_RUN2_KEY = (
+    "sub-03/ses-01/func/"
+    "sub-03_ses-01_task-images_run-02_echo-1_part-mag_bold.nii.gz"
+)
+RAW_PHASE_KEY = (
+    "sub-03/ses-01/func/"
+    "sub-03_ses-01_task-images_run-01_echo-1_part-phase_bold.nii.gz"
+)
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_lists_raw_when_include_set(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``include_raw=True`` lists the per-subject raw BIDS prefix."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03", include_raw=True,
+        )
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "sub-03/" in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_skips_raw_by_default(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Without ``include_raw`` the raw BIDS prefix is not touched."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "sub-03/" not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_laion_fmri_raw_downloads_root_metadata(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``fetch_laion_fmri_raw`` still pulls dataset-level manifests."""
+    mock_list_objects.return_value = []
+
+    with pytest.raises(NoMatchingDataError):
+        fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+
+    keys = [c.args[1] for c in mock_download_key.call_args_list]
+    for expected in (
+        "dataset_description.json",
+        "participants.tsv",
+        "participants.json",
+        "README",
+    ):
+        assert expected in keys
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_laion_fmri_raw_lists_raw_prefix_only(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Raw-only fetch touches ``sub-XX/`` and no derivative tree."""
+    mock_list_objects.return_value = []
+
+    with pytest.raises(NoMatchingDataError):
+        fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "sub-03/" in listed
+    for deriv_prefix in (
+        "derivatives/glmsingle-tedana/sub-03/",
+        "derivatives/rois/sub-03/",
+        "derivatives/freesurfer/sub-03/",
+        "derivatives/anatomical/sub-03/",
+    ):
+        assert deriv_prefix not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_respects_run_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """A ``run="01"`` filter drops other-run raw files."""
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_RUN2_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(
+            str(tmp_path), subject="sub-03", run="01",
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_BOLD_KEY in downloaded
+    assert RAW_RUN2_KEY not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_respects_echo_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """An ``echo="1"`` filter drops other-echo raw files."""
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_ECHO2_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(
+            str(tmp_path), subject="sub-03", echo="1",
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_BOLD_KEY in downloaded
+    assert RAW_ECHO2_KEY not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_respects_part_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """A ``part="mag"`` filter drops phase-encoded companion files."""
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_PHASE_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(
+            str(tmp_path), subject="sub-03", part="mag",
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_BOLD_KEY in downloaded
+    assert RAW_PHASE_KEY not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_pulls_events_tsv_with_suffix_filter(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``suffix="events"`` pulls the per-run events TSV, skips bold."""
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_EVENTS_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(
+            str(tmp_path), subject="sub-03", suffix="events",
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_EVENTS_KEY in downloaded
+    assert RAW_BOLD_KEY not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_pulls_json_sidecar_alongside_bold(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """A ``suffix=bold`` + ``extension=nii.gz`` filter keeps the
+    JSON sidecar so the BIDS metadata travels with the data file.
+    """
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_BOLD_JSON_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(
+            str(tmp_path), subject="sub-03",
+            suffix="bold", extension="nii.gz",
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_BOLD_KEY in downloaded
+    assert RAW_BOLD_JSON_KEY in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_excludes_held_out_ses31_keys(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Held-out sessions are excluded from the raw walk too."""
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_HELD_OUT_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_BOLD_KEY in downloaded
+    assert RAW_HELD_OUT_KEY not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_raw_bold_extension_filter_excludes_events(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """``extension="nii.gz"`` drops the events TSV cleanly."""
+    def listing(_bucket, prefix):
+        if prefix == "sub-03/":
+            return [
+                {"Key": RAW_BOLD_KEY, "Size": 100},
+                {"Key": RAW_EVENTS_KEY, "Size": 100},
+            ]
+        return []
+
+    mock_list_objects.side_effect = listing
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri_raw(
+            str(tmp_path), subject="sub-03", extension="nii.gz",
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert RAW_BOLD_KEY in downloaded
+    assert RAW_EVENTS_KEY not in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_laion_fmri_raw_no_match_raises(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Empty raw listing raises the package error."""
+    mock_list_objects.return_value = []
+
+    with pytest.raises(NoMatchingDataError, match="No LAION-fMRI"):
+        fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")

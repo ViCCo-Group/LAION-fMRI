@@ -80,10 +80,48 @@ image-viewing runs plus localizer/deepmreye runs. Sessions ``ses-32``
 to ``ses-34`` are supplemental sessions and are not part of the
 initial launch-release data.
 
+Loading raw data
+================
+
+Raw BIDS files are reachable through the same package, either via
+:func:`laion_fmri.download.download_raw` (raw only) or with
+``include_raw=True`` on :func:`laion_fmri.download.download`
+(raw on top of the derivative walk). ``Subject`` exposes three
+accessors on top:
+
+.. code-block:: python
+
+   from laion_fmri import load_subject
+   from laion_fmri.download import download_raw
+
+   download_raw(subject="sub-01", ses="ses-01", run="01")
+
+   sub = load_subject("sub-01")
+
+   sub.has_raw()                                    # True
+   sub.has_raw(session="ses-01")                    # True
+
+   events = sub.get_events(session="ses-01")        # every run
+   events_run1 = sub.get_events(session="ses-01",
+                                run="01")           # one run
+
+   bold = sub.get_raw_bold(session="ses-01",
+                           run="01", echo="1")      # (n_vols, n_vox)
+   sbref = sub.get_sbref(session="ses-01",
+                         run="01", echo="1")        # (n_vox,)
+
+:meth:`Subject.get_events` returns the raw BIDS events TSV(s) as a
+pandas DataFrame. With ``run=None`` (default) it concatenates every
+run in the session and adds a ``run`` column tagging each row.
+:meth:`Subject.get_raw_bold` and :meth:`Subject.get_sbref` return
+float32 arrays masked with the same brain mask used by
+:meth:`Subject.get_betas` (default ``mask_source="anatomical"``).
+
 Confounds and Behavioral Files
 ==============================
 
-The raw BIDS event files and richer confound documentation will be
-expanded in a later documentation update. For the trial table that
-aligns directly with the released GLMsingle beta volumes, see
-:doc:`glmsingle_betas`.
+Richer confound documentation will be expanded in a later
+documentation update. For the trial table that aligns directly
+with the released GLMsingle beta volumes, see
+:doc:`glmsingle_betas`. For raw BIDS ``events.tsv``, see the
+"Loading raw data" section above.

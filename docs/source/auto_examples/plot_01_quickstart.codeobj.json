@@ -387,6 +387,29 @@
    "module": "laion_fmri.download",
    "module_short": "laion_fmri.download",
    "name": "download"
+  },
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "download"
+  }
+ ],
+ "download_raw": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "builtins",
+   "module_short": "builtins",
+   "name": "function"
+  },
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri.download",
+   "name": "download_raw"
   }
  ],
  "fig": [
@@ -670,6 +693,15 @@
    "name": "Image.size"
   }
  ],
+ "laion_fmri.download.download_raw": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.download",
+   "module_short": "laion_fmri.download",
+   "name": "download_raw"
+  }
+ ],
  "laion_fmri.subject.Subject": [
   {
    "is_class": false,
@@ -677,6 +709,24 @@
    "module": "laion_fmri.subject",
    "module_short": "laion_fmri",
    "name": "Subject"
+  }
+ ],
+ "laion_fmri.subject.Subject.get_events": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject.Subject",
+   "module_short": "laion_fmri.subject.Subject",
+   "name": "get_events"
+  }
+ ],
+ "laion_fmri.subject.Subject.get_raw_bold": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": "laion_fmri.subject.Subject",
+   "module_short": "laion_fmri.subject.Subject",
+   "name": "get_raw_bold"
   }
  ],
  "load_subject": [

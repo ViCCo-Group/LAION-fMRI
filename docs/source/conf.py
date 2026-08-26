@@ -84,6 +84,18 @@ if _BUILD_EXAMPLES and not os.environ.get(
     ).touch()
     os.environ["LAION_FMRI_EXAMPLE_DATA_DIR"] = str(_EXAMPLE_DATA_DIR)
 
+    # Preflight the stimulus archive so the DUA prompt (if needed)
+    # runs before any example, not partway through the gallery.
+    from laion_fmri._stimulus_access import load_request_id  # noqa: E402
+    if load_request_id() is None:
+        print(
+            "[laion-fmri build] No cached stimulus request_id found. "
+            "The DUA form will now open; set LAION_FMRI_REQUEST_ID to "
+            "skip this prompt on future headless builds."
+        )
+    from laion_fmri.download import download_stimuli  # noqa: E402
+    download_stimuli(data_dir=str(_EXAMPLE_DATA_DIR))
+
 from sphinx_gallery.sorting import FileNameSortKey  # noqa: E402
 
 sphinx_gallery_conf = {
