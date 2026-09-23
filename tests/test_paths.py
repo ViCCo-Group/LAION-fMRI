@@ -28,6 +28,8 @@ from laion_fmri._paths import (
     stimuli_metadata_path,
     subject_noise_ceiling_path,
     trialinfo_path,
+    localizer_statmap_path,
+    localizer_effect_path,
 )
 
 
@@ -121,6 +123,61 @@ def test_roi_mask_path_unknown_raises(tmp_path):
 
     with pytest.raises(FileNotFoundError, match="FFA99"):
         roi_mask_path(tmp_path, "sub-03", "FFA99")
+
+
+def test_roi_mask_path_selects_resolution(tmp_path):
+    roi_dir = tmp_path / "derivatives/rois/sub-03/retinotopy"
+    roi_dir.mkdir(parents=True)
+    expected = (
+        roi_dir
+        / "sub-03_space-T1w_res-1pt5_label-V1d_mask.nii.gz"
+    )
+    expected.touch()
+
+    assert roi_mask_path(
+        tmp_path, "sub-03", "V1d", res="1pt5",
+    ) == expected
+
+
+def test_roi_mask_path_rejects_unknown_resolution(tmp_path):
+    with pytest.raises(ValueError, match="res must be"):
+        roi_mask_path(tmp_path, "sub-03", "V1d", res="2pt0")
+
+
+# ── Localizer path resolvers ──────────────────────────────────
+
+
+def test_localizer_statmap_path_surface(tmp_path):
+    root = (
+        tmp_path
+        / "derivatives/localizers/sub-03/ses-4BarScreenfLoc/func"
+    )
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_ses-4BarScreenfLoc_task-floc_hemi-R_space-fsnative_"
+        "contrast-faceVsOthers_stat-z_statmap.func.gii"
+    )
+    expected.touch()
+
+    assert localizer_statmap_path(
+        tmp_path, "sub-03", "floc", "faceVsOthers",
+        "4BarScreenfLoc", hemi="R",
+    ) == expected
+
+
+def test_localizer_statmap_path_volume(tmp_path):
+    root = tmp_path / "derivatives/localizers/sub-03/ses-31/func"
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_ses-31_task-oloc_space-T1w_res-1pt5_"
+        "contrast-objectVsScrambled_stat-z_statmap.nii.gz"
+    )
+    expected.touch()
+
+    assert localizer_statmap_path(
+        tmp_path, "sub-03", "oloc", "objectVsScrambled", "31",
+        space="T1w", res="1pt5",
+    ) == expected
 
 
 def test_roi_surface_path_finds_func_gii_per_hemi(tmp_path):
@@ -284,3 +341,53 @@ def test_raw_events_path():
         "/data/sub-03/ses-04/func/"
         "sub-03_ses-04_task-images_run-03_events.tsv"
     )
+
+
+def test_localizer_effect_path_per_run(tmp_path):
+    root = (
+        tmp_path
+        / "derivatives/localizers/sub-03/ses-4BarScreenfLoc/func"
+    )
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_ses-4BarScreenfLoc_task-floc_run-05_hemi-L_space-fsnative_"
+        "contrast-face_stat-effect_statmap.func.gii"
+    )
+    expected.touch()
+
+    assert localizer_effect_path(
+        tmp_path, "sub-03", "floc", "face", "4BarScreenfLoc", 5, hemi="L",
+    ) == expected
+
+
+def test_localizer_effect_path_volume(tmp_path):
+    root = (
+        tmp_path
+        / "derivatives/localizers/sub-03/ses-4BarScreenfLoc/func"
+    )
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_ses-4BarScreenfLoc_task-floc_run-02_space-T1w_res-1pt8_"
+        "contrast-body_stat-effect_statmap.nii.gz"
+    )
+    expected.touch()
+
+    assert localizer_effect_path(
+        tmp_path, "sub-03", "floc", "body", "4BarScreenfLoc", 2,
+        space="T1w", res="1pt8",
+    ) == expected
+
+
+def test_localizer_effect_path_rejects_pooled_motion(tmp_path):
+    with pytest.raises(ValueError, match="MotionLeft"):
+        localizer_effect_path(
+            tmp_path, "sub-03", "MotionLoc", "moving",
+            "MotionLocBarsSML", 1, hemi="L",
+        )
+
+
+def test_localizer_effect_path_surface_requires_hemi(tmp_path):
+    with pytest.raises(ValueError, match="hemi"):
+        localizer_effect_path(
+            tmp_path, "sub-03", "oloc", "object", "31", 1,
+        )

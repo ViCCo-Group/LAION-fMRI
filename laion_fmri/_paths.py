@@ -87,21 +87,34 @@ def rois_subject_dir(data_dir, subject):
     return Path(data_dir) / "derivatives" / "rois" / subject
 
 
-def parse_roi_label(filename, subject):
+#: Volumetric grids: ``"1pt8"`` is the GLMsingle beta grid, ``"1pt5"``
+#: the grid of the volumetric localizer maps. ROI masks ship on both.
+VOLUME_RESOLUTIONS = ("1pt8", "1pt5")
+DEFAULT_VOLUME_RES = "1pt8"
+
+
+def _check_res(res):
+    if res not in VOLUME_RESOLUTIONS:
+        raise ValueError(
+            f"res must be one of {VOLUME_RESOLUTIONS}; got {res!r}.")
+    return res
+
+
+def parse_roi_label(filename, subject, res=DEFAULT_VOLUME_RES):
     """Extract the ROI name from a volumetric ROI mask filename.
 
     Returns the ROI label (e.g. ``"FFA1"``) when ``filename``
-    matches ``{subject}_space-T1w_res-1pt8_label-{ROI}_mask.nii.gz``,
+    matches ``{subject}_space-T1w_res-{res}_label-{ROI}_mask.nii.gz``,
     otherwise returns ``None``.
     """
-    head = f"{subject}_space-T1w_res-1pt8_label-"
+    head = f"{subject}_space-T1w_res-{_check_res(res)}_label-"
     tail = "_mask.nii.gz"
     if filename.startswith(head) and filename.endswith(tail):
         return filename[len(head):-len(tail)]
     return None
 
 
-def roi_mask_path(data_dir, subject, roi):
+def roi_mask_path(data_dir, subject, roi, res=DEFAULT_VOLUME_RES):
     """Resolve the volumetric ROI mask file for ``roi``.
 
     The bucket groups ROIs by category
@@ -116,6 +129,8 @@ def roi_mask_path(data_dir, subject, roi):
         BIDS subject ID (``"sub-XX"``).
     roi : str
         BIDS-clean ROI label (e.g. ``"FFA1"``, ``"pSTSfaces"``).
+    res : ``"1pt8"`` (default) | ``"1pt5"``
+        Volumetric grid, see :data:`VOLUME_RESOLUTIONS`.
 
     Raises
     ------
@@ -123,14 +138,15 @@ def roi_mask_path(data_dir, subject, roi):
         If no matching volumetric mask exists under the
         subject's ROI tree.
     """
+    _check_res(res)
     pattern = (
-        f"*/{subject}_space-T1w_res-1pt8_"
+        f"*/{subject}_space-T1w_res-{res}_"
         f"label-{roi}_mask.nii.gz"
     )
     matches = list(rois_subject_dir(data_dir, subject).glob(pattern))
     if not matches:
         raise FileNotFoundError(
-            f"ROI {roi!r} not found under "
+            f"ROI {roi!r} not found at res-{res} under "
             f"{rois_subject_dir(data_dir, subject)}. "
             "See Subject.get_available_rois() for valid names."
         )
@@ -191,6 +207,95 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
             f"{rois_subject_dir(data_dir, subject)}."
         )
     return matches[0]
+
+
+# ── Localizer statmaps ──────────────────────────────────────────
+#
+# Filenames follow the release spec (scripts/release/spec.py in the
+# prf-pipelines repository). Entity values must stay alphanumeric:
+# `_entity_in_key` matches `entity-[A-Za-z0-9]+`.
+
+#: Released localizer tasks. ``MotionLeft`` / ``MotionRight`` are the
+#: two acquired hemifield tasks; ``MotionLoc`` is the pooled map.
+LOCALIZER_TASKS = ("floc", "oloc", "MotionLeft", "MotionRight", "MotionLoc")
+
+
+def localizers_subject_dir(data_dir, subject, session):
+    return (Path(data_dir) / "derivatives" / "localizers" / subject
+            / f"ses-{session}" / "func")
+
+
+def _localizer_map_path(data_dir, subject, task, session, run, contrast,
+                        stat, space, hemi, res):
+    if task not in LOCALIZER_TASKS:
+        raise ValueError(
+            f"task must be one of {LOCALIZER_TASKS}; got {task!r}.")
+    parts = [subject, f"ses-{session}", f"task-{task}"]
+    if run is not None:
+        parts.append(f"run-{int(run):02d}")
+    if space == "fsnative":
+        if hemi not in ("L", "R"):
+            raise ValueError(
+                "space='fsnative' is per-hemisphere; pass hemi='L' or 'R'.")
+        parts += [f"hemi-{hemi}", "space-fsnative"]
+        ext = ".func.gii"
+    elif space == "T1w":
+        _check_res(res)
+        parts += ["space-T1w", f"res-{res}"]
+        ext = ".nii.gz"
+    else:
+        raise ValueError(
+            f"space must be 'fsnative' or 'T1w'; got {space!r}.")
+    parts += [f"contrast-{contrast}", f"stat-{stat}", "statmap"]
+    path = (localizers_subject_dir(data_dir, subject, session)
+            / ("_".join(parts) + ext))
+    if not path.exists():
+        raise FileNotFoundError(f"Localizer map not found: {path}")
+    return path
+
+
+def localizer_statmap_path(data_dir, subject, task, contrast, session,
+                           space="fsnative", hemi=None, res="1pt5"):
+    """Resolve one localizer contrast z-map.
+
+    Parameters
+    ----------
+    task : one of :data:`LOCALIZER_TASKS`
+    contrast : str
+        camelCase contrast name as released, e.g. ``"faceVsOthers"``.
+    space : ``"fsnative"`` (default) | ``"T1w"``
+        ``fsnative`` requires ``hemi``. ``T1w`` is a separate volumetric
+        GLM fit (not a projection of the surface fit) and takes ``res``.
+    """
+    return _localizer_map_path(
+        data_dir, subject, task, session, None, contrast, "z",
+        space, hemi, res,
+    )
+
+
+def localizer_effect_path(data_dir, subject, task, condition, session, run,
+                          space="fsnative", hemi=None, res="1pt5"):
+    """Resolve one per-run localizer condition estimate (``stat-effect``).
+
+    Parameters
+    ----------
+    task : one of :data:`LOCALIZER_TASKS` except ``"MotionLoc"``
+        The pooled motion map has no per-run effect maps.
+    condition : str
+        Design-matrix regressor as released, e.g. ``"face"`` or
+        ``"scrambled"`` (a condition, not a contrast).
+    run : int
+    space, hemi, res
+        As for :func:`localizer_statmap_path`.
+    """
+    if task == "MotionLoc":
+        raise ValueError(
+            "task='MotionLoc' is the pooled map and has no per-run effect "
+            "maps; pass task='MotionLeft' or 'MotionRight'.")
+    return _localizer_map_path(
+        data_dir, subject, task, session, run, condition, "effect",
+        space, hemi, res,
+    )
 
 
 # ── FreeSurfer recon ────────────────────────────────────────────

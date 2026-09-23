@@ -159,6 +159,15 @@ def test_cli_download_passes_include_stimuli(monkeypatch):
     assert captured["include_stimuli"] is True
 
 
+def test_cli_download_passes_include_localizers(monkeypatch):
+    captured = _capture_download(monkeypatch)
+    main([
+        "download", "--subject", "sub-03",
+        "--include-localizers",
+    ])
+    assert captured["include_localizers"] is True
+
+
 def test_cli_download_captions(monkeypatch):
     called = {}
 
