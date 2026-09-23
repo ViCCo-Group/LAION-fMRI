@@ -15,6 +15,7 @@ Auto-generated reference for every public module, class, and function in
    laion_fmri.brain
    laion_fmri.config
    laion_fmri.discovery
+   laion_fmri.derivatives
    laion_fmri.download
    laion_fmri.group
    laion_fmri.io
