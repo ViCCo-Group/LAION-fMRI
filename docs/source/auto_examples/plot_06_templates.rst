@@ -729,7 +729,7 @@ caught before any data moves.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (15 minutes 19.507 seconds)
+   **Total running time of the script:** (11 minutes 9.030 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_06_templates.py:

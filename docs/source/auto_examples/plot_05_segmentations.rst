@@ -91,7 +91,7 @@ stimulus images.
 
  .. code-block:: none
 
-    [laion-fmri] segmentations already up to date.
+    [laion-fmri] Downloading 2 segmentation file(s):
 
     {'h5': PosixPath('/path/to/laion-fmri-data/stimuli/task-images_desc-segmentations.h5'), 'metadata': PosixPath('/path/to/laion-fmri-data/stimuli/task-images_desc-segmentations_metadata.csv')}
 
@@ -275,7 +275,7 @@ check to use before retrieval.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 3.061 seconds)
+   **Total running time of the script:** (0 minutes 21.177 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_05_segmentations.py:

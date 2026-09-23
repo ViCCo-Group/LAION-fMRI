@@ -323,7 +323,7 @@ network path is clean and the package is ready to use.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 13.262 seconds)
+   **Total running time of the script:** (0 minutes 13.538 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_02_initialization.py:

@@ -13,6 +13,7 @@ from laion_fmri.download import (
     accept_licenses,
     download,
     download_captions,
+    download_raw,
 )
 
 
@@ -77,6 +78,7 @@ DEFAULT_FETCH_KWARGS = dict(
     ses=None, task=None, space=None, desc=None, stat=None,
     suffix=None, extension=None, n_jobs=1,
     include_freesurfer=False, include_anatomical=False,
+    include_raw=False,
 )
 
 
@@ -194,6 +196,104 @@ def test_download_include_anatomical_default_false(configured_env):
         download(subject="sub-01")
     kwargs = mock_fetch.call_args.kwargs
     assert kwargs.get("include_anatomical", False) is False
+
+
+# ── include_raw forwards to fetch_laion_fmri ───────────────────
+
+
+def test_download_passes_include_raw_to_fetch(configured_env):
+    """``include_raw=True`` flows through so the raw BIDS prefix is pulled."""
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01", include_raw=True)
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs["include_raw"] is True
+
+
+def test_download_include_raw_default_false(configured_env):
+    """Default skips raw BIDS -- it's hundreds of GB across the dataset."""
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01")
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs.get("include_raw", False) is False
+
+
+# ── download_raw (raw-only entry point) ────────────────────────
+
+
+def test_download_raw_dispatches_to_fetch_raw(configured_env):
+    """``download_raw`` calls ``fetch_laion_fmri_raw`` and skips the
+    derivative-tree walk entirely."""
+    with patch(
+        "laion_fmri.download.fetch_laion_fmri_raw",
+    ) as mock_raw, patch(
+        "laion_fmri.download.fetch_laion_fmri",
+    ) as mock_deriv:
+        download_raw(subject="sub-01")
+    mock_raw.assert_called_once()
+    mock_deriv.assert_not_called()
+
+
+def test_download_raw_normalizes_bare_value_subject(configured_env):
+    """``download_raw("01")`` normalizes to the full BIDS ID."""
+    with patch(
+        "laion_fmri.download.fetch_laion_fmri_raw",
+    ) as mock_raw:
+        download_raw(subject="01")
+    kwargs = mock_raw.call_args.kwargs
+    assert kwargs["subject"] == "sub-01"
+
+
+def test_download_raw_subject_all_iterates_get_subjects(configured_env):
+    """``subject="all"`` fans out to every subject discovered."""
+    with patch(
+        "laion_fmri.download.fetch_laion_fmri_raw",
+    ) as mock_raw, patch(
+        "laion_fmri.download.get_subjects",
+        return_value=["sub-01", "sub-03"],
+    ):
+        download_raw(subject="all")
+    called_subjects = [
+        c.kwargs["subject"] for c in mock_raw.call_args_list
+    ]
+    assert called_subjects == ["sub-01", "sub-03"]
+
+
+def test_download_raw_forwards_run_echo_part_filters(configured_env):
+    """Raw-specific filters (``run``, ``echo``, ``part``) forward."""
+    with patch(
+        "laion_fmri.download.fetch_laion_fmri_raw",
+    ) as mock_raw:
+        download_raw(
+            subject="sub-01",
+            ses="ses-01",
+            run="01",
+            echo="1",
+            part="mag",
+        )
+    kwargs = mock_raw.call_args.kwargs
+    assert kwargs["ses"] == "ses-01"
+    assert kwargs["run"] == "01"
+    assert kwargs["echo"] == "1"
+    assert kwargs["part"] == "mag"
+
+
+def test_download_raw_forwards_bids_filters(configured_env):
+    """``task``, ``suffix``, ``extension`` also forward to the raw fetch."""
+    with patch(
+        "laion_fmri.download.fetch_laion_fmri_raw",
+    ) as mock_raw:
+        download_raw(
+            subject="sub-01",
+            task="images",
+            suffix="events",
+            extension="tsv",
+            n_jobs=2,
+        )
+    kwargs = mock_raw.call_args.kwargs
+    assert kwargs["task"] == "images"
+    assert kwargs["suffix"] == "events"
+    assert kwargs["extension"] == "tsv"
+    assert kwargs["n_jobs"] == 2
 
 
 def test_download_captions_fetches_public_csv(configured_env):

@@ -71,6 +71,14 @@ Common operations:
    # both at once
    download(subject="sub-01", include_stimuli=True)
 
+   # raw BIDS (multi-echo BOLD, events.tsv, fieldmaps, raw MEGRE)
+   from laion_fmri.download import download_raw
+
+   download_raw(subject="sub-01", ses="ses-01")             # one session
+   download_raw(subject="sub-01", suffix="events",
+                extension="tsv")                            # events only
+   download(subject="sub-01", include_raw=True)             # additive
+
 CLI equivalents:
 
 .. code-block:: bash
@@ -79,6 +87,7 @@ CLI equivalents:
    laion-fmri config --data-dir ./laion_fmri_data
    laion-fmri download --subject sub-01
    laion-fmri download-stimuli
+   laion-fmri download-raw --subject sub-01 --ses ses-01
    laion-fmri request-access            # standalone DUA form, no download
 
 Direct AWS CLI (public files only)

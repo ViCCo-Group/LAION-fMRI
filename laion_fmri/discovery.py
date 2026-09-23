@@ -19,7 +19,14 @@ SUBJECT_PREFIXES = (
     "derivatives/rois/",
     "derivatives/freesurfer/",
     "derivatives/anatomical/",
+    "",
 )
+
+#: Human-readable label for each subject-prefix probe. The empty
+#: prefix targets the bucket root and surfaces raw-BIDS subject dirs.
+_SUBJECT_PREFIX_LABELS = {
+    "": "sub-*/  (raw BIDS root)",
+}
 
 
 def get_subjects():
@@ -146,7 +153,8 @@ def inspect_bucket():
     for prefix in SUBJECT_PREFIXES:
         names = list_common_prefixes(LAION_FMRI_BUCKET, prefix)
         subject_count = sum(1 for n in names if n.startswith("sub-"))
+        label = _SUBJECT_PREFIX_LABELS.get(prefix, prefix)
         print(
-            f"{prefix}: {len(names)} entries, "
+            f"{label}: {len(names)} entries, "
             f"{subject_count} sub-* entries"
         )

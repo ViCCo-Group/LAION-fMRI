@@ -33,7 +33,9 @@ DATASET_LEVEL_KEYS = (
 )
 
 #: BIDS entities exposed as filter kwargs (in BIDS short form).
-BIDS_ENTITIES = ("ses", "task", "space", "desc", "stat")
+BIDS_ENTITIES = (
+    "ses", "task", "space", "desc", "stat", "run", "echo", "part",
+)
 
 
 def _clamp_n_jobs(n_jobs):
@@ -317,6 +319,7 @@ def fetch_laion_fmri(
     n_jobs=1,
     include_freesurfer=False,
     include_anatomical=False,
+    include_raw=False,
 ):
     """Download fMRI / derivatives for one subject.
 
@@ -358,6 +361,11 @@ def fetch_laion_fmri(
         orthogonal to typical functional filters, so the anat
         prefix is pulled with no BIDS filters applied (same
         convention as ``include_freesurfer``).
+    include_raw : bool
+        If True, also pull the raw BIDS tree under ``sub-XX/``
+        (multi-echo BOLD, sbref, events, fieldmaps, raw MEGRE).
+        The BIDS filters above (including ``run``, ``echo``,
+        ``part``) apply.
     """
     bucket = LAION_FMRI_BUCKET
     filters = {
@@ -369,6 +377,7 @@ def fetch_laion_fmri(
         "suffix": suffix,
         "extension": extension,
     }
+    raw_filters = dict(filters)
 
     # Root metadata files always go through, regardless of filters.
     for key in DATASET_LEVEL_KEYS:
@@ -404,6 +413,7 @@ def fetch_laion_fmri(
         and not roi_result["matched"]
         and not include_freesurfer
         and not include_anatomical
+        and not include_raw
     ):
         prefixes = (
             f"s3://{bucket}/{glm_result['prefix']}",
@@ -440,10 +450,97 @@ def fetch_laion_fmri(
             data_dir, {}, n_jobs=n_jobs,
         )
 
+    if include_raw:
+        _download_raw_prefix(
+            bucket, subject, data_dir, raw_filters, n_jobs=n_jobs,
+        )
+
     return {
         "glmsingle": glm_result,
         "rois": roi_result,
     }
+
+
+def _download_raw_prefix(
+    bucket, subject, data_dir, filters, n_jobs=1,
+):
+    """Walk ``sub-{subject}/`` (raw BIDS root) with BIDS filters applied.
+
+    Shared by :func:`fetch_laion_fmri` (additive) and
+    :func:`fetch_laion_fmri_raw` (raw-only). Held-out session
+    filtering and JSON sidecar handling reuse the generic
+    ``_filtered_download`` machinery; both operate on BIDS-entity
+    tokens so raw keys are handled by the same path.
+    """
+    return _filtered_download(
+        bucket, f"{subject}/",
+        data_dir, filters, n_jobs=n_jobs,
+    )
+
+
+def fetch_laion_fmri_raw(
+    data_dir,
+    subject,
+    ses=None,
+    task=None,
+    run=None,
+    echo=None,
+    part=None,
+    suffix=None,
+    extension=None,
+    n_jobs=1,
+):
+    """Download raw BIDS files for one subject.
+
+    Walks ``sub-{subject}/`` on the S3 bucket and applies the same
+    BIDS-entity filter grammar as :func:`fetch_laion_fmri`.
+    Held-out sessions (``HELD_OUT_SESSIONS``) are excluded
+    automatically.
+
+    Parameters
+    ----------
+    data_dir : str
+    subject : str
+        BIDS subject ID.
+    ses, task, run, echo, part, suffix, extension : str or list[str], optional
+        BIDS filters. ``run``/``echo``/``part`` are new here; the
+        rest match :func:`fetch_laion_fmri`.
+    n_jobs : int
+        Parallel AWS CLI copy workers.
+
+    Raises
+    ------
+    NoMatchingDataError
+        If no raw keys match the filters.
+    """
+    bucket = LAION_FMRI_BUCKET
+    filters = {
+        "ses": ses,
+        "task": task,
+        "run": run,
+        "echo": echo,
+        "part": part,
+        "suffix": suffix,
+        "extension": extension,
+    }
+
+    for key in DATASET_LEVEL_KEYS:
+        download_key(bucket, key, f"{data_dir}/{key}")
+
+    raw_result = _download_raw_prefix(
+        bucket, subject, data_dir, filters, n_jobs=n_jobs,
+    )
+
+    if not raw_result["matched"]:
+        raise NoMatchingDataError(
+            "No LAION-fMRI files matched "
+            f"subject={subject!r} with filters "
+            f"({_format_active_filters(filters)}) under "
+            f"s3://{bucket}/{subject}/. "
+            "Check the subject ID and BIDS filters."
+        )
+
+    return {"raw": raw_result}
 
 
 def _ses_filters_specific_sessions(ses):

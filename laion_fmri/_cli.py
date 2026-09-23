@@ -14,6 +14,16 @@ _FILTER_ENTITIES = (
     ("extension", "File extension, e.g. nii.gz or tsv"),
 )
 
+_RAW_FILTER_ENTITIES = (
+    ("ses", "BIDS session ID, e.g. ses-01"),
+    ("task", "BIDS task entity, e.g. images"),
+    ("run", "BIDS run entity, e.g. 01"),
+    ("echo", "BIDS echo entity, e.g. 1"),
+    ("part", "BIDS part entity (mag or phase)"),
+    ("suffix", "BIDS suffix, e.g. bold, events, sbref"),
+    ("extension", "File extension, e.g. nii.gz or tsv"),
+)
+
 
 def main(argv=None):
     """Entry point for the laion-fmri CLI."""
@@ -60,6 +70,27 @@ def main(argv=None):
         help=(
             "Include stimulus embeddings. Pass with no value for "
             "all models, or one or more labels (e.g. CLIP DINOv2)."
+        ),
+    )
+    download_parser.add_argument(
+        "--include-freesurfer", action="store_true",
+        help=(
+            "Include the per-subject FreeSurfer recon under "
+            "derivatives/freesurfer/{subject}/."
+        ),
+    )
+    download_parser.add_argument(
+        "--include-anatomical", action="store_true",
+        help=(
+            "Include the per-subject anatomical derivatives under "
+            "derivatives/anatomical/{subject}/ses-PrismaAnat/anat/."
+        ),
+    )
+    download_parser.add_argument(
+        "--include-raw", action="store_true",
+        help=(
+            "Include the raw BIDS tree under sub-XX/ (multi-echo "
+            "BOLD, sbref, events, fieldmaps, raw MEGRE)."
         ),
     )
 
@@ -110,6 +141,28 @@ def main(argv=None):
         help="Download per-stimulus captions (public, no DUA).",
     )
 
+    download_raw_parser = subparsers.add_parser(
+        "download-raw",
+        help=(
+            "Download raw BIDS files for a subject: multi-echo BOLD, "
+            "sbref, per-run events.tsv, fieldmaps, and raw MEGRE. "
+            "Does NOT touch derivative trees."
+        ),
+    )
+    download_raw_parser.add_argument(
+        "--subject", required=True,
+        help="Subject ID (e.g., sub-01) or 'all'",
+    )
+    for entity, description in _RAW_FILTER_ENTITIES:
+        download_raw_parser.add_argument(
+            f"--{entity}", nargs="+", default=None,
+            help=f"{description} (one or more values).",
+        )
+    download_raw_parser.add_argument(
+        "--n-jobs", type=int, default=1,
+        help="Number of parallel AWS CLI copy workers (default: 1).",
+    )
+
     subparsers.add_parser(
         "request-access",
         help=(
@@ -139,6 +192,8 @@ def main(argv=None):
             _handle_download_segmentations(args)
         elif args.command == "download-captions":
             _handle_download_captions(args)
+        elif args.command == "download-raw":
+            _handle_download_raw(args)
         elif args.command == "request-access":
             _handle_request_access(args)
     except Exception as exc:
@@ -177,6 +232,9 @@ def _handle_download(args):
         n_jobs=args.n_jobs,
         include_stimuli=args.include_stimuli,
         include_embeddings=include_embeddings,
+        include_freesurfer=args.include_freesurfer,
+        include_anatomical=args.include_anatomical,
+        include_raw=args.include_raw,
     )
 
 
@@ -209,6 +267,22 @@ def _handle_download_captions(args):
     """Handle the download-captions subcommand."""
     from laion_fmri.download import download_captions
     download_captions()
+
+
+def _handle_download_raw(args):
+    """Handle the download-raw subcommand."""
+    from laion_fmri.download import download_raw
+    download_raw(
+        subject=args.subject,
+        ses=args.ses,
+        task=args.task,
+        run=args.run,
+        echo=args.echo,
+        part=args.part,
+        suffix=args.suffix,
+        extension=args.extension,
+        n_jobs=args.n_jobs,
+    )
 
 
 def _handle_request_access(args):

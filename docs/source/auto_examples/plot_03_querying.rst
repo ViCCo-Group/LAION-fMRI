@@ -260,13 +260,19 @@ extra prefix) show up at a glance.
  .. code-block:: none
 
     Bucket: s3://laion-fmri
-    Top-level prefixes (2):
+    Top-level prefixes (7):
       derivatives/
       stimuli/
+      sub-01/
+      sub-03/
+      sub-05/
+      sub-06/
+      sub-07/
     derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
     derivatives/rois/: 5 entries, 5 sub-* entries
     derivatives/freesurfer/: 5 entries, 5 sub-* entries
     derivatives/anatomical/: 5 entries, 5 sub-* entries
+    sub-*/  (raw BIDS root): 7 entries, 5 sub-* entries
 
 
 
@@ -360,9 +366,9 @@ used to filter the metadata table or beta arrays downstream.
     Split:    random_0
     Pool:     shared
     Family:   random
-    n_train:  897
-    n_test:   224
-    Loaded:   897 train / 224 test ids
+    n_train:  896
+    n_test:   225
+    Loaded:   896 train / 225 test ids
 
 
 
@@ -403,7 +409,7 @@ kept on the test side; everything else is dropped.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 203-219
+.. GENERATED FROM PYTHON SOURCE LINES 203-223
 
 Per-subject queries that need local data
 ----------------------------------------
@@ -420,9 +426,13 @@ The cells below reuse the ``sub-01 / ses-01`` data that
 :doc:`plot_01_quickstart` already downloaded into the shared
 data directory; if plot_03 is being run in isolation, run
 plot_01 first (or call ``download(subject="sub-01",
-ses="ses-01")`` directly).
+ses="ses-01")`` directly). Pass ``include_raw=True`` to
+``download`` (or use
+:func:`~laion_fmri.download.download_raw`) when the raw
+multi-echo BOLD and per-run ``events.tsv`` files are also
+needed.
 
-.. GENERATED FROM PYTHON SOURCE LINES 219-256
+.. GENERATED FROM PYTHON SOURCE LINES 223-260
 
 .. code-block:: Python
 
@@ -485,7 +495,7 @@ ses="ses-01")`` directly).
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 257-268
+.. GENERATED FROM PYTHON SOURCE LINES 261-272
 
 Cross-subject discovery
 -----------------------
@@ -499,7 +509,7 @@ totals and face-area counts; ROI counts can differ across
 subjects, so a quick scan like this catches the difference
 before it surfaces in a downstream model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 268-275
+.. GENERATED FROM PYTHON SOURCE LINES 272-279
 
 .. code-block:: Python
 
@@ -527,7 +537,7 @@ before it surfaces in a downstream model.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 276-297
+.. GENERATED FROM PYTHON SOURCE LINES 280-304
 
 Stimulus metadata
 -----------------
@@ -539,33 +549,40 @@ across subjects, which session a given trial belongs to. The
 ``pandas.DataFrame`` with one row per single-trial beta,
 indexed by global trial index (``0 .. n_total_trials-1``).
 
-The columns combine the per-session events TSV with derived
+The columns combine the per-session trial info with derived
 fields like ``image_name``, ``session``, ``session_trial``,
 ``stim_idx``, and ``unique_or_shared``, which makes it the
 natural pivot table for aligning betas, stimuli, and splits.
 The same table is used in :doc:`plot_04_loading` to pair
-betas with images.
+betas with images. For the raw BIDS ``events.tsv`` (``onset``,
+``duration``, ``trial_type``, ...) instead of the derivative-
+side metadata, use
+:meth:`~laion_fmri.subject.Subject.get_events` after a
+``download_raw(...)`` fetch.
 
-This reads ``sub-01`` from the shared data directory that
-:doc:`plot_01_quickstart` populates; if plot_03 is being run
-in isolation, run plot_01 first (or call ``download(...)``
-directly).
+``Subject.metadata`` joins the trial table against the stimulus
+metadata CSV, so it needs the stimulus archive on disk. The
+guard below skips the cell when it isn't.
 
-.. GENERATED FROM PYTHON SOURCE LINES 297-308
+.. GENERATED FROM PYTHON SOURCE LINES 304-319
 
 .. code-block:: Python
 
 
-    from laion_fmri.subject import load_subject
-
-    # load the subject and inspect the metadata table
-    sub = load_subject(SUBJECT)
-    df = sub.metadata
-    print(df.head())
-    print(f"Total trials: {len(df)}")
-    shared = (df["unique_or_shared"] == "shared").sum()
-    print(f"Shared:       {shared}")
-    print(f"Per session:  {df['session'].value_counts().to_dict()}")
+    # inspect the metadata table
+    if sub.has_stimuli():
+        df = sub.metadata
+        print(df.head())
+        print(f"Total trials: {len(df)}")
+        shared = (df["unique_or_shared"] == "shared").sum()
+        print(f"Shared:       {shared}")
+        print(f"Per session:  {df['session'].value_counts().to_dict()}")
+    else:
+        print(
+            "Stimulus metadata not on disk; call "
+            "`download_stimuli()` (or `download(..., include_stimuli=True)`) "
+            "to populate the archive, then re-run this cell."
+        )
 
 
 
@@ -592,7 +609,7 @@ directly).
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (6 minutes 56.043 seconds)
+   **Total running time of the script:** (5 minutes 5.061 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:

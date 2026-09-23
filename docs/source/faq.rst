@@ -72,7 +72,10 @@ Data Access
    ``laion-fmri download`` CLI accept BIDS-entity filters - narrow by
    subject, session, task, space, desc, stat, suffix, and extension. So
    you can grab a single session, only the noise-ceiling maps, only the
-   ROI masks, etc. See :doc:`data_access` and
+   ROI masks, etc. Raw BIDS files (multi-echo BOLD, ``events.tsv``,
+   fieldmaps, raw MEGRE) are reachable via ``download_raw(...)`` or
+   ``download(..., include_raw=True)``; the raw side adds ``run``,
+   ``echo``, and ``part`` filters. See :doc:`data_access` and
    :doc:`laion_fmri_package/download`.
 
 .. dropdown:: Do I need to sign a Data Use Agreement?

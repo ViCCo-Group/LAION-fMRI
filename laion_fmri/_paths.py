@@ -309,6 +309,86 @@ def anatomical_file_path(
     return anatomical_session_dir(data_dir, subject) / filename
 
 
+# ── Raw BIDS ────────────────────────────────────────────────────
+
+RAW_TASK = "images"
+
+
+def raw_subject_dir(data_dir, subject):
+    """Path to the raw-BIDS dir for a subject."""
+    return Path(data_dir) / subject
+
+
+def raw_session_dir(data_dir, subject, session):
+    """Path to a raw-BIDS session dir."""
+    return raw_subject_dir(data_dir, subject) / session
+
+
+def raw_func_dir(data_dir, subject, session):
+    """Path to the raw ``func/`` dir."""
+    return raw_session_dir(data_dir, subject, session) / "func"
+
+
+def raw_fmap_dir(data_dir, subject, session):
+    """Path to the raw ``fmap/`` dir."""
+    return raw_session_dir(data_dir, subject, session) / "fmap"
+
+
+def raw_anat_dir(data_dir, subject, session):
+    """Path to the raw ``anat/`` dir (per-session MEGRE)."""
+    return raw_session_dir(data_dir, subject, session) / "anat"
+
+
+def _normalize_run_token(run):
+    """Return the zero-padded two-digit run string for a bare int/str."""
+    if isinstance(run, int):
+        return f"{run:02d}"
+    return str(run).zfill(2)
+
+
+def raw_bold_path(data_dir, subject, session, run, echo, part="mag"):
+    """Multi-echo raw BOLD NIfTI (``_bold.nii.gz``).
+
+    Parameters
+    ----------
+    data_dir, subject, session : str or Path
+    run : int or str
+        Run index. Bare integers are zero-padded to two digits.
+    echo : int or str
+        Echo index (1..3 for the release protocol).
+    part : ``"mag"`` (default) | ``"phase"``
+        BIDS ``part-`` entity. Magnitude is the standard input for
+        analysis pipelines; phase is the companion file needed for
+        phase-based denoising (NORDIC input).
+    """
+    run_tok = _normalize_run_token(run)
+    fname = (
+        f"{subject}_{session}_task-{RAW_TASK}_run-{run_tok}"
+        f"_echo-{echo}_part-{part}_bold.nii.gz"
+    )
+    return raw_func_dir(data_dir, subject, session) / fname
+
+
+def raw_sbref_path(data_dir, subject, session, run, echo, part="mag"):
+    """Per-echo single-band reference NIfTI (``_sbref.nii.gz``)."""
+    run_tok = _normalize_run_token(run)
+    fname = (
+        f"{subject}_{session}_task-{RAW_TASK}_run-{run_tok}"
+        f"_echo-{echo}_part-{part}_sbref.nii.gz"
+    )
+    return raw_func_dir(data_dir, subject, session) / fname
+
+
+def raw_events_path(data_dir, subject, session, run):
+    """Per-run raw BIDS events TSV (``_events.tsv``)."""
+    run_tok = _normalize_run_token(run)
+    fname = (
+        f"{subject}_{session}_task-{RAW_TASK}_run-{run_tok}"
+        f"_events.tsv"
+    )
+    return raw_func_dir(data_dir, subject, session) / fname
+
+
 # ── Stimuli ─────────────────────────────────────────────────────
 
 

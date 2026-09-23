@@ -196,3 +196,122 @@ def test_cli_download_passes_all_filters_combined(monkeypatch):
     assert captured["extension"] == ["nii.gz"]
     assert captured["n_jobs"] == 2
     assert captured["include_stimuli"] is True
+
+
+# ── include_* opt-in flags on the download subcommand ─────────
+
+
+def test_cli_download_forwards_include_freesurfer(monkeypatch):
+    """``--include-freesurfer`` reaches the Python download() call."""
+    captured = _capture_download(monkeypatch)
+    main([
+        "download", "--subject", "sub-03",
+        "--include-freesurfer",
+    ])
+    assert captured["include_freesurfer"] is True
+
+
+def test_cli_download_include_freesurfer_default_false(monkeypatch):
+    """Absent flag leaves ``include_freesurfer`` at False."""
+    captured = _capture_download(monkeypatch)
+    main(["download", "--subject", "sub-03"])
+    assert captured.get("include_freesurfer", False) is False
+
+
+def test_cli_download_forwards_include_anatomical(monkeypatch):
+    """``--include-anatomical`` reaches the Python download() call."""
+    captured = _capture_download(monkeypatch)
+    main([
+        "download", "--subject", "sub-03",
+        "--include-anatomical",
+    ])
+    assert captured["include_anatomical"] is True
+
+
+def test_cli_download_include_anatomical_default_false(monkeypatch):
+    """Absent flag leaves ``include_anatomical`` at False."""
+    captured = _capture_download(monkeypatch)
+    main(["download", "--subject", "sub-03"])
+    assert captured.get("include_anatomical", False) is False
+
+
+def test_cli_download_forwards_include_raw(monkeypatch):
+    """``--include-raw`` reaches the Python download() call."""
+    captured = _capture_download(monkeypatch)
+    main([
+        "download", "--subject", "sub-03",
+        "--include-raw",
+    ])
+    assert captured["include_raw"] is True
+
+
+def test_cli_download_include_raw_default_false(monkeypatch):
+    """Absent flag leaves ``include_raw`` at False."""
+    captured = _capture_download(monkeypatch)
+    main(["download", "--subject", "sub-03"])
+    assert captured.get("include_raw", False) is False
+
+
+# ── download-raw subcommand ────────────────────────────────────
+
+
+def _capture_download_raw(monkeypatch):
+    """Replace download_raw() with a recorder; return captured kwargs."""
+    captured = {}
+
+    def fake_download_raw(**kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr(
+        "laion_fmri.download.download_raw", fake_download_raw,
+    )
+    return captured
+
+
+def test_cli_download_raw_forwards_subject_and_n_jobs(monkeypatch):
+    """Bare ``download-raw`` call forwards subject and default n_jobs."""
+    captured = _capture_download_raw(monkeypatch)
+    main([
+        "download-raw", "--subject", "sub-03",
+        "--n-jobs", "4",
+    ])
+    assert captured["subject"] == "sub-03"
+    assert captured["n_jobs"] == 4
+
+
+def test_cli_download_raw_forwards_ses_task(monkeypatch):
+    """``--ses`` and ``--task`` forward to ``download_raw``."""
+    captured = _capture_download_raw(monkeypatch)
+    main([
+        "download-raw", "--subject", "sub-03",
+        "--ses", "ses-01",
+        "--task", "images",
+    ])
+    assert captured["ses"] == ["ses-01"]
+    assert captured["task"] == ["images"]
+
+
+def test_cli_download_raw_forwards_run_echo_part(monkeypatch):
+    """Raw-specific filters ``--run``/``--echo``/``--part`` forward."""
+    captured = _capture_download_raw(monkeypatch)
+    main([
+        "download-raw", "--subject", "sub-03",
+        "--run", "01",
+        "--echo", "1",
+        "--part", "mag",
+    ])
+    assert captured["run"] == ["01"]
+    assert captured["echo"] == ["1"]
+    assert captured["part"] == ["mag"]
+
+
+def test_cli_download_raw_forwards_suffix_extension(monkeypatch):
+    """``--suffix events --extension tsv`` forwards to ``download_raw``."""
+    captured = _capture_download_raw(monkeypatch)
+    main([
+        "download-raw", "--subject", "sub-03",
+        "--suffix", "events",
+        "--extension", "tsv",
+    ])
+    assert captured["suffix"] == ["events"]
+    assert captured["extension"] == ["tsv"]
