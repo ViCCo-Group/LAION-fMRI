@@ -413,8 +413,11 @@ for ax, (roi, color) in zip(axes, roi_specs):
     sub.to_nifti(
         sub.get_roi_mask(roi).astype("float32"), roi_path,
     )
-    # pick the axial slice centered on the ROI's bounding box
-    _, _, z = find_xyz_cut_coords(nib.load(roi_path))
+    # pick the axial slice through the ROI's largest cluster; the
+    # explicit threshold keeps binary masks working in nilearn >= 0.14.1
+    _, _, z = find_xyz_cut_coords(
+        nib.load(roi_path), activation_threshold=0.5,
+    )
     # plot the anatomical backdrop, then overlay the ROI contour
     display = plotting.plot_anat(
         bg_img, axes=ax,
