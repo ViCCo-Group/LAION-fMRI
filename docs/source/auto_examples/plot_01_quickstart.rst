@@ -553,7 +553,7 @@ into a downstream model. The multi-format ROI accessor
 (volume ``.nii.gz`` / surface ``.func.gii`` / FreeSurfer
 ``.label``) is covered in :doc:`plot_04_loading`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 394-431
+.. GENERATED FROM PYTHON SOURCE LINES 394-434
 
 .. code-block:: Python
 
@@ -579,8 +579,11 @@ into a downstream model. The multi-format ROI accessor
         sub.to_nifti(
             sub.get_roi_mask(roi).astype("float32"), roi_path,
         )
-        # pick the axial slice centered on the ROI's bounding box
-        _, _, z = find_xyz_cut_coords(nib.load(roi_path))
+        # pick the axial slice through the ROI's largest cluster; the
+        # explicit threshold keeps binary masks working in nilearn >= 0.14.1
+        _, _, z = find_xyz_cut_coords(
+            nib.load(roi_path), activation_threshold=0.5,
+        )
         # plot the anatomical backdrop, then overlay the ROI contour
         display = plotting.plot_anat(
             bg_img, axes=ax,
@@ -606,7 +609,7 @@ into a downstream model. The multi-format ROI accessor
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 432-442
+.. GENERATED FROM PYTHON SOURCE LINES 435-445
 
 Per-session noise ceiling
 -------------------------
@@ -619,7 +622,7 @@ could possibly explain, given the trial-to-trial reliability
 of the responses. Voxels with a low ceiling will not produce
 good models no matter how clever the analysis is.
 
-.. GENERATED FROM PYTHON SOURCE LINES 442-450
+.. GENERATED FROM PYTHON SOURCE LINES 445-453
 
 .. code-block:: Python
 
@@ -644,7 +647,7 @@ good models no matter how clever the analysis is.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 451-461
+.. GENERATED FROM PYTHON SOURCE LINES 454-464
 
 Visualize the noise-ceiling map
 -------------------------------
@@ -657,7 +660,7 @@ informs the next step in an analysis: thresholding by NC,
 restricting to high-NC voxels, or staying with ROI-based
 selections.
 
-.. GENERATED FROM PYTHON SOURCE LINES 461-499
+.. GENERATED FROM PYTHON SOURCE LINES 464-502
 
 .. code-block:: Python
 
@@ -711,7 +714,7 @@ selections.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 500-518
+.. GENERATED FROM PYTHON SOURCE LINES 503-521
 
 Stimulus images
 ---------------
@@ -732,7 +735,7 @@ not redistribute stimulus content; uncomment it to inspect
 the image locally. For object-level segmentation masks that
 go with each image, see :doc:`plot_05_segmentations`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 518-529
+.. GENERATED FROM PYTHON SOURCE LINES 521-532
 
 .. code-block:: Python
 
@@ -763,7 +766,7 @@ go with each image, see :doc:`plot_05_segmentations`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (11 minutes 31.608 seconds)
+   **Total running time of the script:** (1 minutes 39.815 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_01_quickstart.py:

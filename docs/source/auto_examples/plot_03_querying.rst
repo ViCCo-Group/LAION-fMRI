@@ -272,6 +272,7 @@ extra prefix) show up at a glance.
     derivatives/rois/: 5 entries, 5 sub-* entries
     derivatives/freesurfer/: 5 entries, 5 sub-* entries
     derivatives/anatomical/: 5 entries, 5 sub-* entries
+    derivatives/localizers/: 5 entries, 5 sub-* entries
     sub-*/  (raw BIDS root): 7 entries, 5 sub-* entries
 
 
@@ -609,7 +610,7 @@ guard below skips the cell when it isn't.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (5 minutes 5.061 seconds)
+   **Total running time of the script:** (2 minutes 13.580 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:
