@@ -565,7 +565,7 @@ ROI is not reliable to analyze with. Doing this once, up
 front, surfaces problems that would otherwise turn up much
 later in a downstream model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 392-431
+.. GENERATED FROM PYTHON SOURCE LINES 392-434
 
 .. code-block:: Python
 
@@ -593,8 +593,11 @@ later in a downstream model.
             sub.to_nifti(
                 sub.get_roi_mask(roi).astype("float32"), roi_path,
             )
-            # pick the axial slice centered on the ROI's bounding box
-            _, _, z = find_xyz_cut_coords(nib.load(roi_path))
+            # pick the axial slice through the ROI's largest cluster; the
+            # explicit threshold keeps binary masks working in nilearn >= 0.14.1
+            _, _, z = find_xyz_cut_coords(
+                nib.load(roi_path), activation_threshold=0.5,
+            )
             # plot the anatomical backdrop, then overlay the ROI contour
             display = plotting.plot_anat(
                 bg_img, axes=ax,
@@ -620,7 +623,7 @@ later in a downstream model.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 432-448
+.. GENERATED FROM PYTHON SOURCE LINES 435-451
 
 Surface ROI files (.func.gii)
 -----------------------------
@@ -639,7 +642,7 @@ The cell below pulls only the surface variant per
 hemisphere; the same call with a different ``format=`` would
 return the volume mask or the FreeSurfer label instead.
 
-.. GENERATED FROM PYTHON SOURCE LINES 448-519
+.. GENERATED FROM PYTHON SOURCE LINES 451-522
 
 .. code-block:: Python
 
@@ -732,7 +735,7 @@ return the volume mask or the FreeSurfer label instead.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 520-539
+.. GENERATED FROM PYTHON SOURCE LINES 523-542
 
 Noise ceiling
 -------------
@@ -754,7 +757,7 @@ More repetitions tighten the estimate but include fewer
 stimuli, so the trade-off is between a stable ceiling and
 full stimulus coverage.
 
-.. GENERATED FROM PYTHON SOURCE LINES 539-555
+.. GENERATED FROM PYTHON SOURCE LINES 542-558
 
 .. code-block:: Python
 
@@ -787,7 +790,7 @@ full stimulus coverage.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 556-568
+.. GENERATED FROM PYTHON SOURCE LINES 559-571
 
 Trial info and stimulus metadata
 --------------------------------
@@ -802,7 +805,7 @@ sessions, with the ``image_name`` already filled in. The
 second is the table to pivot on when a model needs trials,
 betas, and stimuli kept in lockstep.
 
-.. GENERATED FROM PYTHON SOURCE LINES 568-586
+.. GENERATED FROM PYTHON SOURCE LINES 571-589
 
 .. code-block:: Python
 
@@ -840,17 +843,19 @@ betas, and stimuli kept in lockstep.
     3  ses-01    1           3   unique_LAION_initial_cluster_4651_i2_p01.jpg
     4  ses-01    1           4   unique_LAION_initial_cluster_3457_i4_p01.jpg
     Trial table rows: 1044 (across all sessions)
-      session  session_trial                                     image_name unique_or_shared
-    0  ses-01              0       unique_LAION_new_cluster_475_i49_p01.jpg           unique
-    1  ses-01              1  unique_LAION_initial_cluster_5192_i30_p01.jpg           unique
-    2  ses-01              2         shared_12rep_LAION_cluster_2677_i5.jpg           shared
-    3  ses-01              3   unique_LAION_initial_cluster_4651_i2_p01.jpg           unique
-    4  ses-01              4   unique_LAION_initial_cluster_3457_i4_p01.jpg           unique
+      session  ...  unique_or_shared
+    0  ses-01  ...            unique
+    1  ses-01  ...            unique
+    2  ses-01  ...            shared
+    3  ses-01  ...            unique
+    4  ses-01  ...            unique
+
+    [5 rows x 4 columns]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 587-600
+.. GENERATED FROM PYTHON SOURCE LINES 590-603
 
 Stimulus images
 ---------------
@@ -866,7 +871,7 @@ beta arrays loaded above.
 When the bucket's ``stimuli/`` prefix is not yet populated,
 the call is skipped automatically.
 
-.. GENERATED FROM PYTHON SOURCE LINES 600-612
+.. GENERATED FROM PYTHON SOURCE LINES 603-615
 
 .. code-block:: Python
 
@@ -896,7 +901,7 @@ the call is skipped automatically.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 613-629
+.. GENERATED FROM PYTHON SOURCE LINES 616-632
 
 Brain-space mapping: save derived results as NIfTI
 --------------------------------------------------
@@ -915,7 +920,7 @@ The cell below illustrates the pattern by saving trial-mean
 betas as a 3-D map; any other per-voxel summary can be
 saved the same way.
 
-.. GENERATED FROM PYTHON SOURCE LINES 629-660
+.. GENERATED FROM PYTHON SOURCE LINES 632-663
 
 .. code-block:: Python
 
@@ -965,7 +970,7 @@ saved the same way.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 661-673
+.. GENERATED FROM PYTHON SOURCE LINES 664-676
 
 Multi-subject group loading
 ---------------------------
@@ -980,7 +985,7 @@ delegate to each subject and return a dict keyed by subject
 ID. ``load_subjects`` is the convenience constructor for the
 typical case where the subject list is known up front.
 
-.. GENERATED FROM PYTHON SOURCE LINES 673-714
+.. GENERATED FROM PYTHON SOURCE LINES 676-717
 
 .. code-block:: Python
 
@@ -1040,7 +1045,7 @@ typical case where the subject list is known up front.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 715-734
+.. GENERATED FROM PYTHON SOURCE LINES 718-737
 
 PyTorch dataset integration
 ---------------------------
@@ -1062,7 +1067,7 @@ gated behind the ``[torch]`` add-on:
 
     uv pip install "laion-fmri[torch]"
 
-.. GENERATED FROM PYTHON SOURCE LINES 734-767
+.. GENERATED FROM PYTHON SOURCE LINES 737-770
 
 .. code-block:: Python
 
@@ -1116,7 +1121,7 @@ gated behind the ``[torch]`` add-on:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 768-789
+.. GENERATED FROM PYTHON SOURCE LINES 771-792
 
 Raw BIDS events
 ---------------
@@ -1140,7 +1145,7 @@ fetch. :meth:`~laion_fmri.subject.Subject.get_events` then
 reads the per-run TSVs and returns a concatenated DataFrame
 with an added ``run`` column.
 
-.. GENERATED FROM PYTHON SOURCE LINES 789-795
+.. GENERATED FROM PYTHON SOURCE LINES 792-798
 
 .. code-block:: Python
 
@@ -1160,12 +1165,12 @@ with an added ``run`` column.
 
     raw events shape: (1128, 19)
     raw events columns: ['onset', 'duration', 'trial_number', 'trial_type', 'response', 'response_correct', 'response_changed', 'response_time', 'stim_number', 'stim_name', 'stim_occurrence', 'stim_occurrence_run', 'stim_occurrence_session', 'stim_duration', 'isi_onset', 'isi_duration', 'pulse_number', 'pulse_onset', 'run']
-         onset  duration  trial_number trial_type  ...  isi_duration  pulse_number             pulse_onset     run
-    0  12.0493    2.9998             1        new  ...           0.5           [8]             ['13.2994']  run-01
-    1  15.0491    2.9999             2        new  ...           0.5       [9, 10]  ['15.1992', '17.0991']  run-01
-    2  18.0491    2.9999             3        new  ...           0.5      [11, 12]  ['18.9991', '20.8991']  run-01
-    3  21.0490    2.9999             4        new  ...           0.5          [13]              ['22.799']  run-01
-    4  24.0489    2.9999             5        new  ...           0.5      [14, 15]  ['24.6991', '26.5989']  run-01
+         onset  duration  trial_number  ... pulse_number             pulse_onset     run
+    0  12.0493    2.9998             1  ...          [8]             ['13.2994']  run-01
+    1  15.0491    2.9999             2  ...      [9, 10]  ['15.1992', '17.0991']  run-01
+    2  18.0491    2.9999             3  ...     [11, 12]  ['18.9991', '20.8991']  run-01
+    3  21.0490    2.9999             4  ...         [13]              ['22.799']  run-01
+    4  24.0489    2.9999             5  ...     [14, 15]  ['24.6991', '26.5989']  run-01
 
     [5 rows x 19 columns]
 
@@ -1175,7 +1180,7 @@ with an added ``run`` column.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (19 minutes 27.153 seconds)
+   **Total running time of the script:** (4 minutes 17.726 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_04_loading.py:

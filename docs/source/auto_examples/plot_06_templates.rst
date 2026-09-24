@@ -441,7 +441,7 @@ compared cleanly against a volume one further down.
 
  .. code-block:: none
 
-    [fetch_surf_fsaverage] Dataset found in $HOME/nilearn_data/fsaverage
+    [fetch_surf_fsaverage] Dataset directory found: $HOME/nilearn_data/fsaverage
 
 
 
@@ -729,7 +729,7 @@ caught before any data moves.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (11 minutes 9.030 seconds)
+   **Total running time of the script:** (6 minutes 21.482 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_06_templates.py:

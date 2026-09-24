@@ -637,47 +637,19 @@
   {
    "is_class": false,
    "is_explicit": false,
-   "module": "PIL.JpegImagePlugin",
-   "module_short": "PIL.JpegImagePlugin",
-   "name": "JpegImageFile"
+   "module": "PIL.Image",
+   "module_short": "PIL.Image",
+   "name": "Image"
   },
   {
    "is_class": false,
    "is_explicit": false,
    "module": "PIL",
    "module_short": "PIL",
-   "name": "JpegImageFile"
+   "name": "Image"
   }
  ],
  "img.size": [
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "PIL.JpegImagePlugin",
-   "module_short": "PIL.JpegImagePlugin",
-   "name": "JpegImageFile.size"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "PIL",
-   "module_short": "PIL",
-   "name": "JpegImageFile.size"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "PIL.ImageFile",
-   "module_short": "PIL.ImageFile",
-   "name": "ImageFile.size"
-  },
-  {
-   "is_class": false,
-   "is_explicit": false,
-   "module": "PIL",
-   "module_short": "PIL",
-   "name": "ImageFile.size"
-  },
   {
    "is_class": false,
    "is_explicit": false,

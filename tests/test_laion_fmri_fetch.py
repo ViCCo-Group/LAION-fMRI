@@ -397,6 +397,81 @@ def test_fetch_skips_anatomical_by_default(
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
 @patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_lists_localizers_when_include_set(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03", include_localizers=True,
+        )
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/localizers/sub-03/" in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_skips_localizers_by_default(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """No ``include_localizers`` flag -> localizer prefix is not touched,
+    so a plain download does not grow by a few hundred MB per subject."""
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/localizers/sub-03/" not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_localizers_pulled_regardless_of_functional_filters(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """Localizer keys carry ``contrast-`` / ``hemi-`` entities and sit in
+    their own sessions; ``include_localizers=True`` pulls the tree
+    unfiltered, and the ses-31 object localizer is not embargoed."""
+    floc_key = (
+        "derivatives/localizers/sub-03/ses-4BarScreenfLoc/func/"
+        "sub-03_ses-4BarScreenfLoc_task-floc_hemi-L_space-fsnative_"
+        "contrast-faceVsOthers_stat-z_statmap.func.gii"
+    )
+    oloc_key = (
+        "derivatives/localizers/sub-03/ses-31/func/"
+        "sub-03_ses-31_task-oloc_hemi-L_space-fsnative_"
+        "contrast-objectVsScrambled_stat-z_statmap.func.gii"
+    )
+
+    def list_side_effect(bucket, prefix):
+        if prefix == "derivatives/localizers/sub-03/":
+            return [{"Key": floc_key, "Size": 100},
+                    {"Key": oloc_key, "Size": 100}]
+        return []
+
+    mock_list_objects.side_effect = list_side_effect
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03", ses="01",
+            suffix="statmap", extension="nii.gz",
+            include_localizers=True,
+        )
+
+    downloaded = [c.args[1] for c in mock_download_key.call_args_list]
+    assert floc_key in downloaded
+    assert oloc_key in downloaded
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
 def test_fetch_anatomical_pulled_even_with_ses_filter(
     mock_download_key, mock_list_objects, tmp_path,
 ):
@@ -880,6 +955,48 @@ def test_is_held_out_false_for_public_session_keys(ses_token):
         "stat-effect_statmap.nii.gz"
     )
     assert _is_held_out(key) is False
+
+
+@pytest.mark.parametrize("suffix", [
+    "_hemi-L_space-fsnative_contrast-objectVsScrambled_stat-z_"
+    "statmap.func.gii",
+    ".json",
+])
+def test_is_held_out_exempts_object_localizer_in_ses31(suffix):
+    """``task-oloc`` was acquired in the held-out ses-31 but its derived
+    statistics are released; the exemption is keyed on the task entity."""
+    key = (
+        "derivatives/localizers/sub-03/ses-31/func/"
+        f"sub-03_ses-31_task-oloc{suffix}"
+    )
+    assert _is_held_out(key) is False
+
+
+def test_is_held_out_keeps_ses31_files_without_exempt_task():
+    """The exemption never reaches image-viewing BOLD or task-less files."""
+    bold = (
+        "derivatives/glmsingle-tedana/sub-03/ses-31/func/"
+        "sub-03_ses-31_task-images_desc-singletrial_stat-effect_"
+        "statmap.nii.gz"
+    )
+    anat = "sub-03/ses-31/anat/sub-03_ses-31_T1w.nii.gz"
+    assert _is_held_out(bold) is True
+    assert _is_held_out(anat) is True
+
+
+def test_is_held_out_exemption_limited_to_localizer_derivatives():
+    """Raw and preprocessed ses-31 oLoc files are not released; only the
+    localizer derivatives are."""
+    raw = (
+        "sub-03/ses-31/func/"
+        "sub-03_ses-31_task-oloc_run-01_echo-1_part-mag_bold.nii.gz"
+    )
+    preproc = (
+        "derivatives/tedana/sub-03/ses-31/func/"
+        "sub-03_ses-31_task-oloc_run-01_space-T1w_desc-optcom_bold.nii.gz"
+    )
+    assert _is_held_out(raw) is True
+    assert _is_held_out(preproc) is True
 
 
 def test_is_held_out_false_for_subject_level_key():

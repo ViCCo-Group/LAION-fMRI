@@ -540,6 +540,7 @@ def download(
     include_freesurfer=False,
     include_anatomical=False,
     include_raw=False,
+    include_localizers=False,
     n_jobs=1,
 ):
     """Download fMRI dataset files for a subject, narrowed by BIDS entities.
@@ -599,6 +600,11 @@ def download(
         ``ses`` / ``run`` / ``echo`` / ``part`` / ``suffix`` /
         ``extension`` filters to narrow. Use
         :func:`download_raw` for a raw-only fetch.
+    include_localizers : bool
+        If True, also pull the subject's localizer derivatives under
+        ``derivatives/localizers/{subject}/`` (contrast z-maps and
+        per-run effect maps, a few hundred MB). Pulled in full; the
+        BIDS filters do not apply.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (AWS CLI copy subprocesses). ``1`` (default) is sequential.
@@ -651,6 +657,7 @@ def download(
             include_freesurfer=include_freesurfer,
             include_anatomical=include_anatomical,
             include_raw=include_raw,
+            include_localizers=include_localizers,
         )
 
     if include_stimuli:

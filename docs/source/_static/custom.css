@@ -665,3 +665,12 @@ body[data-theme="light"] a.muted-link.funding-link:hover {
         justify-content: flex-start;
     }
 }
+
+/* Keep BIDS entity keys intact inside tables.
+ * Browsers break inside <code> at hyphens, which splits identifiers like
+ * task-LowerLeft or ses-MotionLocBarsSML across two lines. Literals in a
+ * table cell stay on one line; the surrounding text still wraps between
+ * them. Scoped to tables so long paths in code blocks keep wrapping. */
+table code {
+    white-space: nowrap;
+}

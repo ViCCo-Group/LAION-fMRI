@@ -79,6 +79,7 @@ DEFAULT_FETCH_KWARGS = dict(
     suffix=None, extension=None, n_jobs=1,
     include_freesurfer=False, include_anatomical=False,
     include_raw=False,
+    include_localizers=False,
 )
 
 
@@ -294,6 +295,23 @@ def test_download_raw_forwards_bids_filters(configured_env):
     assert kwargs["suffix"] == "events"
     assert kwargs["extension"] == "tsv"
     assert kwargs["n_jobs"] == 2
+
+
+# ── include_localizers forwards to fetch_laion_fmri ────────────
+
+def test_download_passes_include_localizers_to_fetch(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01", include_localizers=True)
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs["include_localizers"] is True
+
+
+def test_download_include_localizers_default_false(configured_env):
+    """Default skips the localizer tree -- a few hundred MB per subject."""
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01")
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs.get("include_localizers", False) is False
 
 
 def test_download_captions_fetches_public_csv(configured_env):

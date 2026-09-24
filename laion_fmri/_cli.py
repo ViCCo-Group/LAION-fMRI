@@ -93,6 +93,10 @@ def main(argv=None):
             "BOLD, sbref, events, fieldmaps, raw MEGRE)."
         ),
     )
+    download_parser.add_argument(
+        "--include-localizers", action="store_true",
+        help="Include the localizer derivatives (contrast and effect maps).",
+    )
 
     info_parser = subparsers.add_parser(
         "info", help="Show dataset information"
@@ -235,6 +239,7 @@ def _handle_download(args):
         include_freesurfer=args.include_freesurfer,
         include_anatomical=args.include_anatomical,
         include_raw=args.include_raw,
+        include_localizers=args.include_localizers,
     )
 
 

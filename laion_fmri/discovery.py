@@ -19,6 +19,7 @@ SUBJECT_PREFIXES = (
     "derivatives/rois/",
     "derivatives/freesurfer/",
     "derivatives/anatomical/",
+    "derivatives/localizers/",
     "",
 )
 

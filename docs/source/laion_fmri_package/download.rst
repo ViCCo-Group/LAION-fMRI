@@ -20,6 +20,7 @@ Download
        include_freesurfer=False, # also pull derivatives/freesurfer/
        include_anatomical=False, # also pull derivatives/anatomical/
        include_raw=False,        # also pull raw BIDS tree (sub-XX/)
+       include_localizers=False, # also pull derivatives/localizers/
        n_jobs=1,                 # parallel `aws s3 cp` workers
    )
 
@@ -61,6 +62,13 @@ Arguments
   ``extension`` filters to narrow the fetch. Use
   :func:`download_raw` when you want the raw tree without
   the default derivative walk.
+* ``include_localizers=True`` pulls the per-subject localizer
+  derivatives under ``derivatives/localizers/{subject}/``: the
+  contrast z-maps and per-run effect-size maps of the category,
+  object and motion localizers (a few hundred MB per subject).
+  They are pulled in full; the BIDS filters do not apply. Address
+  single maps with the helpers in :mod:`laion_fmri.derivatives`;
+  see :doc:`../localizers`.
 
 Filter semantics
 ================

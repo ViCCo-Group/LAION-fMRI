@@ -23,7 +23,12 @@ from laion_fmri._s3_engine import (
     download_key,
     list_prefix_objects,
 )
-from laion_fmri._sources import HELD_OUT_SESSIONS, LAION_FMRI_BUCKET
+from laion_fmri._sources import (
+    HELD_OUT_EXEMPT_PREFIX,
+    HELD_OUT_EXEMPT_TASKS,
+    HELD_OUT_SESSIONS,
+    LAION_FMRI_BUCKET,
+)
 
 DATASET_LEVEL_KEYS = (
     "dataset_description.json",
@@ -165,10 +170,14 @@ def _matches_filters(key, filters):
 
 
 def _is_held_out(key):
-    """True if ``key`` belongs to a session in ``HELD_OUT_SESSIONS``."""
+    """True if ``key`` is in a held-out session and not an exempt
+    localizer derivative."""
     for ses in HELD_OUT_SESSIONS:
         if f"/{ses}/" in key or key.endswith(f"/{ses}"):
-            return True
+            if not key.startswith(HELD_OUT_EXEMPT_PREFIX):
+                return True
+            return not any(f"task-{t}_" in key or f"task-{t}." in key
+                           for t in HELD_OUT_EXEMPT_TASKS)
     return False
 
 
@@ -207,8 +216,9 @@ def _filtered_download(
 
     Files whose local size already matches the S3 size are skipped
     entirely -- so a re-run of an interrupted download only fetches
-    what's missing. Keys under ``HELD_OUT_SESSIONS`` are unconditionally
-    excluded; their bucket-policy deny rule would 403 every GET.
+    what's missing. Keys under ``HELD_OUT_SESSIONS`` are excluded
+    (their bucket-policy deny rule would 403 every GET) unless they
+    belong to a task in ``HELD_OUT_EXEMPT_TASKS``.
 
     Parameters
     ----------
@@ -320,6 +330,7 @@ def fetch_laion_fmri(
     include_freesurfer=False,
     include_anatomical=False,
     include_raw=False,
+    include_localizers=False,
 ):
     """Download fMRI / derivatives for one subject.
 
@@ -366,6 +377,11 @@ def fetch_laion_fmri(
         (multi-echo BOLD, sbref, events, fieldmaps, raw MEGRE).
         The BIDS filters above (including ``run``, ``echo``,
         ``part``) apply.
+    include_localizers : bool
+        If True, also pull the subject's localizer derivatives under
+        ``derivatives/localizers/{subject}/`` (contrast z-maps and
+        per-run effect maps, a few hundred MB). Like the recon and anat
+        trees, they are pulled in full; the BIDS filters do not apply.
     """
     bucket = LAION_FMRI_BUCKET
     filters = {
@@ -414,6 +430,7 @@ def fetch_laion_fmri(
         and not include_freesurfer
         and not include_anatomical
         and not include_raw
+        and not include_localizers
     ):
         prefixes = (
             f"s3://{bucket}/{glm_result['prefix']}",
@@ -453,6 +470,12 @@ def fetch_laion_fmri(
     if include_raw:
         _download_raw_prefix(
             bucket, subject, data_dir, raw_filters, n_jobs=n_jobs,
+        )
+
+    if include_localizers:
+        _filtered_download(
+            bucket, f"derivatives/localizers/{subject}/",
+            data_dir, {}, n_jobs=n_jobs,
         )
 
     return {
