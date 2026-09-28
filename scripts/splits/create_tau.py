@@ -208,9 +208,17 @@ def _log_distance(ratio: float, target: float) -> float:
 
 def select_tau_indices(
     mats: dict[str, np.ndarray],
+    *,
+    eligible: np.ndarray | None = None,
+    progress=None,
 ) -> tuple[np.ndarray, dict[str, float]]:
     n = next(iter(mats.values())).shape[0]
     n_test = int(round(TAU_TARGET_FRAC * n))
+    if eligible is None:
+        eligible = np.ones(n, dtype=bool)
+    eligible = np.asarray(eligible, dtype=bool)
+    if eligible.shape != (n,):
+        raise ValueError("eligible must have one entry per image")
     lonely_worst = _lonely_worst_percentile(mats)
     baseline_per_space, baseline_mean = _random_baseline(
         mats,
@@ -221,7 +229,7 @@ def select_tau_indices(
     sweep = []
     for percentile in ADAPTIVE_PERCENTILES:
         tau = float(np.quantile(lonely_worst, percentile / 100.0))
-        feasible = np.where(lonely_worst > tau)[0].astype(np.int64)
+        feasible = np.flatnonzero((lonely_worst > tau) & eligible)
         if len(feasible) < n_test:
             continue
         seed_test = _best_of_n_seed(
@@ -249,6 +257,9 @@ def select_tau_indices(
             "random_baseline_mmd2": baseline_per_space,
             "random_baseline_mmd2_mean": baseline_mean,
         })
+
+        if progress is not None:
+            progress({k: v for k, v in sweep[-1].items() if k != "test_idx"})
 
     if not sweep:
         raise RuntimeError("feasible tau candidate set is empty")

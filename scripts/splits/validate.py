@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -53,8 +54,11 @@ def _assert_complement(
             f"{pool}/{name}: train+test differs from regular universe; "
             f"missing={missing}, extra={extra}"
         )
-    if train != [image_id for image_id in universe if image_id not in test_set]:
-        raise AssertionError(f"{pool}/{name}: train differs from ordered complement")
+    expected_train = [v for v in universe if v not in test_set]
+    if train != expected_train:
+        raise AssertionError(
+            f"{pool}/{name}: train differs from ordered complement"
+        )
 
 
 def _ood_type(image_id: str) -> str:
@@ -95,19 +99,35 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     for name in RANDOM_NAMES:
         split = load_split(pool, name, data_dir)
         if split["splitter"] != RANDOM_SPLITTER:
-            raise AssertionError(f"{pool}/{name}: expected {RANDOM_SPLITTER}")
+            raise AssertionError(
+                f"{pool}/{name}: expected {RANDOM_SPLITTER}"
+            )
         params = split["params"]
         expected_fold = int(name.rsplit("_", 1)[1])
-        if params != random_params(expected_fold):
+        if params != random_params(expected_fold, pool):
             raise AssertionError(f"{pool}/{name}: unexpected random params")
         random_test_sets.append(set(test_ids(split)))
     if set.union(*random_test_sets) != universe_set:
-        raise AssertionError(f"{pool}: random folds leave gaps in universe coverage")
+        raise AssertionError(
+            f"{pool}: random folds leave gaps in universe coverage"
+        )
     if sum(len(s) for s in random_test_sets) != len(universe_set):
         raise AssertionError(f"{pool}: random fold test sets overlap")
     random_sizes = [len(s) for s in random_test_sets]
     if max(random_sizes) - min(random_sizes) > 1:
         raise AssertionError(f"{pool}: imbalanced random fold sizes")
+
+    groups_path = Path(__file__).parent / "data/duplicate_groups.json"
+    groups = json.loads(groups_path.read_text()).get(pool, [])
+    assignments = {
+        image_id: fold
+        for fold, ids in enumerate(random_test_sets) for image_id in ids
+    }
+    for group in groups:
+        if len({assignments[image_id] for image_id in group}) != 1:
+            raise AssertionError(
+                f"{pool}: duplicate images cross random folds"
+            )
 
     cluster_test_sets = []
     for name in CLUSTER_K5_NAMES:
@@ -121,10 +141,14 @@ def validate_pool(pool: str, data_dir: Path) -> None:
             expected_cluster,
             n_init=cluster_k5_n_init(pool),
         ):
-            raise AssertionError(f"{pool}/{name}: unexpected cluster params")
+            raise AssertionError(
+                f"{pool}/{name}: unexpected cluster params"
+            )
         cluster_test_sets.append(set(test_ids(split)))
     if set.union(*cluster_test_sets) != universe_set:
-        raise AssertionError(f"{pool}: cluster folds leave gaps in universe coverage")
+        raise AssertionError(
+            f"{pool}: cluster folds leave gaps in universe coverage"
+        )
     if sum(len(s) for s in cluster_test_sets) != len(universe_set):
         raise AssertionError(f"{pool}: cluster fold test sets overlap")
 
@@ -144,12 +168,57 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     if ood["params"] != ood_params():
         raise AssertionError(f"{pool}/ood: unexpected params")
     if set(train_ids(ood)) != universe_set:
-        raise AssertionError(f"{pool}/ood: train side differs from regular universe")
+        raise AssertionError(
+            f"{pool}/ood: train side differs from regular universe"
+        )
     if set(test_ids(ood)) & universe_set:
         raise AssertionError(f"{pool}/ood: OOD test overlaps regular universe")
     seen_types = sorted({_ood_type(image_id) for image_id in test_ids(ood)})
     if seen_types != sorted(OOD_TYPES):
         raise AssertionError(f"{pool}/ood: unexpected OOD types {seen_types}")
+
+
+def validate_pooled(data_dir: Path) -> None:
+    universe = sorted({
+        image_id for pool in POOLS[1:]
+        for image_id in _regular_pool_ids(pool, data_dir)
+    })
+    input_dir = Path(__file__).parent / "data"
+    groups_path = input_dir / "pooled_duplicate_groups.json"
+    groups = json.loads(groups_path.read_text())
+    image_groups = json.loads(
+        (input_dir / "pooled_image_groups.json").read_text()
+    )["groups"]
+    folds = []
+    for name in ("tau",) + CLUSTER_K5_NAMES:
+        split = load_split("pooled", name, data_dir)
+        validate_single_split(split)
+        train, test = train_ids(split), test_ids(split)
+        _assert_unique(train, f"pooled/{name}/train")
+        _assert_unique(test, f"pooled/{name}/test")
+        _assert_complement(pool="pooled", name=name, universe=universe,
+                           train=train, test=test)
+        test_set = set(test)
+        for group in groups:
+            if len({image_id in test_set for image_id in group}) != 1:
+                raise AssertionError(f"pooled/{name}: duplicates cross sides")
+        if name == "tau":
+            if len(test) != round(0.2 * len(universe)):
+                raise AssertionError("pooled/tau: wrong test size")
+            if any(image_id in test_set for g in groups for image_id in g):
+                raise AssertionError("pooled/tau: duplicate image in test")
+        else:
+            for group in image_groups:
+                if len({image_id in test_set for image_id in group}) != 1:
+                    raise AssertionError(
+                        f"pooled/{name}: similar images cross sides"
+                    )
+            folds.append(test_set)
+    if set.union(*folds) != set(universe):
+        raise AssertionError("pooled: cluster folds leave gaps")
+    if sum(map(len, folds)) != len(universe):
+        raise AssertionError("pooled: cluster folds overlap")
+    print("pooled: validation ok")
 
 
 def validate_all(data_dir: Path) -> None:
@@ -160,6 +229,7 @@ def validate_all(data_dir: Path) -> None:
         if pool_ood != shared_ood:
             raise AssertionError(f"{pool}/ood: test IDs differ from shared")
         print(f"{pool}: validation ok")
+    validate_pooled(data_dir)
 
 
 def main() -> None:

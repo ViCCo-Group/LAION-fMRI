@@ -7,6 +7,24 @@ Changes to the dataset, derived files, and Python package.
 2026-09-28
 ==========
 
+.. _random-split-correction:
+
+Corrected per-subject random splits
+------------------------------------
+
+Updated the subject-specific ``random_0``–``random_4`` splits to keep
+identified duplicate images in the same fold, preserving split names
+and fold sizes. Update the Python package to use the corrected splits.
+The `previous files <https://github.com/ViCCo-Group/LAION-fMRI/blob/main/archive/splits/random-v1.zip>`__
+are archived for reproducing earlier results.
+
+Across-subject train/test splits
+--------------------------------
+
+Added ``pool="pooled"`` with tau and five cluster splits for consistent
+image assignments across subjects. See
+:ref:`across-subject splits <pooled-splits>` for usage and construction.
+
 .. _embedding-transparency-correction:
 
 Corrected stimulus embedding transparency

@@ -6,7 +6,8 @@
     "method": "shuffled_5fold_cv",
     "k": 5,
     "seed": 42,
-    "fold": 4
+    "fold": 4,
+    "revision": 2
   },
   "n_train": 4667,
   "n_test": 1166,
@@ -1705,6 +1706,7 @@
         "unique_LAION_initial_cluster_1494_i3_p02.jpg",
         "unique_LAION_initial_cluster_1495_i5_p02.jpg",
         "unique_LAION_initial_cluster_1496_i42_p02.jpg",
+        "unique_LAION_initial_cluster_1501_i1_p02.jpg",
         "unique_LAION_initial_cluster_1502_i1_p02.jpg",
         "unique_LAION_initial_cluster_1504_i24_p02.jpg",
         "unique_LAION_initial_cluster_1505_i0_p02.jpg",
@@ -4679,7 +4681,6 @@
         "unique_THINGS_wasp_p02.jpg",
         "unique_THINGS_wheat_p02.jpg",
         "unique_THINGS_wig_p02.jpg",
-        "unique_THINGS_wolf_p02.jpg",
         "unique_THINGS_wrench_p02.jpg"
       ],
       "test_ids": [
@@ -5245,7 +5246,7 @@
         "shared_12rep_LAION_cluster_3797_i5.jpg",
         "unique_LAION_initial_cluster_5251_i44_p02.jpg",
         "unique_LAION_initial_cluster_2515_i0_p02.jpg",
-        "unique_LAION_initial_cluster_1501_i1_p02.jpg",
+        "unique_THINGS_wolf_p02.jpg",
         "unique_LAION_initial_cluster_1203_i6_p02.jpg",
         "shared_12rep_THINGS+_kmeans_103_exerciser.jpg",
         "unique_LAION_fillup_cluster_98_i41_p02.jpg",

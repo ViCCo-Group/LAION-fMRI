@@ -100,6 +100,8 @@ def is_shared(row: dict[str, str]) -> bool:
 
 
 def pool_label(pool: str) -> str:
+    if pool == "pooled":
+        return "All subjects, regular images (24681 images)"
     if pool == "shared":
         return "LAION non-OOD shared (1121 images)"
     subject_label = POOL_TO_FEATURE_LABEL[pool]
@@ -115,6 +117,11 @@ def ood_pool_label(pool: str) -> str:
 def pool_image_ids(rows: list[dict[str, str]], pool: str) -> list[str]:
     """Return the ordered regular image universe for a split pool."""
 
+    if pool == "pooled":
+        return sorted({
+            image_id for subject in POOLS[1:]
+            for image_id in pool_image_ids(rows, subject)
+        })
     if pool not in POOLS:
         raise KeyError(f"unknown pool {pool!r}; expected one of {POOLS}")
 
@@ -137,4 +144,6 @@ def pool_image_ids(rows: list[dict[str, str]], pool: str) -> list[str]:
 
 
 def ood_image_ids_from_metadata(rows: list[dict[str, str]]) -> list[str]:
-    return sorted(row["image_name"] for row in rows if is_shared(row) and is_ood(row))
+    return sorted(
+        row["image_name"] for row in rows if is_shared(row) and is_ood(row)
+    )

@@ -47,8 +47,9 @@ three methods of the `re:vision initiative <https://re-vision-initiative.org/gen
 Pools
 =====
 
-Every split is bundled for **six pools**. Pick the pool whose stimulus
-subset matches your analysis; use
+The existing splits are bundled for the **shared and five subject pools**.
+An additional **pooled** pool provides across-subject splits. Pick the
+pool whose stimulus subset matches your analysis; use
 :func:`~laion_fmri.splits.list_pools` to inspect the available pools.
 
 * ``"shared"`` - the **1,121 cross-subject shared images** (non-OOD
@@ -60,10 +61,42 @@ subset matches your analysis; use
   original analysis was per-subject and used that subject's full
   stimulus set.
 
+.. _pooled-splits:
+
+Across-subject splits
+==============================
+
+Use ``pool="pooled"`` when combining data across subjects. These splits
+cover all **24,681 regular images**, counting shared images once. Use the
+same split for every subject so that shared images are assigned
+consistently. Available names are ``tau`` and ``cluster_k5_0`` through
+``cluster_k5_4``.
+
+.. code-block:: python
+
+   from laion_fmri.splits import get_split_masks
+
+   train_mask, test_mask = get_split_masks(trials, "tau", pool="pooled")
+
+The pooled ``tau`` split has 19,745 training and 4,936 test images, with
+identified duplicate images assigned to training. To reduce train/test
+overlap from highly similar images, the pooled cluster splits group
+similar images before five-cluster CLIPA k-means, keeping each group in
+one fold. Each image is tested once across the five cluster folds;
+train/test counts within individual subjects can differ.
+
+During construction, similarity constraints increased the first percentile
+of nearest-training distance from 0.138 to 0.273 in CLIPA while retaining
+93.2% of the baseline mean train/test MMD². See the
+:download:`diagnostic figure <_static/pooled_cluster_diagnostics.png>`
+for the pooled clustering before and after adding these constraints, and
+`generation details <https://github.com/ViCCo-Group/LAION-fMRI/tree/main/scripts/splits#across-subject-splits>`_
+for the feature models and thresholds.
+
 Split names
 ===========
 
-Twelve names exist in every pool - see
+Twelve names exist in the shared and per-subject pools - see
 :func:`~laion_fmri.splits.list_splits`.
 
 .. list-table::
@@ -96,12 +129,17 @@ Twelve names exist in every pool - see
      - baseline
      - One seeded shuffled five-fold CV partition. The validation
        folds are disjoint and together cover the full regular pool.
-       Use them as a baseline for any generalization metric.
+       Identified duplicate images are kept in the same fold to prevent
+       overlap between training and test data. Use these splits as a
+       baseline for any generalization metric.
+
+See the :ref:`changelog <random-split-correction>` for the correction
+to the per-subject random splits and the previous files.
 
 Split sizes:
 
-* ``tau`` is fixed at 80/20 of the pool - that's 897 / 224 for the
-  shared pool and 4666 / 1167 per subject.
+* ``tau`` is fixed at 80/20 of the pool: 897 / 224 for ``shared``,
+  4666 / 1167 per subject, and 19,745 / 4,936 for ``pooled``.
 * ``random_*`` are five-fold CV folds. For ``shared``, ``random_0`` is
   896 / 225 and ``random_1`` … ``random_4`` are 897 / 224. For subject
   pools, ``random_0`` … ``random_2`` are 4666 / 1167 and ``random_3`` …
@@ -248,7 +286,7 @@ For the full :class:`~laion_fmri.splits.Split` object - including
 
    >>> from laion_fmri.splits import list_pools, list_splits, load_split
    >>> list_pools()
-   ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
+   ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07', 'pooled']
    >>> list_splits()
    ['cluster_k5_0', ..., 'random_0', ..., 'ood', 'tau']
    >>> sp = load_split("tau", pool="shared")
