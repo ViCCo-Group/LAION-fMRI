@@ -1,6 +1,6 @@
 """Predefined train / test splits for the re:vision generalization framework.
 
-LAION-fMRI ships with **12 train/test splits per pool**, designed to test
+LAION-fMRI ships with predefined train/test splits, designed to test
 generalization across the per-subject ``shared + unique`` stimulus pool
 or across just the cross-subject shared pool.
 
@@ -12,10 +12,14 @@ Pools
 * ``"sub-01"``, ``"sub-03"``, ``"sub-05"``, ``"sub-06"``, ``"sub-07"`` —
   the 5,833-image per-subject pools (1,121 shared + 4,712 unique).
 
+The ``"pooled"`` pool combines all subjects' regular images, counting shared
+images once. It provides ``tau`` and ``cluster_k5_0`` through ``cluster_k5_4``
+for training and evaluation across subjects.
+
 Splits
 ------
 
-The same 12 split names exist in every pool:
+The shared and per-subject pools provide these 12 split names:
 
 * ``random_0`` … ``random_4`` — the five held-out folds of one shuffled
   5-fold CV partition. Test folds are mutually exclusive and cover the pool
@@ -78,8 +82,10 @@ _SUBJECT_POOLS: Tuple[str, ...] = (
     "sub-01", "sub-03", "sub-05", "sub-06", "sub-07",
 )
 _SHARED_POOL = "shared"
+_POOLED_POOL = "pooled"
+_POOLED_SPLIT_NAMES = ("tau",) + tuple(f"cluster_k5_{k}" for k in range(5))
 
-# All split names available in every pool. 12 names x 6 pools = 72 JSONs.
+# Split names for the shared and per-subject pools.
 _SPLIT_NAMES: Tuple[str, ...] = (
     "random_0", "random_1", "random_2", "random_3", "random_4",
     "cluster_k5_0", "cluster_k5_1", "cluster_k5_2",
@@ -185,11 +191,11 @@ def _data_dir() -> Path:
 
 
 def _validate_pool(pool: str) -> str:
-    if pool == _SHARED_POOL or pool in _SUBJECT_POOLS:
+    if pool in (_SHARED_POOL, _POOLED_POOL) or pool in _SUBJECT_POOLS:
         return pool
     raise ValueError(
         f"Unknown pool {pool!r}. Valid: "
-        f"{[_SHARED_POOL] + list(_SUBJECT_POOLS)}."
+        f"{list_pools()}."
     )
 
 
@@ -206,11 +212,19 @@ def _validate_split_name(name: str) -> str:
 
 def list_pools() -> List[str]:
     """Return every pool that has bundled splits."""
-    return [_SHARED_POOL] + list(_SUBJECT_POOLS)
+    return [_SHARED_POOL] + list(_SUBJECT_POOLS) + [_POOLED_POOL]
 
 
-def list_splits() -> List[str]:
-    """Return the 12 split names available in every pool."""
+def list_splits(pool: Optional[str] = None) -> List[str]:
+    """Return available names, optionally restricted to a pool.
+
+    Without a pool, return the names used by shared and per-subject pools.
+    The pooled pool provides tau and five cluster splits only.
+    """
+    if pool is not None:
+        _validate_pool(pool)
+    if pool == _POOLED_POOL:
+        return list(_POOLED_SPLIT_NAMES)
     return list(_SPLIT_NAMES)
 
 
@@ -220,9 +234,9 @@ def load_split(name: str, pool: str) -> Split:
     Parameters
     ----------
     name : str
-        One of the 11 split names (see :func:`list_splits`).
+        A name available for the requested pool (see :func:`list_splits`).
     pool : str
-        ``"shared"`` or a subject id like ``"sub-01"`` (see
+        ``"shared"``, ``"pooled"``, or a subject id like ``"sub-01"`` (see
         :func:`list_pools`).
 
     Returns
@@ -231,6 +245,11 @@ def load_split(name: str, pool: str) -> Split:
     """
     _validate_split_name(name)
     _validate_pool(pool)
+    if name not in list_splits(pool):
+        raise ValueError(
+            f"Split {name!r} is not available for pool {pool!r}. "
+            f"Available: {list_splits(pool)}."
+        )
     path = _data_dir() / pool / f"{name}.json"
     if not path.is_file():
         raise FileNotFoundError(
@@ -259,7 +278,7 @@ def load_split(name: str, pool: str) -> Split:
 
 def load_all_splits(pool: str) -> Dict[str, Split]:
     """Load every split for ``pool`` → ``{name: Split}``."""
-    return {name: load_split(name, pool) for name in _SPLIT_NAMES}
+    return {name: load_split(name, pool) for name in list_splits(pool)}
 
 
 def get_train_test_ids(
@@ -326,9 +345,9 @@ def get_split_masks(
         is used; otherwise the input is treated as label values
         directly.
     name : str
-        One of the 12 split names (see :func:`list_splits`).
+        A name available for the requested pool (see :func:`list_splits`).
     pool : str
-        ``"shared"`` or a subject id like ``"sub-01"`` (see
+        ``"shared"``, ``"pooled"``, or a subject id like ``"sub-01"`` (see
         :func:`list_pools`).
     variant_id : int, default 0
         Variant within the split. Almost always 0.

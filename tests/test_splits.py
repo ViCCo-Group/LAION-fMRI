@@ -32,7 +32,9 @@ _N_OOD = 371                        # OOD-shared images (re:vision Method 3)
 def test_list_pools_includes_shared_and_five_subjects():
     pools = list_pools()
     assert pools[0] == "shared"
-    assert set(pools[1:]) == {"sub-01", "sub-03", "sub-05", "sub-06", "sub-07"}
+    assert set(pools[1:]) == {
+        "sub-01", "sub-03", "sub-05", "sub-06", "sub-07", "pooled",
+    }
 
 
 def test_list_splits_returns_twelve_names():
@@ -49,7 +51,7 @@ def test_list_splits_returns_twelve_names():
 
 @pytest.mark.parametrize("pool", list_pools())
 def test_every_split_loads_for_every_pool(pool):
-    for name in list_splits():
+    for name in list_splits(pool):
         sp = load_split(name, pool=pool)
         assert sp.name == name
         assert sp.pool == pool
@@ -206,7 +208,7 @@ def test_variant_train_test_disjoint_for_random_split():
     assert not (set(v.train_ids) & set(v.test_ids))
 
 
-@pytest.mark.parametrize("pool", list_pools())
+@pytest.mark.parametrize("pool", [p for p in list_pools() if p != "pooled"])
 def test_random_splits_are_disjoint_five_fold_cv(pool):
     splits = [load_split(f"random_{k}", pool=pool) for k in range(5)]
     test_sets = [set(sp.variants[0].test_ids) for sp in splits]
@@ -291,7 +293,7 @@ def test_shared_pool_ids_are_subset_of_per_subject_pool():
         )
 
 
-@pytest.mark.parametrize("pool", list_pools())
+@pytest.mark.parametrize("pool", [p for p in list_pools() if p != "pooled"])
 def test_random_generator_reproduces_bundled_files(pool, monkeypatch):
     import json
     from pathlib import Path
@@ -306,7 +308,9 @@ def test_random_generator_reproduces_bundled_files(pool, monkeypatch):
         assert generated == json.loads((folder / f"{name}.json").read_text())
 
 
-@pytest.mark.parametrize("pool", list_pools()[1:])
+@pytest.mark.parametrize(
+    "pool", [p for p in list_pools() if p.startswith("sub-")]
+)
 def test_random_correction_preserves_size_and_groups(pool):
     import json
     from pathlib import Path
@@ -342,3 +346,67 @@ def test_random_correction_preserves_size_and_groups(pool):
     )[pool]
     for group in groups:
         assert len({assignments[n] for n in group}) == 1
+
+
+def test_pooled_catalogue_and_unsupported_names():
+    assert list_splits("pooled") == ["tau"] + [
+        f"cluster_k5_{k}" for k in range(5)
+    ]
+    assert set(load_all_splits("pooled")) == set(list_splits("pooled"))
+    for name in ("random_0", "ood"):
+        with pytest.raises(ValueError, match="not available"):
+            load_split(name, "pooled")
+
+
+def test_pooled_splits_cover_union_and_keep_duplicates_together():
+    import json
+    from pathlib import Path
+
+    subjects = [p for p in list_pools() if p.startswith("sub-")]
+    universe = set().union(*[
+        set(get_train_test_ids("ood", pool=p)[0]) for p in subjects
+    ])
+    assert len(universe) == 24681
+    root = Path(__file__).resolve().parents[1]
+    groups = json.loads(
+        (root / "scripts/splits/data/pooled_duplicate_groups.json").read_text()
+    )
+    image_groups = json.loads(
+        (root / "scripts/splits/data/pooled_image_groups.json").read_text()
+    )["groups"]
+    grouped_ids = [image_id for group in image_groups for image_id in group]
+    assert len(grouped_ids) == len(set(grouped_ids))
+    assert set(grouped_ids) <= universe
+    folds = []
+    for name in list_splits("pooled"):
+        train, test = get_train_test_ids(name, pool="pooled")
+        assert len(train) == len(set(train))
+        assert len(test) == len(set(test))
+        assert not set(train) & set(test)
+        assert set(train) | set(test) == universe
+        for group in groups:
+            assert set(group) <= set(train) or set(group) <= set(test)
+        if name == "tau":
+            assert (len(train), len(test)) == (19745, 4936)
+            assert all(set(group) <= set(train) for group in groups)
+        else:
+            test_set = set(test)
+            for group in image_groups:
+                assert len({image_id in test_set for image_id in group}) == 1
+            folds.append(set(test))
+    assert set.union(*folds) == universe
+    assert sum(map(len, folds)) == len(universe)
+
+
+@pytest.mark.parametrize("name", list_splits("pooled"))
+def test_pooled_masks_have_consistent_shared_assignments(name):
+    shared, _ = get_train_test_ids("ood", pool="shared")
+    reference = get_split_masks(shared, name, pool="pooled")
+    for subject in [p for p in list_pools() if p.startswith("sub-")]:
+        ids, _ = get_train_test_ids("ood", pool=subject)
+        # Repeated presentations and concatenation must preserve membership.
+        labels = shared + ids + shared
+        train, test = get_split_masks(labels, name, pool="pooled")
+        assert np.all(train ^ test)
+        assert np.array_equal(train[:len(shared)], reference[0])
+        assert np.array_equal(test[-len(shared):], reference[1])

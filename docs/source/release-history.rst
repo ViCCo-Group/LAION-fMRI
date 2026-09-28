@@ -26,6 +26,15 @@ data does not update the splits. Corrected per-subject random splits have
 The `previous split files <https://github.com/ViCCo-Group/LAION-fMRI/blob/main/archive/splits/random-v1.zip>`__
 are archived for reproducing earlier results.
 
+Across-subject train/test splits
+--------------------------------
+
+Added ``pool="pooled"`` for ``tau`` and ``cluster_k5_0``–``cluster_k5_4``.
+These splits assign the combined image set consistently across subjects,
+keeping shared images and identified duplicate images on the same side.
+The pooled cluster splits also keep groups of highly similar images together.
+See :ref:`across-subject splits <pooled-splits>` for usage.
+
 .. _embedding-transparency-correction:
 
 Corrected stimulus embedding transparency
