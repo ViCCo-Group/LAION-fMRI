@@ -152,6 +152,7 @@ Getting Started
    quickstart
    dataset_at_a_glance
    data_access
+   release-history
 
 .. toctree::
    :maxdepth: 2
