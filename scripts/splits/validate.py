@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -98,7 +99,7 @@ def validate_pool(pool: str, data_dir: Path) -> None:
             raise AssertionError(f"{pool}/{name}: expected {RANDOM_SPLITTER}")
         params = split["params"]
         expected_fold = int(name.rsplit("_", 1)[1])
-        if params != random_params(expected_fold):
+        if params != random_params(expected_fold, pool):
             raise AssertionError(f"{pool}/{name}: unexpected random params")
         random_test_sets.append(set(test_ids(split)))
     if set.union(*random_test_sets) != universe_set:
@@ -108,6 +109,16 @@ def validate_pool(pool: str, data_dir: Path) -> None:
     random_sizes = [len(s) for s in random_test_sets]
     if max(random_sizes) - min(random_sizes) > 1:
         raise AssertionError(f"{pool}: imbalanced random fold sizes")
+
+    groups_path = Path(__file__).parent / "data/duplicate_groups.json"
+    groups = json.loads(groups_path.read_text()).get(pool, [])
+    assignments = {
+        image_id: fold
+        for fold, ids in enumerate(random_test_sets) for image_id in ids
+    }
+    for group in groups:
+        if len({assignments[image_id] for image_id in group}) != 1:
+            raise AssertionError(f"{pool}: duplicate images cross random folds")
 
     cluster_test_sets = []
     for name in CLUSTER_K5_NAMES:

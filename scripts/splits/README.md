@@ -53,3 +53,11 @@ pip install torch torchvision open_clip_torch timm scikit-learn dreamsim h5py
 
 Feature arrays are cached under `temp/split_feature_cache` by default; override
 with `--cache-dir`.
+
+## Random split correction
+
+The random generator applies `data/random_fold_changes.json` after the
+seeded shuffle. This records the 66 reviewed assignment changes while
+preserving fold sizes and the ordering of unaffected images. The validator
+checks `data/duplicate_groups.json` to ensure identified duplicate images
+stay in one fold. The original files are in `archive/splits/random-v1.zip`.

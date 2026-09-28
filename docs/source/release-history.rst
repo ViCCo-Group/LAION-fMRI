@@ -7,6 +7,25 @@ Changes to the dataset, derived files, and Python package.
 2026-09-28
 ==========
 
+.. _random-split-correction:
+
+Corrected per-subject random splits
+------------------------------------
+
+Updated ``random_0``–``random_4`` for ``sub-01``, ``sub-03``, ``sub-05``,
+``sub-06``, and ``sub-07`` to keep identified duplicate images in the same
+fold. This changes 66 image assignments across five subjects. No images
+were removed, and fold sizes and split names are unchanged. Shared-only
+random splits and all other split families are unchanged.
+
+These files are bundled with the Python package. Update to a package
+version containing this correction to use them; re-downloading stimulus
+data does not update the splits. Corrected per-subject random splits have
+``load_split(name, pool).params["revision"] == 2``.
+
+The `previous split files <https://github.com/ViCCo-Group/LAION-fMRI/blob/main/archive/splits/random-v1.zip>`__
+are archived for reproducing earlier results.
+
 .. _embedding-transparency-correction:
 
 Corrected stimulus embedding transparency

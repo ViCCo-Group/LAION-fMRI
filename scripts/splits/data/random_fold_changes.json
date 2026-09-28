@@ -1,0 +1,342 @@
+{
+  "sub-01": [
+    {
+      "image_id": "shared_12rep_LAION_cluster_4098_i0.jpg",
+      "old_fold": 1,
+      "new_fold": 0
+    },
+    {
+      "image_id": "shared_12rep_LAION_cluster_5003_i0.jpg",
+      "old_fold": 2,
+      "new_fold": 4
+    },
+    {
+      "image_id": "shared_12rep_THINGS+_kmeans_222_spring_roll.jpg",
+      "old_fold": 0,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1284_i4_p01.jpg",
+      "old_fold": 4,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2204_i4_p01.jpg",
+      "old_fold": 0,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2694_i21_p01.jpg",
+      "old_fold": 0,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_3218_i4_p01.jpg",
+      "old_fold": 2,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_3283_i1_p01.jpg",
+      "old_fold": 3,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_3724_i8_p01.jpg",
+      "old_fold": 3,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_4221_i4_p01.jpg",
+      "old_fold": 4,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_4841_i27_p01.jpg",
+      "old_fold": 1,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_4924_i10_p01.jpg",
+      "old_fold": 2,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_THINGS_whisk_p01.jpg",
+      "old_fold": 3,
+      "new_fold": 0
+    }
+  ],
+  "sub-03": [
+    {
+      "image_id": "shared_12rep_LAION_cluster_1240_i5.jpg",
+      "old_fold": 3,
+      "new_fold": 4
+    },
+    {
+      "image_id": "shared_12rep_LAION_cluster_2120_i4.jpg",
+      "old_fold": 4,
+      "new_fold": 1
+    },
+    {
+      "image_id": "shared_12rep_LAION_cluster_2384_i2.jpg",
+      "old_fold": 2,
+      "new_fold": 3
+    },
+    {
+      "image_id": "shared_12rep_LAION_cluster_2899_i0.jpg",
+      "old_fold": 1,
+      "new_fold": 3
+    },
+    {
+      "image_id": "shared_12rep_LAION_cluster_3158_i0.jpg",
+      "old_fold": 4,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1135_i2_p04.jpg",
+      "old_fold": 0,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1269_i20_p04.jpg",
+      "old_fold": 4,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1289_i41_p04.jpg",
+      "old_fold": 3,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1532_i33_p04.jpg",
+      "old_fold": 1,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1800_i23_p04.jpg",
+      "old_fold": 2,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2241_i1_p04.jpg",
+      "old_fold": 2,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2287_i36_p04.jpg",
+      "old_fold": 4,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2681_i38_p04.jpg",
+      "old_fold": 2,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2947_i4_p04.jpg",
+      "old_fold": 3,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_5210_i8_p04.jpg",
+      "old_fold": 4,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_5402_i6_p04.jpg",
+      "old_fold": 1,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_new_cluster_231_i35_p04.jpg",
+      "old_fold": 2,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_new_cluster_251_i38_p04.jpg",
+      "old_fold": 1,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_THINGS+_mitten_p04.jpg",
+      "old_fold": 4,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_THINGS_wine_p04.jpg",
+      "old_fold": 3,
+      "new_fold": 4
+    }
+  ],
+  "sub-05": [
+    {
+      "image_id": "shared_12rep_LAION_cluster_1230_i1.jpg",
+      "old_fold": 2,
+      "new_fold": 3
+    },
+    {
+      "image_id": "shared_12rep_THINGS+_kmeans_92_crystal2.jpg",
+      "old_fold": 2,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1340_i5_p03.jpg",
+      "old_fold": 4,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1402_i18_p03.jpg",
+      "old_fold": 4,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1605_i2_p03.jpg",
+      "old_fold": 0,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2004_i14_p03.jpg",
+      "old_fold": 3,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2046_i24_p03.jpg",
+      "old_fold": 4,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2149_i2_p03.jpg",
+      "old_fold": 2,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_3906_i0_p03.jpg",
+      "old_fold": 1,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_4371_i48_p03.jpg",
+      "old_fold": 2,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_THINGS_walker1_p03.jpg",
+      "old_fold": 0,
+      "new_fold": 1
+    }
+  ],
+  "sub-06": [
+    {
+      "image_id": "unique_LAION_fillup_cluster_546_i2_p02.jpg",
+      "old_fold": 1,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1303_i6_p02.jpg",
+      "old_fold": 0,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1501_i1_p02.jpg",
+      "old_fold": 4,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1800_i2_p02.jpg",
+      "old_fold": 2,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2740_i6_p02.jpg",
+      "old_fold": 3,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_3198_i7_p02.jpg",
+      "old_fold": 3,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_4545_i0_p02.jpg",
+      "old_fold": 0,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_4763_i8_p02.jpg",
+      "old_fold": 0,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_THINGS+_bookshelf_p02.jpg",
+      "old_fold": 2,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_THINGS_wolf_p02.jpg",
+      "old_fold": 2,
+      "new_fold": 4
+    }
+  ],
+  "sub-07": [
+    {
+      "image_id": "shared_12rep_LAION_cluster_3647_i2.jpg",
+      "old_fold": 0,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1269_i15_p05.jpg",
+      "old_fold": 4,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1605_i3_p05.jpg",
+      "old_fold": 0,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1685_i3_p05.jpg",
+      "old_fold": 1,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_1988_i6_p05.jpg",
+      "old_fold": 4,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2009_i3_p05.jpg",
+      "old_fold": 2,
+      "new_fold": 4
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2053_i2_p05.jpg",
+      "old_fold": 3,
+      "new_fold": 2
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_2218_i4_p05.jpg",
+      "old_fold": 3,
+      "new_fold": 1
+    },
+    {
+      "image_id": "unique_LAION_initial_cluster_3996_i30_p05.jpg",
+      "old_fold": 3,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_LAION_new_cluster_70_i28_p05.jpg",
+      "old_fold": 1,
+      "new_fold": 3
+    },
+    {
+      "image_id": "unique_THINGS_warthog_p05.jpg",
+      "old_fold": 4,
+      "new_fold": 0
+    },
+    {
+      "image_id": "unique_THINGS_zucchini_p05.jpg",
+      "old_fold": 1,
+      "new_fold": 3
+    }
+  ]
+}

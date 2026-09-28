@@ -96,7 +96,12 @@ Twelve names exist in every pool - see
      - baseline
      - One seeded shuffled five-fold CV partition. The validation
        folds are disjoint and together cover the full regular pool.
-       Use them as a baseline for any generalization metric.
+       Identified duplicate images are kept in the same fold to prevent
+       overlap between training and test data. Use these splits as a
+       baseline for any generalization metric.
+
+See the :ref:`changelog <random-split-correction>` for the correction
+to the per-subject random splits and the previous files.
 
 Split sizes:
 

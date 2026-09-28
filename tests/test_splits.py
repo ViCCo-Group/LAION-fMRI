@@ -289,3 +289,56 @@ def test_shared_pool_ids_are_subset_of_per_subject_pool():
         assert shared_all.issubset(sub_all), (
             f"shared pool not a subset of {sub} pool"
         )
+
+
+@pytest.mark.parametrize("pool", list_pools())
+def test_random_generator_reproduces_bundled_files(pool, monkeypatch):
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.syspath_prepend(str(root / "scripts/splits"))
+    from create_random import build_random_splits
+
+    folder = root / "laion_fmri/splits/data" / pool
+    universe, _ = get_train_test_ids("ood", pool=pool)
+    for name, generated in build_random_splits(pool, image_ids=universe):
+        assert generated == json.loads((folder / f"{name}.json").read_text())
+
+
+@pytest.mark.parametrize("pool", list_pools()[1:])
+def test_random_correction_preserves_size_and_groups(pool):
+    import json
+    from pathlib import Path
+    from zipfile import ZipFile
+
+    root = Path(__file__).resolve().parents[1]
+    assignments = {}
+    old_assignments = {}
+    with ZipFile(root / "archive/splits/random-v1.zip") as archive:
+        for fold in range(5):
+            name = f"random_{fold}"
+            old = json.loads(archive.read(f"{pool}/{name}.json"))
+            split = load_split(name, pool=pool)
+            train, test = get_train_test_ids(name, pool=pool)
+            assert split.params["revision"] == 2
+            assert len(train) == old["n_train"]
+            assert len(test) == old["n_test"]
+            assignments.update({image_id: fold for image_id in test})
+            old_assignments.update({
+                image_id: fold
+                for image_id in old["variants"][0]["test_ids"]
+            })
+    assert assignments.keys() == old_assignments.keys()
+    expected_changes = {
+        "sub-01": 13, "sub-03": 20, "sub-05": 11,
+        "sub-06": 10, "sub-07": 12,
+    }
+    assert sum(
+        assignments[n] != old_assignments[n] for n in assignments
+    ) == expected_changes[pool]
+    groups = json.loads(
+        (root / "scripts/splits/data/duplicate_groups.json").read_text()
+    )[pool]
+    for group in groups:
+        assert len({assignments[n] for n in group}) == 1

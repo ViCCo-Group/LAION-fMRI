@@ -7,6 +7,8 @@ pool. Pool membership comes from ``task-images_metadata.csv``.
 from __future__ import annotations
 
 import argparse
+import json
+from pathlib import Path
 
 import numpy as np
 
@@ -36,13 +38,16 @@ RANDOM_SEED = 42
 RANDOM_FOLDS = 5
 
 
-def random_params(fold: int) -> dict[str, object]:
-    return {
+def random_params(fold: int, pool: str = "shared") -> dict[str, object]:
+    params = {
         "method": RANDOM_METHOD,
         "k": RANDOM_FOLDS,
         "seed": RANDOM_SEED,
         "fold": int(fold),
     }
+    if pool != "shared":
+        params["revision"] = 2
+    return params
 
 
 def build_random_splits(
@@ -55,16 +60,39 @@ def build_random_splits(
     shuffled = np.array(image_ids, dtype=object)
     np.random.default_rng(RANDOM_SEED).shuffle(shuffled)
 
+    folds = [part.tolist() for part in np.array_split(shuffled, RANDOM_FOLDS)]
+    changes_path = Path(__file__).parent / "data/random_fold_changes.json"
+    changes = json.loads(changes_path.read_text()).get(pool, [])
+    assignments = {
+        image_id: fold for fold, ids in enumerate(folds) for image_id in ids
+    }
+    for change in changes:
+        image_id = change["image_id"]
+        if assignments.get(image_id) != change["old_fold"]:
+            raise ValueError(f"{pool}: unexpected original fold for {image_id}")
+        assignments[image_id] = change["new_fold"]
+
     payloads = []
-    for fold, (name, test_arr) in enumerate(
-        zip(RANDOM_NAMES, np.array_split(shuffled, RANDOM_FOLDS)),
-    ):
-        test = [str(x) for x in test_arr.tolist()]
+    for fold, (name, original) in enumerate(zip(RANDOM_NAMES, folds)):
+        original_set = set(original)
+        additions = sorted(
+            image_id for image_id, assigned in assignments.items()
+            if assigned == fold and image_id not in original_set
+        )
+        departures = sum(assignments[n] != fold for n in original)
+        if len(additions) != departures:
+            raise ValueError(f"{pool}/{name}: correction changes fold size")
+        incoming = iter(additions)
+        # Replace departing images in place, preserving all other ordering.
+        test = [
+            image_id if assignments[image_id] == fold else next(incoming)
+            for image_id in original
+        ]
         payload = make_single_variant_split(
             name=name,
             pool_label=pool_label(pool),
             splitter=RANDOM_SPLITTER,
-            params=random_params(fold),
+            params=random_params(fold, pool),
             train=ordered_complement(image_ids, test),
             test=test,
         )
