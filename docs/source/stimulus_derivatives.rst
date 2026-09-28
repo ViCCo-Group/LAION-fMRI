@@ -40,6 +40,13 @@ installed, the same files are available through the dataset-wide
 Stimulus Embeddings
 ===================
 
+.. note::
+
+   On 2026-09-28, all four embedding files were corrected for transparency
+   handling in 116 OOD stimuli. See the
+   :ref:`changelog <embedding-transparency-correction>` for refresh
+   instructions and links to the original files.
+
 For every stimulus image in the dataset (25,052 in total, including the
 OOD set), pretrained image embeddings from four widely used vision
 models are provided as a convenience for downstream analyses. The
