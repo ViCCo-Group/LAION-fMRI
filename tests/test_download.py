@@ -19,6 +19,15 @@ from laion_fmri.download import (
 
 
 @pytest.fixture(autouse=True)
+def stub_bucket_root(monkeypatch):
+    """Keep the dataset-level listing of the fetchers off the network."""
+    monkeypatch.setattr(
+        "laion_fmri._laion_fmri_fetch.list_top_level_objects",
+        lambda bucket, prefix: [],
+    )
+
+
+@pytest.fixture(autouse=True)
 def reset_data_dir_drift_tracker(monkeypatch):
     """Reset the cross-call data_dir tracker before every test."""
     monkeypatch.setattr(

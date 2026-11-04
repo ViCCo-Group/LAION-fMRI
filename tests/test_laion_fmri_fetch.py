@@ -2,6 +2,7 @@
 
 import subprocess
 import warnings
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,25 @@ from laion_fmri._laion_fmri_fetch import (
     fetch_retinotopy_stimuli,
 )
 from laion_fmri._errors import NoMatchingDataError
+
+
+#: The bucket root as ``list_top_level_objects`` reports it. The
+#: fetchers list it for the dataset-level files; tests that care patch
+#: it themselves.
+ROOT_OBJECTS = [
+    {"Key": key, "Size": 1}
+    for key in ("dataset_description.json", "participants.tsv",
+                "participants.json", "README", "CHANGES")
+]
+
+
+@pytest.fixture(autouse=True)
+def stub_bucket_root(monkeypatch):
+    """Keep the dataset-level listing off the network."""
+    monkeypatch.setattr(
+        "laion_fmri._laion_fmri_fetch.list_top_level_objects",
+        lambda bucket, prefix: list(ROOT_OBJECTS),
+    )
 
 
 # ── _clamp_n_jobs ───────────────────────────────────────────────
@@ -1604,3 +1624,75 @@ def test_fetch_laion_fmri_raw_no_match_raises(
 
     with pytest.raises(NoMatchingDataError, match="No LAION-fMRI"):
         fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+
+
+# ── Nothing is downloaded twice ─────────────────────────────────
+
+
+def _fake_bucket(tree):
+    """``list_prefix_objects`` and ``download_key`` stand-ins over
+    ``tree`` ({key: size}); downloads write files of the listed size,
+    so the local-size check sees them as complete."""
+    def list_objects(bucket, prefix):
+        return [{"Key": k, "Size": n} for k, n in tree.items()
+                if k.startswith(prefix)]
+
+    def download(bucket, key, local):
+        local = Path(local)
+        local.parent.mkdir(parents=True, exist_ok=True)
+        size = tree.get(key, 1)
+        local.write_bytes(b"x" * size)
+        return local
+
+    return list_objects, download
+
+
+def test_dataset_level_files_are_skipped_when_complete(tmp_path):
+    """A complete local copy is kept; a wrong-sized one is refetched."""
+    (tmp_path / "README").write_bytes(b"x")              # size matches
+    (tmp_path / "participants.tsv").write_bytes(b"xx")   # stale
+    with patch("laion_fmri._laion_fmri_fetch.download_key") as dl, \
+            patch("laion_fmri._laion_fmri_fetch.list_prefix_objects",
+                  return_value=[]):
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+    fetched = sorted(c.args[1] for c in dl.call_args_list)
+    assert fetched == [
+        "dataset_description.json", "participants.json", "participants.tsv",
+    ]
+
+
+def test_download_then_download_mapping_fetches_each_file_once(tmp_path):
+    """The derivative trees both entry points pull, and the
+    dataset-level files, come down once across the two calls."""
+    tree = {
+        "derivatives/glmsingle-tedana/sub-03/"
+        "sub-03_ses-01_desc-betas_statmap.h5": 7,
+        "derivatives/rois/sub-03/face/"
+        "sub-03_space-T1w_res-1pt8_label-FFA-1_mask.nii.gz": 3,
+        "derivatives/localizers/sub-03/ses-4BarScreenfLoc/func/"
+        "sub-03_ses-4BarScreenfLoc_space-T1w_res-1pt5_"
+        "desc-fitted_mask.nii.gz": 4,
+        "derivatives/retinotopy/sub-03/func/"
+        "sub-03_paradigm-best_space-T1w_res-1pt8_param-ecc_"
+        "model-dnhrf_statmap.nii.gz": 5,
+    }
+    list_objects, download = _fake_bucket(tree)
+    with patch("laion_fmri._laion_fmri_fetch.list_prefix_objects",
+               side_effect=list_objects), \
+            patch("laion_fmri._laion_fmri_fetch.download_key",
+                  side_effect=download) as dl:
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_localizers=True, include_retinotopy=True,
+        )
+        first = [c.args[1] for c in dl.call_args_list]
+        dl.reset_mock()
+        fetch_mapping(str(tmp_path), subject="sub-03")
+        second = [c.args[1] for c in dl.call_args_list]
+
+    assert sorted(first) == sorted(
+        list(tree) + ["dataset_description.json", "participants.tsv",
+                      "participants.json", "README"]
+    )
+    assert second == []

@@ -212,6 +212,22 @@ def _local_matches(path, expected_size):
     return path.exists() and path.stat().st_size == expected_size
 
 
+def _fetch_dataset_level_files(bucket, data_dir):
+    """Download the :data:`DATASET_LEVEL_KEYS` at the bucket root.
+
+    Every fetch calls this, so a file already complete locally (same
+    size as on S3) is skipped, as in :func:`_filtered_download`;
+    ``download`` followed by ``download_mapping`` fetches each once.
+    """
+    for obj in list_top_level_objects(bucket, ""):
+        key = obj["Key"]
+        if key not in DATASET_LEVEL_KEYS:
+            continue
+        local = Path(data_dir) / key
+        if not _local_matches(local, obj["Size"]):
+            download_key(bucket, key, local)
+
+
 def _filtered_download(
     bucket, prefix, data_dir, filters,
     n_jobs=1, force_keys=(), exclude_sessions=(), top_level_only=False,
@@ -422,8 +438,7 @@ def fetch_laion_fmri(
     raw_filters = dict(filters)
 
     # Root metadata files always go through, regardless of filters.
-    for key in DATASET_LEVEL_KEYS:
-        download_key(bucket, key, f"{data_dir}/{key}")
+    _fetch_dataset_level_files(bucket, data_dir)
 
     # Brain mask is pinned when ``ses`` filters to specific
     # session(s) without "averages" -- it lives at the subject
@@ -600,8 +615,7 @@ def fetch_mapping(
     session_filters = {"ses": ses, "task": task, "space": space}
     subject_filters = {"task": task, "space": space}
 
-    for key in DATASET_LEVEL_KEYS:
-        download_key(bucket, key, f"{data_dir}/{key}")
+    _fetch_dataset_level_files(bucket, data_dir)
 
     results = {}
     for flag, tree in MAPPING_TREES:
@@ -726,8 +740,7 @@ def fetch_laion_fmri_raw(
         "extension": extension,
     }
 
-    for key in DATASET_LEVEL_KEYS:
-        download_key(bucket, key, f"{data_dir}/{key}")
+    _fetch_dataset_level_files(bucket, data_dir)
 
     raw_result = _download_raw_prefix(
         bucket, subject, data_dir, filters, n_jobs=n_jobs,
