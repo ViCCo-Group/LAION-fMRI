@@ -13,6 +13,7 @@ from laion_fmri.download import (
     accept_licenses,
     download,
     download_captions,
+    download_mapping,
     download_raw,
 )
 
@@ -79,7 +80,7 @@ DEFAULT_FETCH_KWARGS = dict(
     suffix=None, extension=None, n_jobs=1,
     include_freesurfer=False, include_anatomical=False,
     include_raw=False,
-    include_localizers=False,
+    include_localizers=False, include_retinotopy=False,
 )
 
 
@@ -112,6 +113,29 @@ def test_download_dispatches_for_all_subjects(configured_env):
         any_order=False,
     )
     assert mock_fetch.call_count == 2
+
+
+def test_download_all_is_the_main_experiment(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="all")
+    assert [c.kwargs["subject"] for c in mock_fetch.call_args_list] == [
+        "sub-01", "sub-03", "sub-05", "sub-06", "sub-07",
+    ]
+
+
+@pytest.mark.parametrize("subject", ["sub-04", "08"])
+def test_download_points_mapping_only_subjects_to_download_mapping(
+    configured_env, subject,
+):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        with pytest.raises(SubjectNotFoundError, match="download_mapping"):
+            download(subject=subject)
+    mock_fetch.assert_not_called()
+
+
+def test_download_rejects_unknown_subject(configured_env):
+    with pytest.raises(SubjectNotFoundError, match="main"):
+        download(subject="sub-02")
 
 
 def test_download_passes_bids_entity_filters(configured_env):
@@ -259,6 +283,13 @@ def test_download_raw_subject_all_iterates_get_subjects(configured_env):
     assert called_subjects == ["sub-01", "sub-03"]
 
 
+def test_download_raw_points_mapping_only_subjects_to_download_mapping(
+    configured_env,
+):
+    with pytest.raises(SubjectNotFoundError, match="download_mapping"):
+        download_raw(subject="sub-08")
+
+
 def test_download_raw_forwards_run_echo_part_filters(configured_env):
     """Raw-specific filters (``run``, ``echo``, ``part``) forward."""
     with patch(
@@ -312,6 +343,61 @@ def test_download_include_localizers_default_false(configured_env):
         download(subject="sub-01")
     kwargs = mock_fetch.call_args.kwargs
     assert kwargs.get("include_localizers", False) is False
+
+
+# ── include_retinotopy forwards to fetch_laion_fmri ────────────
+
+def test_download_passes_include_retinotopy_to_fetch(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01", include_retinotopy=True)
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs["include_retinotopy"] is True
+
+
+def test_download_include_retinotopy_default_false(configured_env):
+    with patch("laion_fmri.download.fetch_laion_fmri") as mock_fetch:
+        download(subject="sub-01")
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs.get("include_retinotopy", False) is False
+
+
+# ── download_mapping ───────────────────────────────────────────
+
+def test_download_mapping_all_is_the_mapping_dataset(configured_env):
+    with patch("laion_fmri.download.fetch_mapping") as mock_fetch, patch(
+        "laion_fmri.download.fetch_mapping_dataset_files",
+    ) as mock_dataset:
+        download_mapping(subject="all")
+    assert [c.kwargs["subject"] for c in mock_fetch.call_args_list] == [
+        "sub-01", "sub-03", "sub-04", "sub-05", "sub-06", "sub-07",
+        "sub-08",
+    ]
+    mock_dataset.assert_called_once()
+
+
+def test_download_mapping_forwards_filters_and_flags(configured_env):
+    with patch("laion_fmri.download.fetch_mapping") as mock_fetch, patch(
+        "laion_fmri.download.fetch_mapping_dataset_files",
+    ) as mock_dataset:
+        download_mapping(
+            subject="04", ses="Foveal", space="fsnative",
+            include_preproc=True, include_raw=True, n_jobs=2,
+        )
+    kwargs = mock_fetch.call_args.kwargs
+    assert kwargs["subject"] == "sub-04"
+    assert kwargs["ses"] == "Foveal"
+    assert kwargs["space"] == "fsnative"
+    assert kwargs["include_preproc"] is True
+    assert kwargs["include_raw"] is True
+    assert kwargs["include_anatomical"] is False
+    assert mock_dataset.call_args.kwargs["include_preproc"] is True
+
+
+def test_download_mapping_rejects_unknown_subject(configured_env):
+    with patch("laion_fmri.download.fetch_mapping") as mock_fetch:
+        with pytest.raises(SubjectNotFoundError, match="mapping"):
+            download_mapping(subject="sub-02")
+    mock_fetch.assert_not_called()
 
 
 def test_download_captions_fetches_public_csv(configured_env):

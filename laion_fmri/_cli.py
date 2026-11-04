@@ -97,6 +97,10 @@ def main(argv=None):
         "--include-localizers", action="store_true",
         help="Include the localizer derivatives (contrast and effect maps).",
     )
+    download_parser.add_argument(
+        "--include-retinotopy", action="store_true",
+        help="Include the pRF parameter maps.",
+    )
 
     info_parser = subparsers.add_parser(
         "info", help="Show dataset information"
@@ -167,6 +171,44 @@ def main(argv=None):
         help="Number of parallel AWS CLI copy workers (default: 1).",
     )
 
+    mapping_parser = subparsers.add_parser(
+        "download-mapping",
+        help=(
+            "Download the precision-mapping dataset for a subject: pRF "
+            "maps, localizer maps, ROIs and the aperture libraries."
+        ),
+    )
+    mapping_parser.add_argument(
+        "--subject", required=True,
+        help=(
+            "Subject ID (e.g., sub-04) or 'all' (every subject of the "
+            "precision-mapping dataset)"
+        ),
+    )
+    for entity, description in (
+        ("ses", "Session filter; per-session files only"),
+        ("task", "Task filter"),
+        ("space", "Space filter"),
+    ):
+        mapping_parser.add_argument(
+            f"--{entity}", nargs="+", default=None,
+            help=f"{description} (one or more values).",
+        )
+    for flag, description in (
+        ("anatomical", "the anatomical derivatives"),
+        ("freesurfer", "the FreeSurfer reconstruction"),
+        ("preproc", "the preprocessed BOLD, design matrices and frame tables"),
+        ("raw", "the raw precision-mapping sessions and ses-PrismaAnat"),
+    ):
+        mapping_parser.add_argument(
+            f"--include-{flag}", action="store_true",
+            help=f"Include {description}.",
+        )
+    mapping_parser.add_argument(
+        "--n-jobs", type=int, default=1,
+        help="Number of parallel AWS CLI copy workers (default: 1).",
+    )
+
     subparsers.add_parser(
         "request-access",
         help=(
@@ -198,6 +240,8 @@ def main(argv=None):
             _handle_download_captions(args)
         elif args.command == "download-raw":
             _handle_download_raw(args)
+        elif args.command == "download-mapping":
+            _handle_download_mapping(args)
         elif args.command == "request-access":
             _handle_request_access(args)
     except Exception as exc:
@@ -240,6 +284,7 @@ def _handle_download(args):
         include_anatomical=args.include_anatomical,
         include_raw=args.include_raw,
         include_localizers=args.include_localizers,
+        include_retinotopy=args.include_retinotopy,
     )
 
 
@@ -286,6 +331,22 @@ def _handle_download_raw(args):
         part=args.part,
         suffix=args.suffix,
         extension=args.extension,
+        n_jobs=args.n_jobs,
+    )
+
+
+def _handle_download_mapping(args):
+    """Handle the download-mapping subcommand."""
+    from laion_fmri.download import download_mapping
+    download_mapping(
+        subject=args.subject,
+        ses=args.ses,
+        task=args.task,
+        space=args.space,
+        include_anatomical=args.include_anatomical,
+        include_freesurfer=args.include_freesurfer,
+        include_preproc=args.include_preproc,
+        include_raw=args.include_raw,
         n_jobs=args.n_jobs,
     )
 

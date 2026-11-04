@@ -22,12 +22,15 @@ from laion_fmri._paths import r2mean_path
 from laion_fmri._s3_engine import (
     download_key,
     list_prefix_objects,
+    list_top_level_objects,
 )
 from laion_fmri._sources import (
     HELD_OUT_EXEMPT_PREFIX,
     HELD_OUT_EXEMPT_TASKS,
     HELD_OUT_SESSIONS,
     LAION_FMRI_BUCKET,
+    MAPPING_SESSIONS,
+    SHARED_ANATOMY_SESSION,
 )
 
 DATASET_LEVEL_KEYS = (
@@ -210,7 +213,7 @@ def _local_matches(path, expected_size):
 
 def _filtered_download(
     bucket, prefix, data_dir, filters,
-    n_jobs=1, force_keys=(),
+    n_jobs=1, force_keys=(), exclude_sessions=(), top_level_only=False,
 ):
     """List ``prefix``, filter, skip already-complete files, download.
 
@@ -229,6 +232,10 @@ def _filtered_download(
         S3 keys to keep regardless of the filter result. Used by
         the caller to pin essentials (e.g. the subject brain mask
         when filtering by ``ses``).
+    exclude_sessions : iterable of str
+        Session directories (``"ses-Foveal"``) whose keys are skipped.
+    top_level_only : bool
+        List only the objects directly under ``prefix``.
     """
     n_jobs = _clamp_n_jobs(n_jobs)
     force_keys = set(force_keys)
@@ -240,11 +247,16 @@ def _filtered_download(
         "access_denied": [],
     }
 
-    objects = list_prefix_objects(bucket, prefix)
+    if top_level_only:
+        objects = list_top_level_objects(bucket, prefix)
+    else:
+        objects = list_prefix_objects(bucket, prefix)
     matching = []
     for o in objects:
         key = o["Key"]
         if _is_held_out(key):
+            continue
+        if any(f"/{s}/" in key for s in exclude_sessions):
             continue
         if key in force_keys:
             matching.append(o)
@@ -331,6 +343,7 @@ def fetch_laion_fmri(
     include_anatomical=False,
     include_raw=False,
     include_localizers=False,
+    include_retinotopy=False,
 ):
     """Download fMRI / derivatives for one subject.
 
@@ -366,7 +379,8 @@ def fetch_laion_fmri(
     include_anatomical : bool
         If True, also pull the per-subject anatomical derivatives
         under ``derivatives/anatomical/{subject}/ses-PrismaAnat/
-        anat/`` (T1w, T2w, brain mask at two resolutions). The
+        anat/`` (T1w, T2w, brain mask and tissue masks at three
+        resolutions). The
         anat files sit under ``ses-PrismaAnat`` and use
         ``T1w`` / ``T2w`` / ``mask`` suffixes -- both axes are
         orthogonal to typical functional filters, so the anat
@@ -382,6 +396,10 @@ def fetch_laion_fmri(
         ``derivatives/localizers/{subject}/`` (contrast z-maps and
         per-run effect maps, a few hundred MB). Like the recon and anat
         trees, they are pulled in full; the BIDS filters do not apply.
+    include_retinotopy : bool
+        If True, also pull the subject's pRF parameter maps under
+        ``derivatives/retinotopy/{subject}/``, in full, like the
+        localizer tree.
     """
     bucket = LAION_FMRI_BUCKET
     filters = {
@@ -431,6 +449,7 @@ def fetch_laion_fmri(
         and not include_anatomical
         and not include_raw
         and not include_localizers
+        and not include_retinotopy
     ):
         prefixes = (
             f"s3://{bucket}/{glm_result['prefix']}",
@@ -478,10 +497,159 @@ def fetch_laion_fmri(
             data_dir, {}, n_jobs=n_jobs,
         )
 
+    if include_retinotopy:
+        _filtered_download(
+            bucket, f"derivatives/retinotopy/{subject}/",
+            data_dir, {}, n_jobs=n_jobs,
+        )
+
     return {
         "glmsingle": glm_result,
         "rois": roi_result,
     }
+
+
+def fetch_retinotopy_stimuli(data_dir, n_jobs=1):
+    """Download the retinotopy aperture libraries.
+
+    Dataset-wide, under ``stimuli/retinotopy/``: one HDF5 of
+    full-resolution apertures per defining task, each with a JSON
+    sidecar. Public, unlike the LAION images.
+    """
+    return _filtered_download(
+        LAION_FMRI_BUCKET, "stimuli/retinotopy/",
+        data_dir, {}, n_jobs=n_jobs,
+    )
+
+
+#: Derivative trees of the precision-mapping dataset, by the
+#: ``download_mapping`` flag that adds them (``None``: always).
+MAPPING_TREES = (
+    (None, "derivatives/retinotopy/"),
+    (None, "derivatives/localizers/"),
+    (None, "derivatives/rois/"),
+    ("include_anatomical", "derivatives/anatomical/"),
+    ("include_freesurfer", "derivatives/freesurfer/"),
+    ("include_preproc", "derivatives/preproc-mapping/"),
+)
+
+#: Trees with per-session files; ``ses`` filters only these. The
+#: others hold subject-level files (pRF maps, ROIs, anatomy) that carry
+#: no ``ses`` entity, which a ``ses`` filter would drop.
+_SESSION_TREES = ("derivatives/localizers/", "derivatives/preproc-mapping/")
+
+#: Trees pulled whole, like in :func:`fetch_laion_fmri`: their files
+#: carry no BIDS entities (FreeSurfer) or use their own sessions.
+_WHOLE_TREES = ("derivatives/anatomical/", "derivatives/freesurfer/")
+
+
+def fetch_mapping(
+    data_dir,
+    subject,
+    ses=None,
+    task=None,
+    space=None,
+    n_jobs=1,
+    include_anatomical=False,
+    include_freesurfer=False,
+    include_preproc=False,
+    include_raw=False,
+):
+    """Download one subject's precision-mapping files.
+
+    Always the pRF maps, localizer maps and ROIs; the other trees on
+    request. ``ses`` applies to the per-session trees (localizers,
+    preprocessed data, raw) only; ``task`` and ``space`` apply wherever
+    a file carries the entity.
+
+    Parameters
+    ----------
+    data_dir : str
+    subject : str
+        BIDS subject ID (e.g. ``"sub-04"``).
+    ses, task, space : str or list[str], optional
+        BIDS-entity filters.
+    n_jobs : int
+        Number of parallel AWS CLI copy workers.
+    include_anatomical, include_freesurfer : bool
+        Also pull ``derivatives/anatomical/{subject}/`` or
+        ``derivatives/freesurfer/{subject}/``, whole.
+    include_preproc : bool
+        Also pull ``derivatives/preproc-mapping/{subject}/``: the
+        preprocessed BOLD, design matrices and frame tables.
+    include_raw : bool
+        Also pull the raw precision-mapping sessions
+        (:data:`MAPPING_SESSIONS`) and ``ses-PrismaAnat``. LAION's
+        numbered sessions are not included; use
+        :func:`laion_fmri.download.download_raw` for those.
+    """
+    bucket = LAION_FMRI_BUCKET
+    flags = {
+        "include_anatomical": include_anatomical,
+        "include_freesurfer": include_freesurfer,
+        "include_preproc": include_preproc,
+    }
+    session_filters = {"ses": ses, "task": task, "space": space}
+    subject_filters = {"task": task, "space": space}
+
+    for key in DATASET_LEVEL_KEYS:
+        download_key(bucket, key, f"{data_dir}/{key}")
+
+    results = {}
+    for flag, tree in MAPPING_TREES:
+        if flag is not None and not flags[flag]:
+            continue
+        if tree in _WHOLE_TREES:
+            filters = {}
+        elif tree in _SESSION_TREES:
+            filters = session_filters
+        else:
+            filters = subject_filters
+        results[tree] = _filtered_download(
+            bucket, f"{tree}{subject}/", data_dir, filters, n_jobs=n_jobs,
+        )
+
+    if include_raw:
+        for session in MAPPING_SESSIONS + (SHARED_ANATOMY_SESSION,):
+            results[f"{subject}/{session}/"] = _filtered_download(
+                bucket, f"{subject}/{session}/", data_dir,
+                session_filters, n_jobs=n_jobs,
+            )
+
+    if not any(r["matched"] for r in results.values()):
+        raise NoMatchingDataError(
+            "No precision-mapping files matched "
+            f"subject={subject!r} with filters "
+            f"({_format_active_filters(session_filters)}). "
+            "Check the subject ID and BIDS filters."
+        )
+    return results
+
+
+def fetch_mapping_dataset_files(
+    data_dir, n_jobs=1, include_anatomical=False,
+    include_freesurfer=False, include_preproc=False,
+):
+    """Download the dataset-wide files of the precision-mapping trees.
+
+    The files directly under each derivative tree that
+    :func:`fetch_mapping` pulls (``dataset_description.json``, lookup
+    tables such as ``seg-winner_dseg.tsv``) and the aperture libraries
+    under ``stimuli/retinotopy/``.
+    """
+    flags = {
+        "include_anatomical": include_anatomical,
+        "include_freesurfer": include_freesurfer,
+        "include_preproc": include_preproc,
+    }
+    for flag, tree in MAPPING_TREES:
+        if flag is not None and not flags[flag]:
+            continue
+        _filtered_download(
+            LAION_FMRI_BUCKET, tree, data_dir, {},
+            n_jobs=n_jobs, top_level_only=True,
+        )
+    fetch_retinotopy_stimuli(data_dir, n_jobs=n_jobs)
 
 
 def _download_raw_prefix(
@@ -493,11 +661,14 @@ def _download_raw_prefix(
     :func:`fetch_laion_fmri_raw` (raw-only). Held-out session
     filtering and JSON sidecar handling reuse the generic
     ``_filtered_download`` machinery; both operate on BIDS-entity
-    tokens so raw keys are handled by the same path.
+    tokens so raw keys are handled by the same path. The
+    precision-mapping sessions (:data:`MAPPING_SESSIONS`) are left
+    out; :func:`fetch_mapping` fetches them.
     """
     return _filtered_download(
         bucket, f"{subject}/",
         data_dir, filters, n_jobs=n_jobs,
+        exclude_sessions=MAPPING_SESSIONS,
     )
 
 
