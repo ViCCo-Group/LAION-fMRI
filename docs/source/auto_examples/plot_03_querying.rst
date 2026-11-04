@@ -133,7 +133,7 @@ too.
     LAION-fMRI Dataset
       Bucket:    s3://laion-fmri
       Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
-      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
+      ROIs:      EBA, EVC, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionstimEVC, laionstimIPCS, laionstimIPS0, laionstimLO1, laionstimLO2, laionstimSPCS, laionstimTO1, laionstimTO2, laionstimV1d, laionstimV1v, laionstimV2d, laionstimV2v, laionstimV3A, laionstimV3B, laionstimV3d, laionstimV3v, laionstimVO1, laionstimVO2, laionstimhV4, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
 
 
 
@@ -182,7 +182,7 @@ Most downstream analyses scope themselves to a subset of ROIs
 rather than the whole brain, so the next thing worth knowing
 is which ROIs ship per subject and how they are grouped.
 
-The dataset organizes ROIs into eight categories on the
+The dataset organizes ROIs into nine categories on the
 bucket (body-, face-, place-areas, ...). ``get_rois`` is the
 accessor for them. With no filter it returns the full
 inventory; with ``category=`` it returns one functional family
@@ -216,8 +216,8 @@ voxel mask for an analysis.
 
  .. code-block:: none
 
-    All ROIs (40):
-    ['EBA', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
+    All ROIs (61):
+    ['EBA', 'EVC', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionstimEVC', 'laionstimIPCS', 'laionstimIPS0', 'laionstimLO1', 'laionstimLO2', 'laionstimSPCS', 'laionstimTO1', 'laionstimTO2', 'laionstimV1d', 'laionstimV1v', 'laionstimV2d', 'laionstimV2v', 'laionstimV3A', 'laionstimV3B', 'laionstimV3d', 'laionstimV3v', 'laionstimVO1', 'laionstimVO2', 'laionstimhV4', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
 
     body: ['EBA', 'FBA']
     character: ['VWFA1', 'VWFA2', 'mfswords', 'pSTSwords']
@@ -225,8 +225,8 @@ voxel mask for an analysis.
     laion: ['laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral']
     motion: ['MST', 'MT']
     object: ['lobjects', 'vobjects']
-    place: ['MPA', 'OPA', 'PPA']
-    retinotopy: ['IPCS', 'IPS0', 'LO1', 'LO2', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'hV4']
+    place: ['MPA', 'OPA', 'PPA', 'SPA']
+    retinotopy: ['EVC', 'IPCS', 'IPS0', 'LO1', 'LO2', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'hV4']
 
 
 
@@ -260,20 +260,23 @@ extra prefix) show up at a glance.
  .. code-block:: none
 
     Bucket: s3://laion-fmri
-    Top-level prefixes (7):
+    Top-level prefixes (10):
+      archive/
       derivatives/
       stimuli/
       sub-01/
       sub-03/
+      sub-04/
       sub-05/
       sub-06/
       sub-07/
+      sub-08/
     derivatives/glmsingle-tedana/: 5 entries, 5 sub-* entries
-    derivatives/rois/: 5 entries, 5 sub-* entries
-    derivatives/freesurfer/: 5 entries, 5 sub-* entries
-    derivatives/anatomical/: 5 entries, 5 sub-* entries
-    derivatives/localizers/: 5 entries, 5 sub-* entries
-    sub-*/  (raw BIDS root): 7 entries, 5 sub-* entries
+    derivatives/rois/: 7 entries, 7 sub-* entries
+    derivatives/freesurfer/: 7 entries, 7 sub-* entries
+    derivatives/anatomical/: 7 entries, 7 sub-* entries
+    derivatives/localizers/: 7 entries, 7 sub-* entries
+    sub-*/  (raw BIDS root): 10 entries, 7 sub-* entries
 
 
 
@@ -319,7 +322,7 @@ subject data needs to be on disk.
 
  .. code-block:: none
 
-    Pools:     ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07']
+    Pools:     ['shared', 'sub-01', 'sub-03', 'sub-05', 'sub-06', 'sub-07', 'pooled']
     Splits:    ['random_0', 'random_1', 'random_2', 'random_3', 'random_4', 'cluster_k5_0', 'cluster_k5_1', 'cluster_k5_2', 'cluster_k5_3', 'cluster_k5_4', 'tau', 'ood']
     OOD types: ['cropped', 'gabor', 'gaudy', 'illusion-classic', 'illusion-natural', 'relations', 'selfmade', 'shape', 'unusual']
 
@@ -488,7 +491,7 @@ needed.
     Trials in ses-01:   1044
     FFA1 betas:      (1044, 222)
     face union:      (1044, 1100)
-    all-ROI union:   (1044, 16569)
+    all-ROI union:   (1044, 16869)
     ROI keys:        ['FFA1']
     FFA1 formats:    ['volume', 'gii']
     FFA1 gii hemis:  ['hemi-L', 'hemi-R']
@@ -529,11 +532,11 @@ before it surfaces in a downstream model.
 
  .. code-block:: none
 
-      sub-01:  40 ROIs total, 4 face
-      sub-03:  43 ROIs total, 6 face
-      sub-05:  41 ROIs total, 6 face
-      sub-06:  41 ROIs total, 5 face
-      sub-07:  41 ROIs total, 6 face
+      sub-01:  61 ROIs total, 4 face
+      sub-03:  62 ROIs total, 6 face
+      sub-05:  61 ROIs total, 6 face
+      sub-06:  61 ROIs total, 5 face
+      sub-07:  61 ROIs total, 6 face
 
 
 
@@ -610,7 +613,7 @@ guard below skips the cell when it isn't.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (2 minutes 13.580 seconds)
+   **Total running time of the script:** (3 minutes 15.871 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_03_querying.py:

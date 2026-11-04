@@ -544,7 +544,7 @@ appear only once in the resulting mask.
 
       MT: 183 voxels
       body (category): 1539 voxels
-      all: 16569 voxels
+      all: 16869 voxels
 
 
 
@@ -1038,6 +1038,8 @@ typical case where the subject list is known up front.
 
  .. code-block:: none
 
+      derivatives/rois/sub-03/: 163/163 files, 7.3 MB / 7.3 MB (100.0%)
+      derivatives/anatomical/sub-03/: 42/42 files, 30.7 MB / 30.7 MB (100.0%)
     Group size: 2
       sub-01: (469, 289)
       sub-03: (412, 305)
@@ -1180,7 +1182,7 @@ with an added ``run`` column.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (4 minutes 17.726 seconds)
+   **Total running time of the script:** (12 minutes 20.766 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_04_loading.py:
