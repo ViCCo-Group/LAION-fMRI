@@ -17,6 +17,35 @@ def test_progress_reports_files_and_bytes():
     assert out.getvalue().endswith("\n")
 
 
+class _Terminal(io.StringIO):
+    def isatty(self):
+        return True
+
+
+def test_progress_off_a_terminal_writes_only_the_final_line():
+    """A log file, CI or the docs gallery would turn every \\r redraw
+    into a line of its own."""
+    out = io.StringIO()
+    progress = DownloadProgress("prefix/", 3, 3000, stream=out)
+    for _ in range(3):
+        progress.advance(1000)
+    progress.close()
+    assert out.getvalue() == (
+        "  prefix/: 3/3 files, 3.0 KB / 3.0 KB (100.0%)\n"
+    )
+
+
+def test_progress_on_a_terminal_redraws_in_place():
+    out = _Terminal()
+    progress = DownloadProgress("prefix/", 2, 2000, stream=out)
+    progress.advance(1000)              # first redraw is never throttled
+    progress.close()
+    text = out.getvalue()
+    assert text.count("\r") == 2
+    assert "\r  prefix/: 1/2 files" in text
+    assert text.endswith("(50.0%)   \n")
+
+
 def test_progress_handles_zero_total():
     out = io.StringIO()
     DownloadProgress("empty/", 0, 0, stream=out).close()
