@@ -19,6 +19,7 @@ from pathlib import Path
 from laion_fmri._bidsify import bidsify_local_key
 from laion_fmri._errors import NoMatchingDataError
 from laion_fmri._paths import r2mean_path
+from laion_fmri._progress import DownloadProgress
 from laion_fmri._s3_engine import (
     download_key,
     list_prefix_objects,
@@ -306,14 +307,21 @@ def _filtered_download(
             raise
         return "downloaded", key
 
-    if n_jobs <= 1:
-        for obj in todo:
-            status, key = _fetch(obj)
-            result[status].append(key)
-    else:
-        with ThreadPoolExecutor(max_workers=n_jobs) as pool:
-            for status, key in pool.map(_fetch, todo):
+    sizes = {o["Key"]: o["Size"] for o in todo}
+    progress = DownloadProgress(prefix, len(todo), sum(sizes.values()))
+    try:
+        if n_jobs <= 1:
+            for obj in todo:
+                status, key = _fetch(obj)
                 result[status].append(key)
+                progress.advance(sizes[key])
+        else:
+            with ThreadPoolExecutor(max_workers=n_jobs) as pool:
+                for status, key in pool.map(_fetch, todo):
+                    result[status].append(key)
+                    progress.advance(sizes[key])
+    finally:
+        progress.close()
 
     return result
 

@@ -26,6 +26,7 @@ from laion_fmri._paths import (
     stimuli_h5_path,
     stimuli_metadata_path,
 )
+from laion_fmri._progress import DownloadProgress
 from laion_fmri._s3_engine import download_key, list_prefix_objects
 from laion_fmri._sources import LAION_FMRI_BUCKET
 from laion_fmri._stimulus_access import (  # noqa: F401
@@ -398,13 +399,21 @@ def download_embeddings(models="all", data_dir=None, n_jobs=1):
     def _fetch(item):
         key, local = item
         download_key(LAION_FMRI_BUCKET, key, local)
+        return key
 
-    if n_jobs <= 1:
-        for it in todo:
-            _fetch(it)
-    else:
-        with ThreadPoolExecutor(max_workers=n_jobs) as pool:
-            list(pool.map(_fetch, todo))
+    progress = DownloadProgress(
+        "embeddings", len(todo), sum(sizes[key] for key, _ in todo),
+    )
+    try:
+        if n_jobs <= 1:
+            for it in todo:
+                progress.advance(sizes[_fetch(it)])
+        else:
+            with ThreadPoolExecutor(max_workers=n_jobs) as pool:
+                for key in pool.map(_fetch, todo):
+                    progress.advance(sizes[key])
+    finally:
+        progress.close()
 
     return paths
 
@@ -472,8 +481,15 @@ def download_segmentations(data_dir=None):
         return paths
 
     print(f"[laion-fmri] Downloading {len(todo)} segmentation file(s):")
-    for key, local in todo:
-        download_key(LAION_FMRI_BUCKET, key, local)
+    progress = DownloadProgress(
+        "segmentations", len(todo), sum(sizes[key] for key, _ in todo),
+    )
+    try:
+        for key, local in todo:
+            download_key(LAION_FMRI_BUCKET, key, local)
+            progress.advance(sizes[key])
+    finally:
+        progress.close()
 
     return paths
 
