@@ -198,6 +198,74 @@ However, this limitation applies equally to all six variants.
       * - Smoothing
         - (placeholder)
 
+Precision Mapping Sessions
+==========================
+
+The retinotopic mapping and localizer sessions (``ses-BarsLMSEyeCalib``,
+``ses-Corners1``, ``ses-Corners2``, ``ses-Foveal``, ``ses-MotionLocBarsSML``,
+``ses-4BarScreenfLoc``) went through the same pipeline as above, from slice
+timing correction to the final interpolation, with these differences:
+
+- **Single echo**: there is no tedana step, and NORDIC was not
+  applied.
+- **TR**: the data were acquired at TR = 1.5 s and upsampled to TR = 1.0 s
+  in the slice-timing step.
+- **Output grid**: the final interpolation writes subject T1w space on a
+  1.5 mm isotropic grid.
+- **Intensity scale**: the interpolated volumes are stored as 16-bit integers.
+  To fit that range, each volume is divided by 2, so ``desc-preproc``
+  intensities are half the scanner values.
+
+Two further stages turn the interpolated BOLD into the inputs of the pRF
+and localizer models.
+
+Percent signal change
+---------------------
+
+Each brain voxel (FreeSurfer brain mask) is converted to percent signal
+change, ``100 * (x - b) / b``, where ``b`` is the voxel's mean over the
+run's baseline frames. For the retinotopy runs, the baseline frames are
+those in which the stimulus, convolved with an SPM HRF, is zero. For
+the localizer runs, the whole run was used as the baseline.
+
+High-pass filtering
+-------------------
+
+For the retinotopy runs, slow drift is removed from the percent-signal-change 
+series by regressing out four discrete-cosine (DCT) regressors. Because the number of
+regressors is fixed, the effective cutoff scales with run length: about
+180 s for the 270 s foveal runs and 220 s for the 330 s standard and
+corner runs.
+For the localizer runs, DCT regressors were included in the GLM (see :doc:`localizers`).
+
+Slab-edge mask
+--------------
+
+After motion correction, brain voxels at the edge of the acquisition slab 
+can move in and out of coverage. Voxels whose largest frame-to-frame change exceeds half
+the median BOLD intensity across the brain are flagged, saved as a mask
+(``desc-slabedge_mask``) and set to NaN in the retinotopy percent-signal-change and
+high-pass series.
+
+Surface projection
+------------------
+
+The volumetric series are sampled onto each subject's native cortical
+surface (``fsnative``) at mid-thickness with FreeSurfer ``mri_vol2surf``.
+Vertices that fall in the slab-edge mask are NaN.
+
+Run-onset alignment
+-------------------
+
+Six bar runs of sub-01 (``ses-MotionLocBarsSML``, ``task-BARL``, ``BARM``,
+``BARS``) started their stimulus 18 TR later than their sibling runs. In
+the released files these runs are shifted 18 TR earlier onto the common
+timeline, with the final 18 frames NaN. The unshifted timecourse is released
+beside it (``desc-preprocAsAcquired``, ``desc-pscHpAsAcquired``).
+
+See :doc:`fmri_data` for where these files are and which stage each run
+ships.
+
 Output Files
 ============
 

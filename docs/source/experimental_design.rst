@@ -416,9 +416,8 @@ they occur during blank periods as well as during sweeps. Because the task
 is at fixation and is orthogonal to bar position, it holds attention and
 gaze without contributing a stimulus-locked component to the pRF fits.
 
-The fitted pRF models, the recommended surface map, parameter
-definitions and quality-control caveats will be documented in an upcoming
-documentation update.
+See :doc:`retinotopy` for the fitted models, the recommended
+``paradigm-best`` surface map and parameter definitions.
 
 .. only:: dev
 

@@ -80,6 +80,86 @@ image-viewing runs plus localizer/deepmreye runs. Sessions ``ses-32``
 to ``ses-34`` are supplemental sessions and are not part of the
 initial launch-release data.
 
+Precision Mapping Functional Data
+=================================
+
+The retinotopic mapping and localizer sessions are released for all seven
+mapping subjects (``sub-01``, ``sub-03``, ``sub-04``, ``sub-05``, ``sub-06``,
+``sub-07``, ``sub-08``), both raw and preprocessed. Their preprocessing is
+described in :doc:`preprocessing` ("Precision Mapping Sessions"). The maps
+fitted on them are in :doc:`retinotopy` and :doc:`localizers`.
+
+Raw data
+--------
+
+The raw sessions sit beside the LAION sessions in each subject folder, as
+single-echo BIDS (TR = 1.5 s, 1.5 mm isotropic):
+
+.. code-block:: text
+
+   sub-03/
+   ├── ses-PrismaAnat/anat/             # T1w, T2w
+   ├── ses-BarsLMSEyeCalib/{func,fmap}/
+   ├── ses-Corners1/{func,fmap}/
+   ├── ses-Corners2/{func,fmap}/
+   ├── ses-Foveal/{func,fmap}/
+   ├── ses-MotionLocBarsSML/{func,fmap}/
+   └── ses-4BarScreenfLoc/{anat,func,fmap}/
+
+Preprocessed data
+-----------------
+
+The preprocessed runs are under ``derivatives/preproc-mapping``, on the
+1.5 mm T1w grid with TR = 1.0 s, as well as on each subject's native surface:
+
+.. code-block:: text
+
+   derivatives/preproc-mapping/sub-03/ses-Foveal/func/
+   ├── sub-03_ses-Foveal_task-BAR_run-01_space-T1w_res-1pt5_desc-preproc_bold.nii.gz
+   ├── sub-03_ses-Foveal_task-BAR_run-01_space-T1w_res-1pt5_desc-pscHp_bold.nii.gz
+   ├── sub-03_ses-Foveal_task-BAR_run-01_space-T1w_res-1pt5_desc-slabedge_mask.nii.gz
+   ├── sub-03_ses-Foveal_task-BAR_run-01_hemi-L_space-fsnative_desc-pscHp_bold.func.gii
+   ├── sub-03_ses-Foveal_task-BAR_run-01_hemi-L_space-fsnative_desc-slabedge_mask.func.gii
+   ├── sub-03_ses-Foveal_task-BAR_run-01_desc-apertures_design.h5
+   ├── sub-03_ses-Foveal_task-BAR_run-01_desc-frames_design.tsv
+   └── ...  (hemi-R, and a JSON sidecar beside every file)
+
+Every run ships ``desc-preproc`` (the interpolated BOLD). The brain mask on
+the same grid is the subject's anatomical one,
+``derivatives/anatomical/sub-XX/ses-<anat>/anat/sub-XX_ses-<anat>_space-T1w_res-1pt5_desc-brain_mask.nii.gz``
+(``ses-PrismaAnat``; ``ses-ConnectomAnat`` for sub-04; see
+:doc:`anatomical_data`). Beyond that, each run ships the stage its
+released maps were fitted on:
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - Runs
+     - Stage
+   * - Retinotopy (``BAR``, ``WEDGE``, ``BARS``/``BARM``/``BARL``, corner
+       tasks) and ``4bar``
+     - ``desc-pscHp`` (percent signal change, high-pass filtered), volume
+       and surface, with ``desc-slabedge_mask``
+   * - Localizers (``floc``, ``MotionLeft``, ``MotionRight``)
+     - ``desc-psc`` (percent signal change, not filtered: the localizer GLMs
+       model drift themselves), volume and surface
+   * - Resting state (``RS``) and ``DeepMREye``
+     - ``desc-preproc`` only
+
+``desc-preproc`` intensities are half the scanner values (see
+:doc:`preprocessing`). The pRF and 4bar runs also ship the design the fits
+used: ``desc-apertures_design.h5`` (for every 1 s frame and screen pixel,
+the fraction of the frame the aperture covered; pixel positions in degrees of
+visual angle from fixation) and
+``desc-frames_design.tsv`` (the frame sequence with its timing). The
+aperture libraries those designs come from are in ``stimuli/retinotopy/``.
+
+Six sub-01 runs in ``ses-MotionLocBarsSML`` are shifted onto the common
+stimulus timeline; their as-acquired versions ship beside them as
+``desc-preprocAsAcquired`` and ``desc-pscHpAsAcquired``, with matching
+``*AsAcquired`` design files.
+
 Loading raw data
 ================
 
