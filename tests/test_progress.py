@@ -9,9 +9,9 @@ from laion_fmri._progress import DownloadProgress
 
 def test_progress_reports_files_and_bytes():
     out = io.StringIO()
-    progress = DownloadProgress("prefix/", 2, 2048, stream=out)
-    progress.advance(1024)
-    progress.advance(1024)
+    progress = DownloadProgress("prefix/", 2, 2000, stream=out)
+    progress.advance(1000)
+    progress.advance(1000)
     progress.close()
     assert "prefix/: 2/2 files, 2.0 KB / 2.0 KB (100.0%)" in out.getvalue()
     assert out.getvalue().endswith("\n")
@@ -47,3 +47,13 @@ def test_filtered_download_silent_when_nothing_to_fetch(
     mock_list.return_value = []
     _filtered_download("bucket", "empty/", str(tmp_path), {})
     assert capsys.readouterr().err == ""
+
+
+def test_sizes_are_decimal_like_s3():
+    """17,002,104 bytes (the aperture libraries) read 17.0 MB, as in
+    ``aws s3 ls --summarize``, not 16.2."""
+    from laion_fmri._stimulus_access import _format_bytes
+
+    assert _format_bytes(17_002_104) == "17.0 MB"
+    assert _format_bytes(999) == "999.0 B"
+    assert _format_bytes(1000) == "1.0 KB"
