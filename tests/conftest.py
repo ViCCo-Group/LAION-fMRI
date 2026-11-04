@@ -81,6 +81,9 @@ N_FSNATIVE_VERTICES = 162
 # from ``source="rsquare"`` by voxel count.
 N_ANATOMICAL_BRAIN_VOXELS = 60
 ANATOMICAL_SESSION = "ses-PrismaAnat"
+# Tissue masks split the anatomical brain mask without overlap and
+# leave 5 voxels unlabelled, as the real masks leave sulcal CSF.
+N_TISSUE_VOXELS = {"CGM": 20, "SGM": 4, "BS": 2, "CBM": 4, "WM": 20, "CSF": 5}
 N_REPS_PER_STIMULUS = 3
 N_TRIALS_PER_SESSION = N_STIMULI * N_REPS_PER_STIMULUS  # 60
 AFFINE = np.eye(4)
@@ -163,6 +166,18 @@ def _make_anatomical_brain_mask():
     mask[4, 0, :] = True  # +5
     mask[4, 1, :] = True  # +5 = 60 total
     return mask
+
+
+def _make_tissue_masks(anat_mask):
+    """Return {label: volume} splitting ``anat_mask`` per N_TISSUE_VOXELS."""
+    brain_indices = np.where(anat_mask.ravel())[0]
+    masks, start = {}, 0
+    for label, n in N_TISSUE_VOXELS.items():
+        flat = np.zeros(anat_mask.size, dtype=bool)
+        flat[brain_indices[start:start + n]] = True
+        masks[label] = flat.reshape(anat_mask.shape)
+        start += n
+    return masks
 
 
 def _make_roi_masks(brain_mask):
@@ -593,10 +608,11 @@ def _build_freesurfer(data_dir, sub_id):
 def _build_anatomical(data_dir, sub_id, rng):
     """Populate ``derivatives/anatomical/{sub_id}/ses-PrismaAnat/anat/``.
 
-    Six files per subject mirror the bucket layout: T1w, T2w, and a
-    brain mask, each at full resolution and at ``res-1pt8``. The
-    synthetic grid is 5x5x5 throughout -- the ``res-1pt8`` token
-    only differentiates the filenames, not the array shape.
+    Files mirror the bucket layout: T1w, T2w, a brain mask and six
+    tissue masks, each at full resolution, ``res-1pt8`` and
+    ``res-1pt5``. The synthetic grid is 5x5x5 throughout -- the
+    ``res-`` token only differentiates the filenames, not the array
+    shape.
     """
     anat_root = (
         data_dir / "derivatives" / "anatomical"
@@ -605,10 +621,11 @@ def _build_anatomical(data_dir, sub_id, rng):
     anat_root.mkdir(parents=True)
 
     anat_mask = _make_anatomical_brain_mask()
+    tissue_masks = _make_tissue_masks(anat_mask)
     t1w_volume = rng.standard_normal(BRAIN_SHAPE).astype(np.float32)
     t2w_volume = rng.standard_normal(BRAIN_SHAPE).astype(np.float32)
 
-    for res in (None, "1pt8"):
+    for res in (None, "1pt8", "1pt5"):
         res_token = f"_res-{res}" if res else ""
         base = (
             f"{sub_id}_{ANATOMICAL_SESSION}"
@@ -621,6 +638,12 @@ def _build_anatomical(data_dir, sub_id, rng):
             anat_root / f"{base}_desc-brain_mask.nii.gz",
             dtype=np.uint8,
         )
+        for label, vol in tissue_masks.items():
+            _save_nifti(
+                vol.astype(np.uint8),
+                anat_root / f"{base}_label-{label}_mask.nii.gz",
+                dtype=np.uint8,
+            )
 
 
 # ── Raw BIDS scaffold ───────────────────────────────────────────

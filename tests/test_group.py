@@ -36,15 +36,34 @@ def test_load_subjects_all(synthetic_data_dir, monkeypatch):
     from laion_fmri.config import dataset_initialize
     dataset_initialize(str(synthetic_data_dir))
 
-    # "all" expands via the S3-backed get_subjects -- mock it so the
-    # test doesn't hit the network.
+    # The synthetic data has two subjects; narrow "all" to them.
     monkeypatch.setattr(
         "laion_fmri.group.get_subjects",
-        lambda: ["sub-01", "sub-03"],
+        lambda dataset: ["sub-01", "sub-03"],
     )
 
     group = load_subjects("all")
     assert len(group) == 2
+
+
+def test_load_subjects_all_mapping_loads_the_mapping_only_subjects(
+    tmp_path, monkeypatch,
+):
+    """sub-04 and sub-08 have no betas; their maps make them loadable."""
+    data_dir = tmp_path / "data"
+    for sub in ("01", "03", "04", "05", "06", "07", "08"):
+        (data_dir / f"derivatives/retinotopy/sub-{sub}/func").mkdir(
+            parents=True)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "cfg"))
+
+    from laion_fmri.config import dataset_initialize
+    dataset_initialize(str(data_dir))
+
+    group = load_subjects("all", dataset="mapping")
+    assert [sub.subject_id for _, sub in group] == [
+        "sub-01", "sub-03", "sub-04", "sub-05", "sub-06", "sub-07",
+        "sub-08",
+    ]
 
 
 def test_group_getitem_by_id(configured_group):
