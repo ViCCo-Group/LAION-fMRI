@@ -18,7 +18,8 @@ Two brain masks are available:
 * ``source="anatomical"`` *(default)*: the
   anatomically-derived brain mask shipped under
   ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/
-  ..._res-1pt8_desc-brain_mask.nii.gz``. Wider than the
+  ..._res-1pt8_desc-brain_mask.nii.gz`` (``ses-ConnectomAnat`` for
+  ``sub-04``). Wider than the
   rsquare-derived mask (it includes voxels with no GLMsingle
   signal too). Requires
   ``download(include_anatomical=True)``.
@@ -72,7 +73,34 @@ Core accessors
    sub.get_noise_ceiling(session="ses-01")     # float32, (n_voxels,)
    sub.get_noise_ceiling(desc="Noiseceiling12rep")  # subject-level variant
 
+   sub.get_prf("angle", roi=["V1d", "V1v"])    # float32, pRF map on the beta grid
+   sub.get_localizer("floc", "faceVsOthers")   # float32, localizer z-map on the beta grid
+
    sub.get_trial_info(session="ses-01")        # pandas DataFrame
+
+pRF and localizer maps on their fit grid
+========================================
+
+``get_prf``, ``get_localizer`` and ``get_roi_mask`` read the beta grid
+(``res="1pt8"``) by default, so their values line up with the betas.
+The volumetric fits were computed on the 1.5 mm grid, and ``res="1pt5"``
+reads that grid instead, indexed by the ``res-1pt5`` anatomical brain
+mask. ``mask_source="rsquare"`` exists on the beta grid only.
+
+.. code-block:: python
+
+   sub.get_prf("ecc", roi="V1d", res="1pt5")           # pRF map on the fit grid
+   sub.get_localizer("floc", "faceVsOthers", res="1pt5")
+   sub.get_roi_mask("face", res="1pt5")
+
+Each localizer session ships the mask of voxels its volumetric GLM was
+fitted on.
+
+.. code-block:: python
+
+   fitted = sub.get_localizer_fitted_mask("floc", res="1pt5")  # bool, fit grid
+   z = sub.get_localizer("floc", "faceVsOthers", res="1pt5")
+   z[~fitted] = np.nan
 
 Filters on ``get_betas``
 ========================
@@ -105,7 +133,7 @@ ROI inputs accept three forms (or a list mixing them):
 * ``"FFA1"``: a specific ROI name.
 * ``"face"``: every ROI in that category (the bucket groups
   ROIs into ``body``, ``character``, ``face``, ``laion``,
-  ``motion``, ``object``, ``place``, ``retinotopy``).
+  ``motion``, ``object``, ``place``, ``retinotopy``, ``laionstim``).
 * ``"all"``: every ROI for the subject.
 
 Categories and ROI names are disjoint, so a single string
@@ -115,7 +143,7 @@ once; overlapping voxels appear only once in the result.
 .. code-block:: python
 
    sub.get_available_rois()                 # flat list of every ROI
-   sub.get_available_categories()           # 8 categories
+   sub.get_available_categories()           # 9 categories
    sub.get_available_rois(category="face")  # face-area ROIs only
 
    sub.get_roi_mask("FFA1")        # 1-D bool mask
@@ -131,9 +159,24 @@ ROI queries on ``get_betas`` follow the same grammar:
    sub.get_betas(session="ses-01", roi="face")
    sub.get_betas(session="ses-01", roi=["face", "place"])
 
+``roi=`` and ``mask=`` are mutually exclusive on every loader; to
+combine an ROI with another criterion, build one boolean mask and pass
+it as ``mask=``.
+
+``z_threshold`` restricts each localizer-defined ROI to voxels above a z
+value on the contrast it was delineated on
+(``laion_fmri.derivatives.ROI_CONTRASTS``; needs
+``download(include_localizers=True)``):
+
+.. code-block:: python
+
+   ffa = sub.get_roi_mask("FFA1", z_threshold=5)
+   sub.get_betas(session="ses-01", mask=sub.get_roi_mask("face", z_threshold=5))
+
 Note that ``get_roi_mask`` / ``get_betas(roi=...)`` are
-**volume-only**: they operate on the ``space-T1w_res-1pt8``
-NIfTI mask. Surface variants are loaded via ``get_roi_data``.
+**volume-only**: they operate on the ``space-T1w`` NIfTI mask
+(``res-1pt8`` by default; ``get_roi_mask(..., res="1pt5")`` for the fit
+grid). Surface variants are loaded via ``get_roi_data``.
 
 Multi-format ROI loading
 ========================
@@ -187,6 +230,10 @@ Multi-subject access
    for sub_id, sub in group:
        ...
 
+``load_subjects("all")`` loads the five subjects of the main
+experiment. ``load_subjects("all", dataset="mapping")`` adds ``sub-04``
+and ``sub-08``, which have no betas and no ``res-1pt8`` files.
+
 Brain-space mapping
 ===================
 
@@ -201,26 +248,48 @@ templates, see :doc:`template_space`.
 Anatomical derivatives
 ======================
 
-Per-subject T1w / T2w volumes and a dedicated brain mask are
-published under ``derivatives/anatomical/sub-XX/ses-PrismaAnat/
-anat/``. Each modality ships at full resolution and at
-``res-1pt8`` (the functional grid). Pull them with
-``download(include_anatomical=True)`` and access via:
+Per-subject T1w / T2w volumes, a dedicated brain mask and
+tissue masks are published under ``derivatives/anatomical/sub-XX/
+ses-PrismaAnat/anat/``. Each file ships at full resolution,
+``res-1pt8`` (the GLMsingle beta grid) and ``res-1pt5`` (the grid
+of the volumetric pRF and localizer maps). Pull them with
+``download(include_anatomical=True)`` or
+``download_mapping(include_anatomical=True)`` and access via:
 
 .. code-block:: python
 
    sub.has_anatomical()                       # bool: are the files local?
    sub.get_anatomical_dir()                   # Path to the subject's anat tree
    sub.get_t1w()                              # full-resolution T1w path
-   sub.get_t1w(res="1pt8")                    # functional-grid T1w path
+   sub.get_t1w(res="1pt8")                    # beta-grid T1w path
+   sub.get_t1w(res="1pt5")                    # pRF / localizer-grid T1w path
    sub.get_t2w()                              # full-resolution T2w path
    sub.get_anatomical_brain_mask(res="1pt8")  # anat brain mask path
+   sub.get_anatomical_tissue_mask("CGM", res="1pt5")  # tissue mask path
 
-Each accessor returns a ``pathlib.Path``; load with
+``sub-04`` has no ``ses-PrismaAnat``: its anatomy comes from a
+Connectom scanner and is published as ``ses-ConnectomAnat``, at the same
+0.8 mm resolution. The accessors resolve the session per subject, so the
+same calls work. ``sub-04`` and ``sub-08`` have no ``res-1pt8`` files.
+
+Each accessor returns a ``pathlib.Path``. Load it with
 ``nibabel.load(...)`` when you need the voxel data. The
 ``res-1pt8`` mask is the same file ``source="anatomical"``
 reads in :meth:`get_brain_mask` and the voxel-axis accessors,
 so the voxel axis stays aligned.
+
+The tissue labels are ``"CGM"`` (cortical grey matter), ``"SGM"``
+(subcortical grey matter), ``"BS"`` (brainstem), ``"CBM"``
+(cerebellar cortex), ``"WM"`` and ``"CSF"`` (ventricular). See :doc:`../anatomical_data`
+for how they are defined. On the voxel axis, ``get_tissue_mask``
+works like ``get_roi_mask``:
+
+.. code-block:: python
+
+   cgm = sub.get_tissue_mask("CGM")              # 1-D bool mask
+   grey = sub.get_tissue_mask(["CGM", "SGM", "BS", "CBM"])  # all grey matter
+   betas = sub.get_betas("ses-01", mask=cgm)     # cortical voxels only
+   ffa_cgm = sub.get_roi_mask("FFA1") & cgm      # ROI limited to cortex
 
 
 PyTorch integration
@@ -521,9 +590,12 @@ The package raises a small, named exception hierarchy from
    ``laion_fmri.config.dataset_initialize(...)`` first.
 
 ``DataNotDownloadedError`` (subclass of ``FileNotFoundError``)
-   Raised when a subject's directory exists but the requested
-   file is missing on disk. Re-run ``download(...)`` with the
-   right ``ses``/``desc``/``stat`` filters.
+   Raised by ``load_subject`` when none of the subject's data is on
+   disk (neither the betas nor the pRF maps, localizer maps or ROIs),
+   and by an accessor when the requested file is missing. The message
+   names the call that fetches it: ``download(...)`` with the right
+   ``ses``/``desc``/``stat`` filters, or ``download_mapping(...)`` for
+   ``sub-04`` and ``sub-08``.
 
 ``StimuliNotDownloadedError`` (subclass of ``FileNotFoundError``)
    Raised by stimulus-side accessors (``Subject.metadata``,

@@ -73,8 +73,8 @@ The cards below walk through each step in detail.
       :class-card: sd-border-0
       :shadow: sm
 
-      List subjects, ROIs, and bucket structure. Every query
-      reads S3 directly, no local download needed.
+      List subjects, ROIs, and bucket structure. No local
+      download needed.
 
       +++
       ``get_subjects`` · ``describe`` · ``inspect_bucket``
@@ -90,7 +90,7 @@ The cards below walk through each step in detail.
       parallelism.
 
       +++
-      ``download(...)``
+      ``download(...)`` · ``download_mapping(...)``
 
    .. grid-item-card:: Load
       :link: load
