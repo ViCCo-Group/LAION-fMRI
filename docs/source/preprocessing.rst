@@ -233,10 +233,11 @@ High-pass filtering
 
 For the retinotopy runs, slow drift is removed from the percent-signal-change 
 series by regressing out four discrete-cosine (DCT) regressors. Because the number of
-regressors is fixed, the effective cutoff scales with run length: about
-180 s for the 270 s foveal runs and 220 s for the 330 s standard and
-corner runs.
-For the localizer runs, DCT regressors were included in the GLM (see :doc:`localizers`).
+regressors is fixed, the effective cutoff scales with run length: 165 s for the standard
+and corner runs, 150 s and 135 s for the foveal wedge and bar runs, and 96 s for the 4bar runs.
+
+For the localizer runs, the GLM includes a cosine drift model with a 128 s
+cutoff instead (see :doc:`localizers`).
 
 Slab-edge mask
 --------------

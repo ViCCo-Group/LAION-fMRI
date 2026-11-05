@@ -362,8 +362,8 @@ and are held out from the released fits. Gaze position was recorded during the f
    rotation, and shaded blocks represent blank periods.
 
 The standard, corner and foveal bar runs share one structure: an 18 s
-fixation period, four blocks of two orthogonal bar sweeps followed by an 18 s
-blank, and an 18 s fixation period to close. Sweep directions follow a
+fixation period, four blocks of two orthogonal bar sweeps separated by 18 s
+blanks, and an 18 s fixation period to close. Sweep directions follow a
 palindromic sequence, so each cardinal
 direction occurs twice per run and the second half of the run reverses the
 first. Horizontal sweeps last 37.5 s and vertical sweeps 22.5 s on the full
