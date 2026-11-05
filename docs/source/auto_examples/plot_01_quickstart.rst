@@ -139,7 +139,7 @@ in :doc:`plot_03_querying`.
     LAION-fMRI Dataset
       Bucket:    s3://laion-fmri
       Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
-      ROIs:      EBA, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
+      ROIs:      EBA, EVC, FBA, FFA1, FFA2, IPCS, IPS0, LO1, LO2, MPA, MST, MT, OFA, OPA, PPA, SPA, SPCS, TO1, TO2, V1d, V1v, V2d, V2v, V3A, V3B, V3d, V3v, VO1, VO2, VWFA1, VWFA2, hV4, laionEVC, laiondorsal, laiongeneral, laionlateral, laionstimEVC, laionstimIPCS, laionstimIPS0, laionstimLO1, laionstimLO2, laionstimSPCS, laionstimTO1, laionstimTO2, laionstimV1d, laionstimV1v, laionstimV2d, laionstimV2v, laionstimV3A, laionstimV3B, laionstimV3d, laionstimV3v, laionstimVO1, laionstimVO2, laionstimhV4, laionventral, lobjects, mfswords, pSTSfaces, pSTSwords, vobjects
 
 
 
@@ -235,6 +235,8 @@ surface ROI loading is covered in :doc:`plot_04_loading`.
  .. code-block:: none
 
     Downloading sub-01 / ses-01
+      derivatives/rois/sub-01/: 162/162 files, 7.1 MB / 7.1 MB (100.0%)
+      derivatives/anatomical/sub-01/: 42/42 files, 30.8 MB / 30.8 MB (100.0%)
     [laion-fmri] stimuli already up to date.
 
 
@@ -319,7 +321,7 @@ seen at a glance. The full cascading-kwarg story is in
     Subject:   sub-01
     Sessions:  ['ses-01']
     Voxels:    272080 (rsquare: 271557)
-    ROIs:      ['EBA', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
+    ROIs:      ['EBA', 'EVC', 'FBA', 'FFA1', 'FFA2', 'IPCS', 'IPS0', 'LO1', 'LO2', 'MPA', 'MST', 'MT', 'OFA', 'OPA', 'PPA', 'SPA', 'SPCS', 'TO1', 'TO2', 'V1d', 'V1v', 'V2d', 'V2v', 'V3A', 'V3B', 'V3d', 'V3v', 'VO1', 'VO2', 'VWFA1', 'VWFA2', 'hV4', 'laionEVC', 'laiondorsal', 'laiongeneral', 'laionlateral', 'laionstimEVC', 'laionstimIPCS', 'laionstimIPS0', 'laionstimLO1', 'laionstimLO2', 'laionstimSPCS', 'laionstimTO1', 'laionstimTO2', 'laionstimV1d', 'laionstimV1v', 'laionstimV2d', 'laionstimV2v', 'laionstimV3A', 'laionstimV3B', 'laionstimV3d', 'laionstimV3v', 'laionstimVO1', 'laionstimVO2', 'laionstimhV4', 'laionventral', 'lobjects', 'mfswords', 'pSTSfaces', 'pSTSwords', 'vobjects']
 
 
 
@@ -766,7 +768,7 @@ go with each image, see :doc:`plot_05_segmentations`.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (1 minutes 39.815 seconds)
+   **Total running time of the script:** (4 minutes 59.803 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_01_quickstart.py:

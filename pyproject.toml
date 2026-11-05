@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "laion-fmri"
-version = "0.1.0"
+version = "0.2.0"
 description = "Data loading package for the LAION-fMRI dataset"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}

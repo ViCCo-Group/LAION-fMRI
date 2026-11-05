@@ -6,6 +6,8 @@ exception -- :attr:`Subject.metadata` aggregates the per-session trial
 TSVs into one trial table for convenience.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -20,7 +22,14 @@ from laion_fmri._paths import (
     betas_path,
     freesurfer_subject_dir,
     glmsingle_subject_dir,
+    LOCALIZER_SESSIONS,
+    localizer_fitted_mask_path,
+    localizer_statmap_path,
     parse_roi_label,
+    PRF_WINNER_LEVELS,
+    VOLUME_RESOLUTIONS,
+    prf_map_path,
+    prf_winner_path,
     r2mean_path,
     raw_bold_path,
     raw_events_path,
@@ -28,8 +37,10 @@ from laion_fmri._paths import (
     raw_sbref_path,
     raw_session_dir,
     raw_subject_dir,
+    retinotopy_subject_dir,
     roi_freesurfer_label_path,
     roi_mask_path,
+    ROI_CONTRASTS,
     roi_surface_path,
     rois_subject_dir,
     session_noise_ceiling_path,
@@ -38,6 +49,7 @@ from laion_fmri._paths import (
     subject_noise_ceiling_path,
     trialinfo_path,
 )
+from laion_fmri._sources import DATASET_SUBJECTS
 from laion_fmri.config import get_data_dir
 from laion_fmri.io import (
     load_freesurfer_label,
@@ -82,20 +94,78 @@ def load_subject(subject):
     SubjectNotFoundError
         If the subject identifier is invalid.
     DataNotDownloadedError
-        If the subject's data has not been downloaded.
+        If none of the subject's data has been downloaded: neither the
+        betas (:func:`laion_fmri.download.download`) nor the
+        precision-mapping maps
+        (:func:`laion_fmri.download.download_mapping`).
     """
     subject_id = resolve_subject_id(subject)
     data_dir = get_data_dir()
 
-    glm_dir = glmsingle_subject_dir(data_dir, subject_id)
-    if not glm_dir.is_dir():
+    trees = _subject_data_dirs(data_dir, subject_id)
+    if not any(d.is_dir() for d in trees):
+        if subject_id in DATASET_SUBJECTS["main"]:
+            hint = f"download(subject='{subject_id}')"
+            func = "download"
+        else:
+            hint = f"download_mapping(subject='{subject_id}')"
+            func = "download_mapping"
         raise DataNotDownloadedError(
-            f"Data for {subject_id} not found at {glm_dir}. "
-            "Run: from laion_fmri.download import download; "
-            f"download(subject='{subject_id}')"
+            f"No data for {subject_id} found under {data_dir} "
+            f"(looked for {', '.join(str(d) for d in trees)}). "
+            f"Run: from laion_fmri.download import {func}; {hint}"
         )
 
     return Subject(subject_id, data_dir)
+
+
+def _subject_data_dirs(data_dir, subject_id):
+    """Per-subject trees, any of which makes a subject loadable.
+
+    The betas come with ``download``; the pRF maps, localizer maps and
+    ROIs with ``download_mapping``. The precision-mapping-only subjects
+    (``sub-04``, ``sub-08``) have no betas.
+    """
+    return (
+        glmsingle_subject_dir(data_dir, subject_id),
+        retinotopy_subject_dir(data_dir, subject_id).parent,
+        Path(data_dir) / "derivatives" / "localizers" / subject_id,
+        rois_subject_dir(data_dir, subject_id),
+    )
+
+
+def _maps_hint(subject_id, flag):
+    """CLI command that fetches a subject's pRF or localizer maps.
+
+    ``download`` refuses the precision-mapping-only subjects;
+    ``download-mapping`` fetches both trees without a flag.
+    """
+    if subject_id in DATASET_SUBJECTS["main"]:
+        return f"laion-fmri download --subject {subject_id} --{flag}"
+    return f"laion-fmri download-mapping --subject {subject_id}"
+
+
+def _tree_hint(subject_id, flag):
+    """Python call that fetches a subject's anatomy or FreeSurfer tree."""
+    func = (
+        "download" if subject_id in DATASET_SUBJECTS["main"]
+        else "download_mapping"
+    )
+    return (
+        f"from laion_fmri.download import {func}; "
+        f"{func}(subject='{subject_id}', {flag}=True)"
+    )
+
+
+def _check_mask_source_res(mask_source, res):
+    """The R2mean-derived brain mask exists on the beta grid only."""
+    if res not in VOLUME_RESOLUTIONS:
+        raise ValueError(
+            f"res must be one of {VOLUME_RESOLUTIONS}; got {res!r}.")
+    if mask_source == "rsquare" and res != "1pt8":
+        raise ValueError(
+            "mask_source='rsquare' is defined on the beta grid only; "
+            "use res='1pt8' or mask_source='anatomical'.")
 
 
 class Subject:
@@ -174,12 +244,12 @@ class Subject:
         for cat_dir in sorted(root.iterdir()):
             if not cat_dir.is_dir():
                 continue
-            rois = [
-                roi for f in sorted(cat_dir.iterdir())
+            rois = sorted({
+                roi for f in cat_dir.iterdir() for res in VOLUME_RESOLUTIONS
                 if (roi := parse_roi_label(
-                    f.name, self._subject_id,
+                    f.name, self._subject_id, res=res,
                 )) is not None
-            ]
+            })
             if rois:
                 out[cat_dir.name] = rois
         return out
@@ -263,11 +333,12 @@ class Subject:
             mean-R^2 map (voxels with any non-zero GLMsingle fit;
             the bucket ships R2mean as
             ``..._stat-rsquare_desc-R2mean_statmap.nii.gz``).
-        res : ``"1pt8"`` (default) | ``None``
+        res : ``"1pt8"`` (default) | ``"1pt5"`` | ``None``
             Anatomical-mask resolution. ``"1pt8"`` matches the
             functional grid, so the returned mask aligns with the
             voxel axis of ``get_betas`` / ``get_noise_ceiling`` and
-            with the rsquare-derived mask. ``None`` loads the
+            with the rsquare-derived mask. ``"1pt5"`` is the grid of
+            the volumetric pRF and localizer fits. ``None`` loads the
             full-resolution anatomical mask; the returned 1-D
             array is larger and will not align with the loader
             cascade. Ignored for ``source="rsquare"`` (the
@@ -473,7 +544,8 @@ class Subject:
 
     # ── ROI masks ───────────────────────────────────────────────
 
-    def get_roi_mask(self, query, mask_source="anatomical"):
+    def get_roi_mask(self, query, mask_source="anatomical", z_threshold=None,
+                     res="1pt8"):
         """Load one or more ROI masks, restricted to brain-mask voxels.
 
         ``query`` accepts the multi-level grammar:
@@ -489,18 +561,49 @@ class Subject:
 
         ``mask_source`` selects which brain mask the result is
         indexed within; see :meth:`get_brain_mask`.
+
+        ``z_threshold`` keeps only the voxels of each ROI whose
+        volumetric z exceeds it on the localizer contrast the ROI was
+        delineated on (:data:`laion_fmri.derivatives.ROI_CONTRASTS`,
+        by category). Only localizer-defined ROIs have one; needs
+        ``download(include_localizers=True)``.
+
+        ``res`` selects the volumetric grid: ``"1pt8"`` (default, the
+        beta grid) or ``"1pt5"`` (the grid of the pRF and localizer
+        fits); see :meth:`get_prf`.
         """
+        _check_mask_source_res(mask_source, res)
         rois = self._resolve_rois_query(query)
         union = np.zeros(
-            self.get_n_voxels(source=mask_source), dtype=bool,
+            self.get_n_voxels(source=mask_source, res=res), dtype=bool,
         )
+        if z_threshold is not None:
+            category = {r: c for c, rs in self._rois_by_category().items()
+                        for r in rs}
+            undefined = sorted({f"{r} ({category[r]})" for r in rois
+                                if category[r] not in ROI_CONTRASTS})
+            if undefined:
+                raise ValueError(
+                    "z_threshold needs localizer-defined ROIs; no "
+                    f"defining contrast for {', '.join(undefined)}. "
+                    f"Categories with one: {sorted(ROI_CONTRASTS)}.")
+            above = {}
         for roi in rois:
-            union |= self._load_roi_volume_mask(
-                roi, mask_source=mask_source,
+            keep = self._load_roi_volume_mask(
+                roi, mask_source=mask_source, res=res,
             )
+            if z_threshold is not None:
+                cat = category[roi]
+                if cat not in above:
+                    z = self.get_localizer(
+                        *ROI_CONTRASTS[cat], mask_source=mask_source,
+                        res=res)
+                    above[cat] = z > z_threshold
+                keep &= above[cat]
+            union |= keep
         return union
 
-    def get_roi_masks(self, queries, mask_source="anatomical"):
+    def get_roi_masks(self, queries, mask_source="anatomical", res="1pt8"):
         """Load several ROI masks at once.
 
         ``queries`` is a list (or single string). Each element is
@@ -508,12 +611,12 @@ class Subject:
         keyed by the user's strings, so categories and "all" appear
         as their original keys with a union mask as value.
 
-        ``mask_source`` is forwarded to :meth:`get_roi_mask`.
+        ``mask_source`` and ``res`` are forwarded to :meth:`get_roi_mask`.
         """
         if isinstance(queries, str):
             queries = [queries]
         return {
-            q: self.get_roi_mask(q, mask_source=mask_source)
+            q: self.get_roi_mask(q, mask_source=mask_source, res=res)
             for q in queries
         }
 
@@ -573,12 +676,12 @@ class Subject:
             for roi in rois
         }
 
-    def _load_roi_volume_mask(self, roi, mask_source="anatomical"):
+    def _load_roi_volume_mask(self, roi, mask_source="anatomical", res="1pt8"):
         """Load a single volumetric ROI mask within the brain mask."""
         roi_vol = load_nifti_mask(
-            roi_mask_path(self._data_dir, self._subject_id, roi),
+            roi_mask_path(self._data_dir, self._subject_id, roi, res=res),
         )
-        brain = self.get_brain_mask(source=mask_source)
+        brain = self.get_brain_mask(source=mask_source, res=res)
         return roi_vol[brain]
 
     def _build_roi_data(self, roi, format, hemi, mask_source):
@@ -647,6 +750,8 @@ class Subject:
             (0-100, GLMsingle convention). Threshold near
             10-20 % keeps reliably driven voxels.
         """
+        if roi is not None and mask is not None:
+            raise ValueError("roi and mask are mutually exclusive.")
         if isinstance(session, (list, tuple)):
             return {
                 s: self.get_noise_ceiling(
@@ -704,6 +809,226 @@ class Subject:
             nc = nc[mask]
 
         return nc
+
+    # ── pRF maps ────────────────────────────────────────────────
+
+    def get_prf(
+        self, param, paradigm="best", stage="dnhrf", desc=None,
+        space="T1w", hemi=None, roi=None, mask=None,
+        mask_source="anatomical", res="1pt8",
+    ):
+        """Load one pRF parameter map.
+
+        In ``space="T1w"`` the map is read on the beta grid
+        (``res-1pt8``) and indexed like :meth:`get_betas`: one value
+        per brain-mask voxel, or per voxel of ``roi`` / ``mask``, in the
+        same order as the betas' voxel axis. In ``space="fsnative"``
+        (``hemi`` required) it is one value per vertex, or per vertex of
+        ``roi`` on that hemisphere.
+
+        Parameters
+        ----------
+        param : str
+            One of :data:`laion_fmri.derivatives.PRF_PARAMS`, e.g.
+            ``"angle"``, ``"ecc"``, ``"x"``, ``"y"``, ``"sd"``, ``"r2"``,
+            ``"r2cv"``; or ``"winner"``: which paradigm each
+            ``paradigm="best"`` value comes from (``paradigm="best"``,
+            ``stage="dnhrf"``, ``desc`` None or ``"filtered"`` only).
+        paradigm : ``"best"`` (default) | ``"standard"`` | ``"foveal"`` |
+            ``"corners"``
+            ``"best"`` exists for ``stage="dnhrf"`` and
+            :data:`laion_fmri.derivatives.PRF_BEST_PARAMS`, with ``desc``
+            None or ``"filtered"`` (plus ``"half"`` for ``r2cv``); other
+            combinations raise ``ValueError``.
+        stage : ``"dnhrf"`` (default) | ``"dn"`` | ``"gauss"`` | ``"ols"``
+        desc : None | ``"filtered"`` | ``"odd"`` | ``"even"`` | ``"half"``
+        space : ``"T1w"`` (default) | ``"fsnative"``
+        hemi : ``"L"`` | ``"R"``; required for ``fsnative``.
+        roi : str, list[str], or None
+            Named ROI(s) (see :meth:`get_roi_mask`).
+        mask : np.ndarray[bool] or None
+            Custom mask over brain-mask voxels (``T1w``) or vertices
+            (``fsnative``). Mutually exclusive with ``roi``.
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+            Brain-mask choice for ``T1w``; see :meth:`get_brain_mask`.
+        res : ``"1pt8"`` (default) | ``"1pt5"``
+            ``T1w`` grid. ``"1pt8"`` is the beta grid (a nearest-neighbour
+            resampling of the fit); ``"1pt5"`` is the grid the volumetric
+            fits were computed on, indexed by the ``res-1pt5`` anatomical
+            brain mask, so its values do not align with the betas.
+            ``mask_source="rsquare"`` exists on the beta grid only.
+
+        Returns
+        -------
+        np.ndarray
+            float32, ``NaN`` where the fit has no value. For
+            ``"winner"``: paradigm names (``"standard"``, ``"foveal"``,
+            ``"corners"``, or ``"none"`` where no paradigm has a fit).
+        """
+        if roi is not None and mask is not None:
+            raise ValueError("roi and mask are mutually exclusive.")
+        _check_mask_source_res(mask_source, res)
+        winner = param == "winner"
+        if winner and (paradigm != "best" or stage != "dnhrf"
+                       or desc not in (None, "filtered")):
+            raise ValueError(
+                "param='winner' exists for paradigm='best', stage='dnhrf' "
+                "and desc None or 'filtered' only.")
+        try:
+            if winner:
+                path = prf_winner_path(
+                    self._data_dir, self._subject_id, stage=stage,
+                    space=space, hemi=hemi, res=res, desc=desc,
+                )
+            else:
+                path = prf_map_path(
+                    self._data_dir, self._subject_id, param,
+                    paradigm=paradigm, stage=stage, space=space, hemi=hemi,
+                    res=res, desc=desc,
+                )
+        except FileNotFoundError as err:
+            raise DataNotDownloadedError(
+                f"{err}. Run: "
+                f"{_maps_hint(self._subject_id, 'include-retinotopy')}"
+            ) from None
+
+        values = self._index_map(path, space, hemi, roi, mask, mask_source,
+                                 res)
+        if winner:
+            names = np.array(
+                [PRF_WINNER_LEVELS[k] for k in sorted(PRF_WINNER_LEVELS)])
+            return names[values.astype(int)]
+        return values.astype(np.float32)
+
+    def _index_map(self, path, space, hemi, roi, mask, mask_source,
+                   res="1pt8"):
+        """One map's values per brain-mask voxel (``T1w``, on grid
+        ``res``) or per vertex (``fsnative``), then per voxel/vertex of
+        ``roi`` or ``mask``."""
+        import nibabel as nib
+
+        img = nib.load(str(path))
+        if space == "T1w":
+            values = np.asarray(img.dataobj).ravel()[
+                self.get_brain_mask(source=mask_source, res=res)]
+            if roi is not None:
+                keep = self.get_roi_mask(roi, mask_source=mask_source,
+                                         res=res)
+        else:
+            values = np.asarray(img.darrays[0].data)
+            if roi is not None:
+                keep = np.zeros(values.shape, dtype=bool)
+                for name in self._resolve_rois_query(roi):
+                    keep |= load_gifti_mask(roi_surface_path(
+                        self._data_dir, self._subject_id, name, hemi))
+        if roi is not None:
+            return values[keep]
+        if mask is not None:
+            return values[mask]
+        return values
+
+    # ── Localizer maps ──────────────────────────────────────────
+
+    def get_localizer(
+        self, task, contrast, session=None, space="T1w", hemi=None,
+        roi=None, mask=None, mask_source="anatomical", res="1pt8",
+    ):
+        """Load one localizer contrast z-map.
+
+        Indexed like :meth:`get_prf`: in ``space="T1w"`` one value per
+        brain-mask voxel on the beta grid (``res-1pt8``), in the order
+        of the betas' voxel axis; in ``space="fsnative"`` (``hemi``
+        required) one value per vertex. The ``T1w`` map comes from a
+        separate volumetric GLM, not a projection of the surface fit
+        the ROIs were drawn on.
+
+        Parameters
+        ----------
+        task : one of :data:`laion_fmri.derivatives.LOCALIZER_TASKS`
+        contrast : str
+            camelCase contrast name as released, e.g.
+            ``"faceVsOthers"``.
+            :data:`laion_fmri.derivatives.ROI_CONTRASTS` lists the one
+            each ROI category was delineated on.
+        session : str or None
+            Defaults to the session the task was acquired in
+            (:data:`laion_fmri.derivatives.LOCALIZER_SESSIONS`).
+        space : ``"T1w"`` (default) | ``"fsnative"``
+        hemi : ``"L"`` | ``"R"``; required for ``fsnative``.
+        roi : str, list[str], or None
+            Named ROI(s) (see :meth:`get_roi_mask`).
+        mask : np.ndarray[bool] or None
+            Custom mask over brain-mask voxels (``T1w``) or vertices
+            (``fsnative``). Mutually exclusive with ``roi``.
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+            Brain-mask choice for ``T1w``; see :meth:`get_brain_mask`.
+        res : ``"1pt8"`` (default) | ``"1pt5"``
+            ``T1w`` grid; see :meth:`get_prf`. All three localizers
+            were fitted on ``"1pt5"`` (oLoc after resampling from its
+            1.778 mm acquisition); ``"1pt8"`` is a resampling of the
+            fit.
+
+        Returns
+        -------
+        np.ndarray
+            float32 z values.
+        """
+        if roi is not None and mask is not None:
+            raise ValueError("roi and mask are mutually exclusive.")
+        _check_mask_source_res(mask_source, res)
+        if session is None:
+            session = LOCALIZER_SESSIONS.get(task)
+        try:
+            path = localizer_statmap_path(
+                self._data_dir, self._subject_id, task, contrast, session,
+                space=space, hemi=hemi, res=res,
+            )
+        except FileNotFoundError as err:
+            raise DataNotDownloadedError(
+                f"{err}. Run: "
+                f"{_maps_hint(self._subject_id, 'include-localizers')}"
+            ) from None
+        values = self._index_map(path, space, hemi, roi, mask, mask_source,
+                                 res)
+        return values.astype(np.float32)
+
+    def get_localizer_fitted_mask(
+        self, task, session=None, res="1pt8", mask_source="anatomical",
+    ):
+        """Which brain-mask voxels the localizer GLM was fitted on.
+
+        One mask per localizer session and grid, indexed like
+        :meth:`get_localizer`: values of that session's maps outside it
+        are not estimates (0, NaN or interpolated from the edge of the
+        fitted volume).
+
+        Parameters
+        ----------
+        task : one of :data:`laion_fmri.derivatives.LOCALIZER_TASKS`
+            Selects the session; tasks sharing a session share a mask.
+        session : str or None
+            Defaults to the session the task was acquired in.
+        res : ``"1pt8"`` (default) | ``"1pt5"``
+        mask_source : ``"anatomical"`` (default) | ``"rsquare"``
+
+        Returns
+        -------
+        np.ndarray
+            1-D boolean array over the brain mask.
+        """
+        _check_mask_source_res(mask_source, res)
+        if session is None:
+            session = LOCALIZER_SESSIONS.get(task)
+        try:
+            path = localizer_fitted_mask_path(
+                self._data_dir, self._subject_id, session, res=res)
+        except FileNotFoundError as err:
+            raise DataNotDownloadedError(
+                f"{err}. Run: "
+                f"{_maps_hint(self._subject_id, 'include-localizers')}"
+            ) from None
+        return load_nifti_mask(path)[
+            self.get_brain_mask(source=mask_source, res=res)]
 
     # ── Trial info (events.tsv per session) ────────────────────
 
@@ -785,9 +1110,7 @@ class Subject:
             raise DataNotDownloadedError(
                 f"FreeSurfer recon for {self._subject_id} not "
                 f"found at {fs_dir}. Run: "
-                "from laion_fmri.download import download; "
-                f"download(subject='{self._subject_id}', "
-                "include_freesurfer=True)"
+                f"{_tree_hint(self._subject_id, 'include_freesurfer')}"
             )
         return fs_dir
 
@@ -796,8 +1119,7 @@ class Subject:
 
         Anatomical files live under
         ``derivatives/anatomical/{subject}/ses-PrismaAnat/anat/``
-        and ship T1w / T2w volumes plus a brain mask at two
-        resolutions (full and ``res-1pt8``).
+        (``ses-ConnectomAnat`` for sub-04).
         """
         return anatomical_subject_dir(
             self._data_dir, self._subject_id,
@@ -818,17 +1140,16 @@ class Subject:
             raise DataNotDownloadedError(
                 f"Anatomical derivatives for {self._subject_id} "
                 f"not found at {anat_dir}. Run: "
-                "from laion_fmri.download import download; "
-                f"download(subject='{self._subject_id}', "
-                "include_anatomical=True)"
+                f"{_tree_hint(self._subject_id, 'include_anatomical')}"
             )
         return anat_dir
 
     def get_t1w(self, *, res=None):
         """Return the path to this subject's anatomical T1w volume.
 
-        ``res=None`` returns the full-resolution image;
-        ``res="1pt8"`` returns the variant on the functional grid.
+        ``res=None`` returns the full-resolution image,
+        ``res="1pt8"`` the variant on the GLMsingle beta grid and
+        ``res="1pt5"`` the variant on the pRF / localizer grid.
         """
         return self._anatomical_file(suffix="T1w", res=res)
 
@@ -847,18 +1168,56 @@ class Subject:
             suffix="mask", res=res, desc="brain",
         )
 
-    def _anatomical_file(self, *, suffix, res=None, desc=None):
+    def get_anatomical_tissue_mask(self, label, *, res=None):
+        """Return the path to one anatomical tissue mask.
+
+        ``label`` is ``"CGM"`` (cortical grey matter), ``"SGM"``
+        (subcortical grey matter), ``"BS"`` (brainstem), ``"CBM"``
+        (cerebellar cortex), ``"WM"`` or ``"CSF"`` (ventricular). ``res`` is
+        ``None`` (full resolution), ``"1pt8"`` or ``"1pt5"``.
+        """
+        return self._anatomical_file(
+            suffix="mask", res=res, label=label,
+        )
+
+    def get_tissue_mask(self, label, mask_source="anatomical", res="1pt8"):
+        """Load one or more tissue masks, restricted to brain-mask voxels.
+
+        ``label`` is a tissue label (see
+        :meth:`get_anatomical_tissue_mask`) or a list of them,
+        unioned voxel-wise, so ``["CGM", "SGM", "BS", "CBM"]`` is all
+        grey matter. Returns a 1-D bool array over the brain mask of
+        grid ``res``: ``"1pt8"`` (default) aligns with
+        :meth:`get_betas` and the other voxel-axis accessors,
+        ``"1pt5"`` with ``get_prf(..., res="1pt5")`` and
+        ``get_localizer(..., res="1pt5")``. Pass it as ``mask=`` or
+        intersect it with :meth:`get_roi_mask`.
+
+        ``mask_source`` selects which brain mask the result is
+        indexed within; see :meth:`get_brain_mask`.
+        """
+        _check_mask_source_res(mask_source, res)
+        labels = [label] if isinstance(label, str) else list(label)
+        brain = self.get_brain_mask(source=mask_source, res=res)
+        union = np.zeros(int(brain.sum()), dtype=bool)
+        for lab in labels:
+            union |= load_nifti_mask(
+                self.get_anatomical_tissue_mask(lab, res=res),
+            )[brain]
+        return union
+
+    def _anatomical_file(
+        self, *, suffix, res=None, desc=None, label=None,
+    ):
         """Resolve one file under this subject's anatomical dir."""
         path = anatomical_file_path(
             self._data_dir, self._subject_id,
-            suffix=suffix, res=res, desc=desc,
+            suffix=suffix, res=res, desc=desc, label=label,
         )
         if not path.is_file():
             raise DataNotDownloadedError(
                 f"Anatomical file not found at {path}. Run: "
-                "from laion_fmri.download import download; "
-                f"download(subject='{self._subject_id}', "
-                "include_anatomical=True)"
+                f"{_tree_hint(self._subject_id, 'include_anatomical')}"
             )
         return path
 

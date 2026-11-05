@@ -9,11 +9,13 @@ from laion_fmri._constants import (
     LICENSE_AGREEMENT_TEXT,
     resolve_subject_id,
 )
-from laion_fmri._errors import LicenseNotAcceptedError, NoMatchingDataError
+from laion_fmri._errors import LicenseNotAcceptedError, SubjectNotFoundError
 from laion_fmri._laion_fmri_fetch import (
     _clamp_n_jobs,
     fetch_laion_fmri,
     fetch_laion_fmri_raw,
+    fetch_mapping,
+    fetch_mapping_dataset_files,
 )
 from laion_fmri._paths import (
     captions_path,
@@ -24,6 +26,7 @@ from laion_fmri._paths import (
     stimuli_h5_path,
     stimuli_metadata_path,
 )
+from laion_fmri._progress import DownloadProgress
 from laion_fmri._s3_engine import download_key, list_prefix_objects
 from laion_fmri._sources import LAION_FMRI_BUCKET
 from laion_fmri._stimulus_access import (  # noqa: F401
@@ -396,13 +399,21 @@ def download_embeddings(models="all", data_dir=None, n_jobs=1):
     def _fetch(item):
         key, local = item
         download_key(LAION_FMRI_BUCKET, key, local)
+        return key
 
-    if n_jobs <= 1:
-        for it in todo:
-            _fetch(it)
-    else:
-        with ThreadPoolExecutor(max_workers=n_jobs) as pool:
-            list(pool.map(_fetch, todo))
+    progress = DownloadProgress(
+        "embeddings", len(todo), sum(sizes[key] for key, _ in todo),
+    )
+    try:
+        if n_jobs <= 1:
+            for it in todo:
+                progress.advance(sizes[_fetch(it)])
+        else:
+            with ThreadPoolExecutor(max_workers=n_jobs) as pool:
+                for key in pool.map(_fetch, todo):
+                    progress.advance(sizes[key])
+    finally:
+        progress.close()
 
     return paths
 
@@ -470,8 +481,15 @@ def download_segmentations(data_dir=None):
         return paths
 
     print(f"[laion-fmri] Downloading {len(todo)} segmentation file(s):")
-    for key, local in todo:
-        download_key(LAION_FMRI_BUCKET, key, local)
+    progress = DownloadProgress(
+        "segmentations", len(todo), sum(sizes[key] for key, _ in todo),
+    )
+    try:
+        for key, local in todo:
+            download_key(LAION_FMRI_BUCKET, key, local)
+            progress.advance(sizes[key])
+    finally:
+        progress.close()
 
     return paths
 
@@ -541,6 +559,7 @@ def download(
     include_anatomical=False,
     include_raw=False,
     include_localizers=False,
+    include_retinotopy=False,
     n_jobs=1,
 ):
     """Download fMRI dataset files for a subject, narrowed by BIDS entities.
@@ -559,7 +578,10 @@ def download(
     ----------
     subject : str or "all"
         Subject identifier (BIDS ID, e.g. ``"sub-01"`` / ``"01"``,
-        or ``"all"`` to iterate every subject).
+        or ``"all"`` to iterate every subject of the main
+        experiment). The subjects with precision-mapping data only
+        (``sub-04``, ``sub-08``) are fetched with
+        :func:`download_mapping`.
     ses, task, space, desc, stat : str or list[str], optional
         BIDS-entity filters. Each accepts a bare value
         (``ses="04"``) or the full BIDS token (``ses="ses-04"``).
@@ -588,10 +610,12 @@ def download(
     include_anatomical : bool
         If True, also pull the per-subject anatomical derivatives
         under ``derivatives/anatomical/{subject}/ses-PrismaAnat/
-        anat/`` (T1w, T2w, brain mask -- full-res plus ``res-1pt8``
-        copies aligned with the functional grid). Tens of MB per
-        subject. Unlocks ``Subject.get_t1w``, ``get_t2w``,
-        ``get_anatomical_brain_mask``, and
+        anat/`` (T1w, T2w, brain mask and tissue masks -- full-res
+        plus ``res-1pt8`` and ``res-1pt5`` copies aligned with the
+        functional grids). Tens of MB per subject. Unlocks
+        ``Subject.get_t1w``, ``get_t2w``,
+        ``get_anatomical_brain_mask``,
+        ``get_anatomical_tissue_mask``, ``get_tissue_mask``, and
         ``mask_source="anatomical"`` on the voxel-axis accessors.
     include_raw : bool
         If True, also pull the raw BIDS tree under ``sub-XX/``
@@ -605,6 +629,12 @@ def download(
         ``derivatives/localizers/{subject}/`` (contrast z-maps and
         per-run effect maps, a few hundred MB). Pulled in full; the
         BIDS filters do not apply.
+    include_retinotopy : bool
+        If True, also pull the subject's pRF parameter maps under
+        ``derivatives/retinotopy/{subject}/``, in full. The
+        precision-mapping dataset as a whole (all its subjects,
+        apertures, preprocessed data) comes with
+        :func:`download_mapping`.
     n_jobs : int
         Number of parallel download workers for fMRI data
         (AWS CLI copy subprocesses). ``1`` (default) is sequential.
@@ -627,20 +657,9 @@ def download(
     data_dir = get_data_dir()
     _check_data_dir_drift(data_dir)
 
-    if subject != "all":
-        resolve_subject_id(subject)
+    subjects = _resolve_subjects(subject, "main")
 
     accept_license()
-
-    if subject == "all":
-        subjects = get_subjects()
-        if not subjects:
-            raise NoMatchingDataError(
-                "No LAION-fMRI subjects were found in the public S3 "
-                "bucket. Check network access and the bucket layout."
-            )
-    else:
-        subjects = [resolve_subject_id(subject)]
 
     for sub_id in subjects:
         fetch_laion_fmri(
@@ -658,6 +677,7 @@ def download(
             include_anatomical=include_anatomical,
             include_raw=include_raw,
             include_localizers=include_localizers,
+            include_retinotopy=include_retinotopy,
         )
 
     if include_stimuli:
@@ -670,6 +690,119 @@ def download(
         download_embeddings(
             models=models, data_dir=data_dir, n_jobs=n_jobs,
         )
+
+
+def _resolve_subjects(subject, dataset):
+    """Expand ``"all"`` or check one subject against ``dataset``.
+
+    Raises before any license prompt or network call, so a wrong
+    subject fails fast.
+    """
+    if subject == "all":
+        return get_subjects(dataset)
+    sub_id = resolve_subject_id(subject)
+    if sub_id in get_subjects(dataset):
+        return [sub_id]
+    if dataset == "main" and sub_id in get_subjects("mapping"):
+        raise SubjectNotFoundError(
+            f"{sub_id} has precision-mapping data only; use "
+            "download_mapping() (CLI: laion-fmri download-mapping)."
+        )
+    raise SubjectNotFoundError(
+        f"{sub_id} is not in the {dataset!r} dataset "
+        f"({', '.join(get_subjects(dataset))})."
+    )
+
+
+def download_mapping(
+    subject,
+    ses=None,
+    task=None,
+    space=None,
+    include_anatomical=False,
+    include_freesurfer=False,
+    include_preproc=False,
+    include_raw=False,
+    n_jobs=1,
+):
+    """Download the precision-mapping dataset for a subject.
+
+    Always fetches the subject's pRF maps
+    (``derivatives/retinotopy/``), localizer maps
+    (``derivatives/localizers/``) and ROIs (``derivatives/rois/``),
+    plus, once per call, the dataset-wide files of those trees and the
+    retinotopy aperture libraries (``stimuli/retinotopy/``). Files go
+    into the same local tree as :func:`download`, and the download is
+    idempotent in the same way.
+
+    Parameters
+    ----------
+    subject : str or "all"
+        Subject identifier (BIDS ID, e.g. ``"sub-04"`` / ``"04"``),
+        or ``"all"`` for every subject of the precision-mapping
+        dataset (the five LAION subjects plus ``sub-04`` and
+        ``sub-08``).
+    ses : str or list[str], optional
+        Session filter (``"Foveal"`` or ``"ses-Foveal"``). Applies to
+        the per-session trees only (localizer maps, preprocessed data,
+        raw); pRF maps, ROIs and anatomy carry no session and are
+        never filtered out by it.
+    task, space : str or list[str], optional
+        BIDS-entity filters, applied wherever a file carries the entity.
+    include_anatomical : bool
+        Also pull ``derivatives/anatomical/{subject}/``, whole.
+    include_freesurfer : bool
+        Also pull ``derivatives/freesurfer/{subject}/``, whole.
+    include_preproc : bool
+        Also pull ``derivatives/preproc-mapping/{subject}/``: the
+        preprocessed BOLD, design matrices and frame tables the maps
+        were fitted on.
+    include_raw : bool
+        Also pull the raw precision-mapping sessions and
+        ``ses-PrismaAnat``. LAION's numbered sessions are not included;
+        use :func:`download_raw` for those. ``sub-04`` has no raw
+        anatomy on the bucket. Its anatomy (``ses-ConnectomAnat``) is
+        released as derivatives only (``include_anatomical``).
+    n_jobs : int
+        Number of parallel AWS CLI copy workers.
+
+    Raises
+    ------
+    SubjectNotFoundError
+        If the subject is not in the precision-mapping dataset.
+    LicenseNotAcceptedError
+        If the CC0 dataset license is declined.
+    NoMatchingDataError
+        If no file matches the filters for a subject.
+    """
+    data_dir = get_data_dir()
+    _check_data_dir_drift(data_dir)
+
+    subjects = _resolve_subjects(subject, "mapping")
+
+    accept_license()
+
+    for sub_id in subjects:
+        fetch_mapping(
+            data_dir,
+            subject=sub_id,
+            ses=ses,
+            task=task,
+            space=space,
+            n_jobs=n_jobs,
+            include_anatomical=include_anatomical,
+            include_freesurfer=include_freesurfer,
+            include_preproc=include_preproc,
+            include_raw=include_raw,
+        )
+
+    fetch_mapping_dataset_files(
+        data_dir,
+        n_jobs=n_jobs,
+        include_anatomical=include_anatomical,
+        include_freesurfer=include_freesurfer,
+        include_preproc=include_preproc,
+    )
 
 
 def download_raw(
@@ -695,7 +828,10 @@ def download_raw(
     ----------
     subject : str or "all"
         Subject identifier (BIDS ID, e.g. ``"sub-01"`` / ``"01"``,
-        or ``"all"`` to iterate every subject).
+        or ``"all"`` to iterate every subject of the main
+        experiment). The subjects with precision-mapping data only
+        (``sub-04``, ``sub-08``) are fetched with
+        :func:`download_mapping`.
     ses, task, run, echo, part, suffix, extension : str or list[str], optional
         BIDS-entity filters. ``run``/``echo``/``part`` narrow to a
         specific run, echo, or magnitude/phase companion.
@@ -714,20 +850,9 @@ def download_raw(
     data_dir = get_data_dir()
     _check_data_dir_drift(data_dir)
 
-    if subject != "all":
-        resolve_subject_id(subject)
+    subjects = _resolve_subjects(subject, "main")
 
     accept_license()
-
-    if subject == "all":
-        subjects = get_subjects()
-        if not subjects:
-            raise NoMatchingDataError(
-                "No LAION-fMRI subjects were found in the public S3 "
-                "bucket. Check network access and the bucket layout."
-            )
-    else:
-        subjects = [resolve_subject_id(subject)]
 
     for sub_id in subjects:
         fetch_laion_fmri_raw(

@@ -88,7 +88,8 @@ def rois_subject_dir(data_dir, subject):
 
 
 #: Volumetric grids: ``"1pt8"`` is the GLMsingle beta grid, ``"1pt5"``
-#: the grid of the volumetric localizer maps. ROI masks ship on both.
+#: the grid of the volumetric pRF and localizer maps. ROI masks ship on
+#: both.
 VOLUME_RESOLUTIONS = ("1pt8", "1pt5")
 DEFAULT_VOLUME_RES = "1pt8"
 
@@ -209,20 +210,204 @@ def roi_freesurfer_label_path(data_dir, subject, roi, hemi):
     return matches[0]
 
 
-# ── Localizer statmaps ──────────────────────────────────────────
+# ── pRF parameter maps and localizer statmaps ───────────────────
 #
 # Filenames follow the release spec (scripts/release/spec.py in the
 # prf-pipelines repository). Entity values must stay alphanumeric:
 # `_entity_in_key` matches `entity-[A-Za-z0-9]+`.
 
+#: pRF fitting paradigms (the ``paradigm`` entity).
+PRF_PARADIGMS = ("standard", "foveal", "corners", "best")
+
+#: Released fit stages (the ``model`` entity).
+PRF_STAGES = ("ols", "gauss", "dn", "dnhrf")
+
+#: pRF parameters (the ``param`` entity). ``r2`` is in-sample; ``r2cv``
+#: is cross-validated between the split halves and ``nc`` is the noise
+#: ceiling of the data.
+PRF_PARAMS = (
+    "angle", "ecc", "x", "y", "sd", "r2", "r2cv", "nc",
+    "amplitude", "baseline",
+    "boldbaseline", "neuralbaseline", "surroundbaseline",
+    "rfamplitude", "srfamplitude", "srfsize",
+    "hrfdelay", "hrfdispersion",
+)
+
+#: Labels of the ``paradigm-best`` ``seg-winner`` segmentation (also the
+#: dataset-root ``seg-winner_dseg.tsv``).
+PRF_WINNER_LEVELS = {0: "none", 1: "standard", 2: "foveal", 3: "corners"}
+
+#: Parameters of the ``paradigm-best`` maps. ``best`` combines the
+#: ``dnhrf`` fits of the three paradigms per vertex or voxel, so it has
+#: no stage choice, no split-half fits and no noise ceiling (there is
+#: no single dataset behind it); its ``r2cv`` also exists as
+#: ``desc-half``.
+PRF_BEST_PARAMS = ("x", "y", "ecc", "angle", "sd", "r2", "r2cv")
+
+#: Parameters of the data rather than of a fit: no ``model`` entity.
+PRF_STAGE_FREE = ("nc",)
+
+#: Released ``desc`` variants of the full fit's maps. ``odd`` / ``even``
+#: are the split-half fits, ``half`` the measured split-half quality
+#: maps (``r2cv``, ``nc``), ``filtered`` the ``dnhrf`` maps restricted to
+#: reliable, stimulated pRFs. No ``desc`` is the full fit itself.
+PRF_DESCS = ("odd", "even", "half", "filtered")
+
 #: Released localizer tasks. ``MotionLeft`` / ``MotionRight`` are the
 #: two acquired hemifield tasks; ``MotionLoc`` is the pooled map.
 LOCALIZER_TASKS = ("floc", "oloc", "MotionLeft", "MotionRight", "MotionLoc")
+
+#: The session each localizer task was acquired in (the same for every
+#: released subject).
+LOCALIZER_SESSIONS = {
+    "floc": "4BarScreenfLoc",
+    "oloc": "31",
+    "MotionLeft": "MotionLocBarsSML",
+    "MotionRight": "MotionLocBarsSML",
+    "MotionLoc": "MotionLocBarsSML",
+}
+
+#: ROI category -> (task, contrast) of the localizer contrast its ROIs
+#: were delineated on. MT/MST were separated with the ipsilateral
+#: hemifield maps, but both are motion-selective on the pooled map.
+ROI_CONTRASTS = {
+    "face": ("floc", "faceVsOthers"),
+    "body": ("floc", "bodyVsOthers"),
+    "place": ("floc", "placeVsOthers"),
+    "character": ("floc", "characterVsOthers"),
+    "object": ("oloc", "objectVsScrambled"),
+    "motion": ("MotionLoc", "movingVsStatic"),
+}
+
+
+def retinotopy_subject_dir(data_dir, subject):
+    return Path(data_dir) / "derivatives" / "retinotopy" / subject / "func"
 
 
 def localizers_subject_dir(data_dir, subject, session):
     return (Path(data_dir) / "derivatives" / "localizers" / subject
             / f"ses-{session}" / "func")
+
+
+def prf_map_path(data_dir, subject, param, paradigm="best",
+                 stage="dnhrf", space="T1w", hemi=None,
+                 res="1pt8", desc=None):
+    """Resolve one pRF parameter map.
+
+    Parameters
+    ----------
+    param : one of :data:`PRF_PARAMS`
+    paradigm : one of :data:`PRF_PARADIGMS`
+        ``"best"`` (default), the per-vertex best of the three
+        paradigms, exists for ``stage="dnhrf"``, the parameters in
+        :data:`PRF_BEST_PARAMS` and ``desc`` None or ``"filtered"``
+        (plus ``"half"`` for ``r2cv``); other combinations raise.
+        ``"standard"``, ``"foveal"`` and ``"corners"`` exist for every
+        ``param``, ``stage`` and ``desc``.
+    stage : one of :data:`PRF_STAGES`
+    space : ``"T1w"`` (default) | ``"fsnative"``
+        ``T1w`` is the volumetric product (cortical ribbon and
+        subcortex) and takes ``res``: ``1pt8`` (the default, a
+        nearest-neighbour resampling onto the beta grid) or ``1pt5``,
+        the grid the fit was computed on. ``fsnative`` requires
+        ``hemi``; ``T1w`` refuses it.
+    desc : ``None`` (default, the full fit) or one of :data:`PRF_DESCS`
+        ``nc`` exists only as ``desc="half"`` and takes no ``stage``.
+
+    Parameters from different ``stage`` or ``paradigm`` values come from
+    different fits and should not be combined.
+    """
+    if param not in PRF_PARAMS:
+        raise ValueError(
+            f"param must be one of {PRF_PARAMS}; got {param!r}.")
+    if paradigm not in PRF_PARADIGMS:
+        raise ValueError(
+            f"paradigm must be one of {PRF_PARADIGMS}; got {paradigm!r}.")
+    if param in PRF_STAGE_FREE:
+        stage = None
+    elif stage not in PRF_STAGES:
+        raise ValueError(
+            f"stage must be one of {PRF_STAGES}; got {stage!r}.")
+    if desc is not None and desc not in PRF_DESCS:
+        raise ValueError(
+            f"desc must be None or one of {PRF_DESCS}; got {desc!r}.")
+    if paradigm == "best" and not _is_best_map(param, stage, desc):
+        raise ValueError(
+            "paradigm='best' exists for stage='dnhrf', param in "
+            f"{PRF_BEST_PARAMS} and desc None or 'filtered' ('half' for "
+            f"r2cv); got param={param!r}, stage={stage!r}, desc={desc!r}. "
+            "Pass paradigm='standard', 'foveal' or 'corners'.")
+    tail = ((f"_model-{stage}" if stage else "")
+            + (f"_desc-{desc}" if desc else "") + "_statmap")
+
+    if space == "fsnative":
+        if hemi not in ("L", "R"):
+            raise ValueError(
+                "space='fsnative' is per-hemisphere; pass hemi='L' or 'R'.")
+        name = (f"{subject}_paradigm-{paradigm}_hemi-{hemi}_space-fsnative_"
+                f"param-{param}{tail}.func.gii")
+    elif space == "T1w":
+        _check_volume_hemi(hemi)
+        _check_res(res)
+        name = (f"{subject}_paradigm-{paradigm}_space-T1w_res-{res}_"
+                f"param-{param}{tail}.nii.gz")
+    else:
+        raise ValueError(
+            f"space must be 'fsnative' or 'T1w'; got {space!r}.")
+
+    path = retinotopy_subject_dir(data_dir, subject) / name
+    if not path.exists():
+        raise FileNotFoundError(f"pRF map not found: {path}")
+    return path
+
+
+def _check_volume_hemi(hemi):
+    """A volume has no hemisphere; ``hemi`` would be silently ignored."""
+    if hemi is not None:
+        raise ValueError(
+            "hemi applies to space='fsnative' only; the T1w volume "
+            "(the default space) covers both hemispheres.")
+
+
+def _is_best_map(param, stage, desc):
+    """Whether a ``paradigm-best`` map exists for this combination."""
+    if stage != "dnhrf" or param not in PRF_BEST_PARAMS:
+        return False
+    return desc in (None, "filtered") or (desc, param) == ("half", "r2cv")
+
+
+def prf_winner_path(data_dir, subject, stage="dnhrf", space="T1w",
+                    hemi=None, res="1pt8", desc=None):
+    """Resolve the ``paradigm-best`` selection (``seg-winner`` dseg).
+
+    Which paradigm's fit each vertex or voxel of the best-of maps comes
+    from, coded :data:`PRF_WINNER_LEVELS`. ``desc`` is ``None`` or
+    ``"filtered"``; ``space``/``hemi``/``res`` as in :func:`prf_map_path`.
+    """
+    if stage not in PRF_STAGES:
+        raise ValueError(
+            f"stage must be one of {PRF_STAGES}; got {stage!r}.")
+    if desc not in (None, "filtered"):
+        raise ValueError(f"desc must be None or 'filtered'; got {desc!r}.")
+    tail = (f"_model-{stage}_seg-winner"
+            + (f"_desc-{desc}" if desc else "") + "_dseg")
+    if space == "fsnative":
+        if hemi not in ("L", "R"):
+            raise ValueError(
+                "space='fsnative' is per-hemisphere; pass hemi='L' or 'R'.")
+        name = (f"{subject}_paradigm-best_hemi-{hemi}_space-fsnative"
+                f"{tail}.label.gii")
+    elif space == "T1w":
+        _check_volume_hemi(hemi)
+        _check_res(res)
+        name = f"{subject}_paradigm-best_space-T1w_res-{res}{tail}.nii.gz"
+    else:
+        raise ValueError(
+            f"space must be 'fsnative' or 'T1w'; got {space!r}.")
+    path = retinotopy_subject_dir(data_dir, subject) / name
+    if not path.exists():
+        raise FileNotFoundError(f"pRF winner segmentation not found: {path}")
+    return path
 
 
 def _localizer_map_path(data_dir, subject, task, session, run, contrast,
@@ -255,7 +440,8 @@ def _localizer_map_path(data_dir, subject, task, session, run, contrast,
 
 
 def localizer_statmap_path(data_dir, subject, task, contrast, session,
-                           space="fsnative", hemi=None, res="1pt5"):
+                           space="fsnative", hemi=None, res="1pt5",
+                           acq=None):
     """Resolve one localizer contrast z-map.
 
     Parameters
@@ -266,11 +452,32 @@ def localizer_statmap_path(data_dir, subject, task, contrast, session,
     space : ``"fsnative"`` (default) | ``"T1w"``
         ``fsnative`` requires ``hemi``. ``T1w`` is a separate volumetric
         GLM fit (not a projection of the surface fit) and takes ``res``.
+    acq : removed
+        The motion hemifields are their own tasks now; ignoring ``acq``
+        would silently return the pooled map, so passing it raises.
     """
+    if acq is not None:
+        raise ValueError(
+            "acq= was removed: use task='MotionLeft' or 'MotionRight' "
+            "for a hemifield, task='MotionLoc' for the pooled map.")
     return _localizer_map_path(
         data_dir, subject, task, session, None, contrast, "z",
         space, hemi, res,
     )
+
+
+def localizer_fitted_mask_path(data_dir, subject, session, res="1pt5"):
+    """Resolve one localizer session's fitted mask.
+
+    The voxels the session's volumetric GLM was fitted on; values outside
+    it in the session's maps are not estimates. One per session and grid.
+    """
+    name = (f"{subject}_ses-{session}_space-T1w_res-{_check_res(res)}_"
+            "desc-fitted_mask.nii.gz")
+    path = localizers_subject_dir(data_dir, subject, session) / name
+    if not path.exists():
+        raise FileNotFoundError(f"Localizer fitted mask not found: {path}")
+    return path
 
 
 def localizer_effect_path(data_dir, subject, task, condition, session, run,
@@ -358,56 +565,99 @@ def freesurfer_transforms_dir(data_dir, subject):
 # ── Anatomical derivatives ──────────────────────────────────────
 
 # The anatomical-derivatives pipeline groups all per-subject T1w /
-# T2w / brain-mask outputs under a single session named
-# ``ses-PrismaAnat``. See:
+# T2w / brain-mask / tissue-mask outputs under a single session
+# named ``ses-PrismaAnat``. See:
 # ``derivatives/anatomical/sub-XX/ses-PrismaAnat/anat/``.
 ANATOMICAL_SESSION = "ses-PrismaAnat"
+
+#: Subjects whose anatomy is in another session: sub-04 has no
+#: ``ses-PrismaAnat``; its anatomy comes from a Connectom scanner and
+#: groups five visits under one label.
+ANATOMICAL_SESSION_BY_SUBJECT = {"sub-04": "ses-ConnectomAnat"}
 _ANATOMICAL_SUFFIXES = ("T1w", "T2w", "mask")
+
+#: Anatomical grids: full resolution (``None``) plus the two
+#: volumetric grids in :data:`VOLUME_RESOLUTIONS`.
+ANATOMICAL_RESOLUTIONS = (None,) + VOLUME_RESOLUTIONS
+
+#: ``label-`` values of the tissue masks (BIDS common labels): cortical
+#: grey matter, subcortical grey matter, brainstem, cerebellar cortex,
+#: white matter and ventricular CSF. The six do not overlap.
+TISSUE_LABELS = ("CGM", "SGM", "BS", "CBM", "WM", "CSF")
 
 
 def anatomical_subject_dir(data_dir, subject):
     """Path to the anatomical-derivatives dir for a subject.
 
-    Holds the ``ses-PrismaAnat/anat/`` directory with T1w / T2w /
-    brain-mask files at full resolution and at ``res-1pt8``.
+    Holds the ``ses-PrismaAnat/anat/`` directory (``ses-ConnectomAnat``
+    for sub-04) with T1w / T2w /
+    brain-mask / tissue-mask files at full resolution, ``res-1pt8``
+    and ``res-1pt5``.
     """
     return (
         Path(data_dir) / "derivatives" / "anatomical" / subject
     )
 
 
+def anatomical_session(subject):
+    """The session label of a subject's anatomical derivatives."""
+    return ANATOMICAL_SESSION_BY_SUBJECT.get(subject, ANATOMICAL_SESSION)
+
+
 def anatomical_session_dir(data_dir, subject):
     """Path to the per-subject anatomical session directory."""
     return (
         anatomical_subject_dir(data_dir, subject)
-        / ANATOMICAL_SESSION
+        / anatomical_session(subject)
         / "anat"
     )
 
 
 def anatomical_file_path(
-    data_dir, subject, *, suffix, res=None, desc=None,
+    data_dir, subject, *, suffix, res=None, desc=None, label=None,
 ):
     """Assemble the path to one anatomical derivative file.
 
     Parameters
     ----------
     suffix : ``"T1w"`` | ``"T2w"`` | ``"mask"``
-    res : ``None`` | ``"1pt8"``
+    res : ``None`` | ``"1pt8"`` | ``"1pt5"``
         ``None`` is full resolution; ``"1pt8"`` matches the
-        functional grid.
+        GLMsingle beta grid and ``"1pt5"`` the grid of the
+        volumetric pRF and localizer maps.
     desc : ``None`` | ``"brain"``
-        BIDS ``desc-`` token; required (and the only valid value)
-        for ``suffix="mask"``.
+        BIDS ``desc-`` token of the brain mask.
+    label : ``None`` | one of :data:`TISSUE_LABELS`
+        BIDS ``label-`` token of a tissue mask. A mask takes
+        exactly one of ``desc="brain"`` and ``label``.
     """
     if suffix not in _ANATOMICAL_SUFFIXES:
         raise ValueError(
             f"suffix must be one of {list(_ANATOMICAL_SUFFIXES)}; "
             f"got {suffix!r}."
         )
-    parts = [subject, ANATOMICAL_SESSION, "space-T1w"]
+    if res not in ANATOMICAL_RESOLUTIONS:
+        raise ValueError(
+            f"res must be one of {list(ANATOMICAL_RESOLUTIONS)}; "
+            f"got {res!r}."
+        )
+    if label is not None and label not in TISSUE_LABELS:
+        raise ValueError(
+            f"label must be one of {list(TISSUE_LABELS)}; "
+            f"got {label!r}."
+        )
+    if suffix == "mask" and (desc == "brain") == (label is not None):
+        raise ValueError(
+            "a mask takes exactly one of desc='brain' and label; "
+            f"got desc={desc!r}, label={label!r}."
+        )
+    if suffix != "mask" and label is not None:
+        raise ValueError(f"label applies to masks only; got {suffix!r}.")
+    parts = [subject, anatomical_session(subject), "space-T1w"]
     if res is not None:
         parts.append(f"res-{res}")
+    if label is not None:
+        parts.append(f"label-{label}")
     if desc is not None:
         parts.append(f"desc-{desc}")
     filename = "_".join(parts) + f"_{suffix}.nii.gz"

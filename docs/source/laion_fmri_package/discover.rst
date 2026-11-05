@@ -2,8 +2,9 @@
 Discover what's in the bucket
 =============================
 
-All discovery functions read the bucket directly, they don't
-depend on what's on your disk. Run them right after
+The discovery functions don't depend on what's on your disk.
+``get_subjects`` returns the fixed subject list of a dataset; the
+others read the bucket directly. Run them right after
 :doc:`initialization <initialize>` to confirm the bucket is
 reachable and see what's available before committing to a
 download.
@@ -17,7 +18,8 @@ download.
        inspect_bucket,
    )
 
-   get_subjects()                                # ['sub-01', ...]
+   get_subjects()                                # ['sub-01', ...], main experiment
+   get_subjects("mapping")                       # adds 'sub-04', 'sub-08'
    get_rois("sub-01")                            # ['AFP1', 'EBA', ...]
    get_rois("sub-01", category="face")           # face-area ROIs only
    describe()                                    # human-readable summary
@@ -26,15 +28,17 @@ download.
 What each one does
 ==================
 
-``get_subjects()``
-   Lists all subjects exposed by the bucket (every ``sub-*``
-   subdirectory under ``derivatives/glmsingle-tedana/`` or
-   ``derivatives/rois/``; the union of both is returned).
+``get_subjects(dataset="main")``
+   Lists the subjects of a dataset (:ref:`subject-sets`).
+   ``"main"`` (default) is the main experiment: ``sub-01``,
+   ``sub-03``, ``sub-05``, ``sub-06``, ``sub-07``. ``"mapping"`` is
+   the precision-mapping dataset, which adds ``sub-04`` and
+   ``sub-08``.
 
 ``get_rois(subject, category=None)``
    Lists ROI labels available for a subject. The bucket groups
    ROIs by category (``body``, ``character``, ``face``,
-   ``laion``, ``motion``, ``object``, ``place``,
+   ``laion``, ``laionstim``, ``motion``, ``object``, ``place``,
    ``retinotopy``); pass ``category=`` to restrict the listing.
    ROI labels are returned in BIDS-clean form. The bucket
    sometimes ships hyphenated label values (``label-FFA-1``,
@@ -52,23 +56,12 @@ What each one does
 Sample output
 =============
 
-A populated bucket:
-
 .. code-block:: text
 
    LAION-fMRI Dataset
      Bucket:    s3://laion-fmri
-     Subjects:  3 (sub-01, sub-03, sub-05)
+     Subjects:  5 (sub-01, sub-03, sub-05, sub-06, sub-07)
      ROIs:      AFP1, AFP2, EBA, FBA, FFA1, ...
-
-A bucket that is reachable but partially populated (common
-during the dev phase):
-
-.. code-block:: text
-
-   LAION-fMRI Dataset
-     Bucket:    s3://laion-fmri
-     Subjects:  1 (sub-03)
 
 When something looks wrong, ``inspect_bucket()`` shows the
 top-level layout plus a per-prefix subject count:
@@ -84,10 +77,9 @@ top-level layout plus a per-prefix subject count:
 Empty-listing warnings
 ======================
 
-During the dev phase, individual derivative trees may not yet
-be populated. ``get_subjects()`` and ``get_rois()`` raise a
-``UserWarning`` instead of failing silently, so a partial
-upload is visible rather than mistaken for a configuration
+If a subject has no ROIs on the bucket, ``get_rois()`` raises a
+``UserWarning`` instead of returning an empty list silently, so a
+missing upload is visible rather than mistaken for a configuration
 error.
 
 If you only want the result without the warning:
@@ -98,7 +90,7 @@ If you only want the result without the warning:
 
    with warnings.catch_warnings():
        warnings.simplefilter("ignore", UserWarning)
-       subjects = get_subjects()
+       rois = get_rois("sub-03")
 
 Once the bucket is fully populated and warnings stop firing,
 this wrapper is no longer needed.

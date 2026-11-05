@@ -12,7 +12,7 @@ from laion_fmri._s3_engine import (
     list_common_prefixes,
     list_prefix_keys,
 )
-from laion_fmri._sources import LAION_FMRI_BUCKET
+from laion_fmri._sources import DATASET_SUBJECTS, LAION_FMRI_BUCKET
 
 SUBJECT_PREFIXES = (
     "derivatives/glmsingle-tedana/",
@@ -30,34 +30,31 @@ _SUBJECT_PREFIX_LABELS = {
 }
 
 
-def get_subjects():
-    """Return all subject BIDS IDs present in the S3 bucket.
+def get_subjects(dataset="main"):
+    """Return the subject BIDS IDs of one dataset.
 
-    The bucket may be partially populated during development -- some
-    derivative trees may exist before others. This function returns
-    the union of subjects found under any known derivative prefix.
+    The lists are fixed in the package (:data:`DATASET_SUBJECTS`)
+    rather than read from the bucket, so subjects uploaded for the
+    precision-mapping dataset never change what the default returns.
+
+    Parameters
+    ----------
+    dataset : ``"main"`` (default) | ``"mapping"``
+        ``"main"``: the main experiment, the subjects with betas.
+        ``"mapping"``: the precision-mapping dataset (retinotopy and
+        localizers), which adds ``sub-04`` and ``sub-08``.
 
     Returns
     -------
     list[str]
         Sorted list of BIDS subject IDs (``sub-*``).
     """
-    found = set()
-    for prefix in SUBJECT_PREFIXES:
-        for name in list_common_prefixes(LAION_FMRI_BUCKET, prefix):
-            if name.startswith("sub-"):
-                found.add(name)
-
-    if not found:
-        warnings.warn(
-            f"No subjects found in s3://{LAION_FMRI_BUCKET}/ under "
-            f"any of {SUBJECT_PREFIXES}. "
-            "Check bucket layout and AWS credentials.",
-            UserWarning,
-            stacklevel=2,
+    if dataset not in DATASET_SUBJECTS:
+        raise ValueError(
+            f"dataset must be one of {tuple(DATASET_SUBJECTS)}; "
+            f"got {dataset!r}."
         )
-
-    return sorted(found)
+    return list(DATASET_SUBJECTS[dataset])
 
 
 def get_rois(subject=None, category=None):

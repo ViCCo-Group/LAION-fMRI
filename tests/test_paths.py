@@ -8,6 +8,7 @@ from laion_fmri._paths import (
     glmsingle_subject_dir,
     license_marker_path,
     participants_tsv_path,
+    prf_map_path,
     r2mean_path,
     raw_anat_dir,
     raw_bold_path,
@@ -144,7 +145,118 @@ def test_roi_mask_path_rejects_unknown_resolution(tmp_path):
         roi_mask_path(tmp_path, "sub-03", "V1d", res="2pt0")
 
 
-# ── Localizer path resolvers ──────────────────────────────────
+# ── Retinotopy / localizer path resolvers ─────────────────────
+
+
+def test_prf_map_path_surface_best_map(tmp_path):
+    root = tmp_path / "derivatives/retinotopy/sub-03/func"
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_paradigm-best_hemi-L_space-fsnative_param-angle_"
+        "model-dnhrf_statmap.func.gii"
+    )
+    expected.touch()
+
+    assert prf_map_path(
+        tmp_path, "sub-03", "angle", space="fsnative", hemi="L",
+    ) == expected
+
+
+def test_prf_map_path_volume(tmp_path):
+    root = tmp_path / "derivatives/retinotopy/sub-03/func"
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_paradigm-foveal_space-T1w_res-1pt5_param-ecc_"
+        "model-gauss_statmap.nii.gz"
+    )
+    expected.touch()
+
+    assert prf_map_path(
+        tmp_path, "sub-03", "ecc", paradigm="foveal", stage="gauss",
+        space="T1w", res="1pt5",
+    ) == expected
+
+
+def test_prf_map_path_desc_variants(tmp_path):
+    root = tmp_path / "derivatives/retinotopy/sub-03/func"
+    root.mkdir(parents=True)
+    names = {
+        ("r2cv", None): "param-r2cv_model-dnhrf_statmap",
+        ("r2cv", "half"): "param-r2cv_model-dnhrf_desc-half_statmap",
+        ("nc", "half"): "param-nc_desc-half_statmap",
+        ("ecc", "odd"): "param-ecc_model-dnhrf_desc-odd_statmap",
+        ("ecc", "filtered"): "param-ecc_model-dnhrf_desc-filtered_statmap",
+    }
+    for (param, desc), stem in names.items():
+        expected = root / (
+            f"sub-03_paradigm-standard_hemi-L_space-fsnative_{stem}"
+            ".func.gii"
+        )
+        expected.touch()
+        assert prf_map_path(
+            tmp_path, "sub-03", param, paradigm="standard",
+            space="fsnative", hemi="L", desc=desc,
+        ) == expected
+
+
+def test_prf_map_path_rejects_unknown_desc(tmp_path):
+    with pytest.raises(ValueError, match="desc"):
+        prf_map_path(tmp_path, "sub-03", "ecc", hemi="L", desc="thresh")
+
+
+def test_prf_map_path_defaults_to_the_best_volume_on_the_beta_grid(
+    tmp_path,
+):
+    root = tmp_path / "derivatives/retinotopy/sub-03/func"
+    root.mkdir(parents=True)
+    expected = root / (
+        "sub-03_paradigm-best_space-T1w_res-1pt8_param-ecc_"
+        "model-dnhrf_statmap.nii.gz"
+    )
+    expected.touch()
+    assert prf_map_path(tmp_path, "sub-03", "ecc") == expected
+
+
+def test_prf_map_path_volume_refuses_hemi(tmp_path):
+    """hemi on the (default) T1w space would be silently ignored."""
+    with pytest.raises(ValueError, match="fsnative"):
+        prf_map_path(tmp_path, "sub-03", "ecc", hemi="L")
+
+
+@pytest.mark.parametrize("param, desc", [
+    ("r2cv", "half"), ("ecc", "filtered"), ("r2", None),
+])
+def test_prf_map_path_best_variants(tmp_path, param, desc):
+    root = tmp_path / "derivatives/retinotopy/sub-03/func"
+    root.mkdir(parents=True)
+    tail = f"_desc-{desc}" if desc else ""
+    expected = root / (
+        f"sub-03_paradigm-best_hemi-L_space-fsnative_param-{param}_"
+        f"model-dnhrf{tail}_statmap.func.gii"
+    )
+    expected.touch()
+    assert prf_map_path(
+        tmp_path, "sub-03", param, space="fsnative", hemi="L", desc=desc,
+    ) == expected
+
+
+@pytest.mark.parametrize("kw", [
+    dict(param="nc", desc="half"),          # no single dataset behind it
+    dict(param="ecc", desc="odd"),          # no split-half fits
+    dict(param="ecc", desc="half"),         # half is r2cv only
+    dict(param="ecc", stage="gauss"),       # dnhrf only
+    dict(param="amplitude"),                # not a best-of parameter
+])
+def test_prf_map_path_best_refuses_maps_it_does_not_have(tmp_path, kw):
+    """Fails with the reason, not a FileNotFoundError on a file that
+    is never released."""
+    with pytest.raises(ValueError, match="paradigm='standard'"):
+        prf_map_path(tmp_path, "sub-03", **kw)
+
+
+def test_prf_map_surface_requires_hemi(tmp_path):
+    with pytest.raises(ValueError, match="hemi"):
+        prf_map_path(tmp_path, "sub-03", "r2", space="fsnative")
 
 
 def test_localizer_statmap_path_surface(tmp_path):

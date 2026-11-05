@@ -2,6 +2,7 @@
 
 import subprocess
 import warnings
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -12,8 +13,30 @@ from laion_fmri._laion_fmri_fetch import (
     _matches_filters,
     fetch_laion_fmri,
     fetch_laion_fmri_raw,
+    fetch_mapping,
+    fetch_mapping_dataset_files,
+    fetch_retinotopy_stimuli,
 )
 from laion_fmri._errors import NoMatchingDataError
+
+
+#: The bucket root as ``list_top_level_objects`` reports it. The
+#: fetchers list it for the dataset-level files; tests that care patch
+#: it themselves.
+ROOT_OBJECTS = [
+    {"Key": key, "Size": 1}
+    for key in ("dataset_description.json", "participants.tsv",
+                "participants.json", "README", "CHANGES")
+]
+
+
+@pytest.fixture(autouse=True)
+def stub_bucket_root(monkeypatch):
+    """Keep the dataset-level listing off the network."""
+    monkeypatch.setattr(
+        "laion_fmri._laion_fmri_fetch.list_top_level_objects",
+        lambda bucket, prefix: list(ROOT_OBJECTS),
+    )
 
 
 # ── _clamp_n_jobs ───────────────────────────────────────────────
@@ -428,6 +451,155 @@ def test_fetch_skips_localizers_by_default(
 
     listed = [c.args[1] for c in mock_list_objects.call_args_list]
     assert "derivatives/localizers/sub-03/" not in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_lists_retinotopy_when_include_set(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03", include_retinotopy=True,
+        )
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/retinotopy/sub-03/" in listed
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_retinotopy_stimuli_lists_aperture_prefix(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    mock_list_objects.return_value = [
+        {"Key": "stimuli/retinotopy/task-BARM_apertures.h5", "Size": 3},
+    ]
+    result = fetch_retinotopy_stimuli(str(tmp_path))
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert listed == ["stimuli/retinotopy/"]
+    assert result["matched"] == ["stimuli/retinotopy/task-BARM_apertures.h5"]
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_laion_raw_leaves_out_mapping_sessions_keeps_prismaanat(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    laion = "sub-03/ses-01/func/sub-03_ses-01_task-images_run-01_bold.nii.gz"
+    anat = (
+        "sub-03/ses-PrismaAnat/anat/sub-03_ses-PrismaAnat_run-01_T1w.nii.gz"
+    )
+    mapping = (
+        "sub-03/ses-Foveal/func/sub-03_ses-Foveal_task-BAR_run-01_bold.nii.gz",
+        "sub-03/ses-Corners1/func/"
+        "sub-03_ses-Corners1_task-UpperLeft_run-01_bold.nii.gz",
+    )
+    mock_list_objects.return_value = [
+        {"Key": key, "Size": 1} for key in (laion, anat) + mapping
+    ]
+    result = fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+    assert sorted(result["raw"]["matched"]) == [laion, anat]
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_mapping_default_trees(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    mock_list_objects.return_value = [{"Key": "x/a_mask.nii.gz", "Size": 1}]
+    fetch_mapping(str(tmp_path), subject="sub-04")
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert listed == [
+        "derivatives/retinotopy/sub-04/",
+        "derivatives/localizers/sub-04/",
+        "derivatives/rois/sub-04/",
+    ]
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_mapping_raw_is_mapping_sessions_and_prismaanat_only(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    mock_list_objects.return_value = [{"Key": "x/a_mask.nii.gz", "Size": 1}]
+    fetch_mapping(str(tmp_path), subject="sub-03", include_raw=True)
+    raw = [
+        c.args[1] for c in mock_list_objects.call_args_list
+        if c.args[1].startswith("sub-03/")
+    ]
+    assert raw == [
+        "sub-03/ses-4BarScreenfLoc/", "sub-03/ses-BarsLMSEyeCalib/",
+        "sub-03/ses-Corners1/", "sub-03/ses-Corners2/",
+        "sub-03/ses-Foveal/", "sub-03/ses-MotionLocBarsSML/",
+        "sub-03/ses-PrismaAnat/",
+    ]
+    assert "sub-03/ses-31/" not in raw
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_mapping_ses_filter_spares_subject_level_maps(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    """pRF maps and ROIs carry no ses entity; ses must not drop them."""
+    def listing(bucket, prefix):
+        name = {
+            "derivatives/retinotopy/sub-03/": (
+                "sub-03_paradigm-foveal_hemi-L_space-fsnative_param-ecc_"
+                "model-dnhrf_statmap.func.gii"
+            ),
+            "derivatives/localizers/sub-03/": (
+                "ses-4BarScreenfLoc/func/sub-03_ses-4BarScreenfLoc_"
+                "task-floc_space-T1w_res-1pt5_desc-fitted_mask.nii.gz"
+            ),
+            "derivatives/rois/sub-03/": (
+                "face/sub-03_space-T1w_res-1pt5_label-OFA_mask.nii.gz"
+            ),
+        }[prefix]
+        return [{"Key": prefix + name, "Size": 1}]
+    mock_list_objects.side_effect = listing
+    result = fetch_mapping(str(tmp_path), subject="sub-03", ses="Foveal")
+    assert result["derivatives/retinotopy/"]["matched"]
+    assert result["derivatives/rois/"]["matched"]
+    assert not result["derivatives/localizers/"]["matched"]
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.list_top_level_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_mapping_dataset_files_lists_tree_roots_and_apertures(
+    mock_download_key, mock_top, mock_list_objects, tmp_path,
+):
+    mock_top.return_value = []
+    mock_list_objects.return_value = []
+    fetch_mapping_dataset_files(str(tmp_path), include_preproc=True)
+    roots = [c.args[1] for c in mock_top.call_args_list]
+    assert roots == [
+        "derivatives/retinotopy/", "derivatives/localizers/",
+        "derivatives/rois/", "derivatives/preproc-mapping/",
+    ]
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert listed == ["stimuli/retinotopy/"]
+
+
+@patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
+@patch("laion_fmri._laion_fmri_fetch.download_key")
+def test_fetch_skips_retinotopy_by_default(
+    mock_download_key, mock_list_objects, tmp_path,
+):
+    mock_list_objects.return_value = []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri(str(tmp_path), subject="sub-03")
+
+    listed = [c.args[1] for c in mock_list_objects.call_args_list]
+    assert "derivatives/retinotopy/sub-03/" not in listed
 
 
 @patch("laion_fmri._laion_fmri_fetch.list_prefix_objects")
@@ -1452,3 +1624,75 @@ def test_fetch_laion_fmri_raw_no_match_raises(
 
     with pytest.raises(NoMatchingDataError, match="No LAION-fMRI"):
         fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+
+
+# ── Nothing is downloaded twice ─────────────────────────────────
+
+
+def _fake_bucket(tree):
+    """``list_prefix_objects`` and ``download_key`` stand-ins over
+    ``tree`` ({key: size}); downloads write files of the listed size,
+    so the local-size check sees them as complete."""
+    def list_objects(bucket, prefix):
+        return [{"Key": k, "Size": n} for k, n in tree.items()
+                if k.startswith(prefix)]
+
+    def download(bucket, key, local):
+        local = Path(local)
+        local.parent.mkdir(parents=True, exist_ok=True)
+        size = tree.get(key, 1)
+        local.write_bytes(b"x" * size)
+        return local
+
+    return list_objects, download
+
+
+def test_dataset_level_files_are_skipped_when_complete(tmp_path):
+    """A complete local copy is kept; a wrong-sized one is refetched."""
+    (tmp_path / "README").write_bytes(b"x")              # size matches
+    (tmp_path / "participants.tsv").write_bytes(b"xx")   # stale
+    with patch("laion_fmri._laion_fmri_fetch.download_key") as dl, \
+            patch("laion_fmri._laion_fmri_fetch.list_prefix_objects",
+                  return_value=[]):
+        with pytest.raises(NoMatchingDataError):
+            fetch_laion_fmri_raw(str(tmp_path), subject="sub-03")
+    fetched = sorted(c.args[1] for c in dl.call_args_list)
+    assert fetched == [
+        "dataset_description.json", "participants.json", "participants.tsv",
+    ]
+
+
+def test_download_then_download_mapping_fetches_each_file_once(tmp_path):
+    """The derivative trees both entry points pull, and the
+    dataset-level files, come down once across the two calls."""
+    tree = {
+        "derivatives/glmsingle-tedana/sub-03/"
+        "sub-03_ses-01_desc-betas_statmap.h5": 7,
+        "derivatives/rois/sub-03/face/"
+        "sub-03_space-T1w_res-1pt8_label-FFA-1_mask.nii.gz": 3,
+        "derivatives/localizers/sub-03/ses-4BarScreenfLoc/func/"
+        "sub-03_ses-4BarScreenfLoc_space-T1w_res-1pt5_"
+        "desc-fitted_mask.nii.gz": 4,
+        "derivatives/retinotopy/sub-03/func/"
+        "sub-03_paradigm-best_space-T1w_res-1pt8_param-ecc_"
+        "model-dnhrf_statmap.nii.gz": 5,
+    }
+    list_objects, download = _fake_bucket(tree)
+    with patch("laion_fmri._laion_fmri_fetch.list_prefix_objects",
+               side_effect=list_objects), \
+            patch("laion_fmri._laion_fmri_fetch.download_key",
+                  side_effect=download) as dl:
+        fetch_laion_fmri(
+            str(tmp_path), subject="sub-03",
+            include_localizers=True, include_retinotopy=True,
+        )
+        first = [c.args[1] for c in dl.call_args_list]
+        dl.reset_mock()
+        fetch_mapping(str(tmp_path), subject="sub-03")
+        second = [c.args[1] for c in dl.call_args_list]
+
+    assert sorted(first) == sorted(
+        list(tree) + ["dataset_description.json", "participants.tsv",
+                      "participants.json", "README"]
+    )
+    assert second == []

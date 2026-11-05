@@ -168,6 +168,31 @@ def test_cli_download_passes_include_localizers(monkeypatch):
     assert captured["include_localizers"] is True
 
 
+def test_cli_download_passes_include_retinotopy(monkeypatch):
+    captured = _capture_download(monkeypatch)
+    main([
+        "download", "--subject", "sub-03",
+        "--include-retinotopy",
+    ])
+    assert captured["include_retinotopy"] is True
+
+
+def test_cli_download_mapping(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        "laion_fmri.download.download_mapping",
+        lambda **kwargs: captured.update(kwargs),
+    )
+    main([
+        "download-mapping", "--subject", "all", "--ses", "Foveal",
+        "--include-raw",
+    ])
+    assert captured["subject"] == "all"
+    assert captured["ses"] == ["Foveal"]
+    assert captured["include_raw"] is True
+    assert captured["include_preproc"] is False
+
+
 def test_cli_download_captions(monkeypatch):
     called = {}
 

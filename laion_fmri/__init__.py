@@ -44,6 +44,7 @@ set_data_dir = dataset_initialize
 from laion_fmri.download import (  # noqa: E402
     download_captions,
     download_embeddings,
+    download_mapping,
     download_segmentations,
     download_stimuli,
     request_stimulus_access,
@@ -69,6 +70,7 @@ __all__ = [
     "describe",
     "download_captions",
     "download_embeddings",
+    "download_mapping",
     "download_segmentations",
     "download_stimuli",
     "get_data_dir",

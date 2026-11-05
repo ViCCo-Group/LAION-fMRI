@@ -10,122 +10,31 @@ from laion_fmri.discovery import describe, get_rois, get_subjects
 # ── get_subjects ────────────────────────────────────────────────
 
 
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_lists_from_bucket(mock_lcp):
-    # glmsingle-tedana, rois, freesurfer, anatomical, localizers, raw root
-    mock_lcp.side_effect = [
-        ["sub-01", "sub-03"],
-        ["sub-01", "sub-03", "sub-05"],
-        [],
-        [],
-        [],
-        [],
+def test_get_subjects_default_is_the_main_experiment():
+    """Uploading the mapping-only subjects must not change the default."""
+    assert get_subjects() == [
+        "sub-01", "sub-03", "sub-05", "sub-06", "sub-07",
     ]
-    assert get_subjects() == ["sub-01", "sub-03", "sub-05"]
+    assert get_subjects("main") == get_subjects()
+
+
+def test_get_subjects_mapping_adds_sub04_sub08():
+    assert get_subjects("mapping") == [
+        "sub-01", "sub-03", "sub-04", "sub-05", "sub-06", "sub-07",
+        "sub-08",
+    ]
 
 
 @patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_union_across_derivatives(mock_lcp):
-    """Subject present only in rois is still returned."""
-    mock_lcp.side_effect = [[], ["sub-01"], [], [], [], []]
-    assert get_subjects() == ["sub-01"]
+def test_get_subjects_does_not_query_the_bucket(mock_lcp):
+    get_subjects()
+    get_subjects("mapping")
+    mock_lcp.assert_not_called()
 
 
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_probes_glmsingle_tedana_first(mock_lcp):
-    """glmsingle-tedana is the primary derivative tree."""
-    mock_lcp.side_effect = [[], [], [], [], [], []]
-    with pytest.warns(UserWarning):
-        get_subjects()
-    prefixes = [call.args[1] for call in mock_lcp.call_args_list]
-    assert prefixes[0] == "derivatives/glmsingle-tedana/"
-    assert "derivatives/rois/" in prefixes
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_warns_when_empty(mock_lcp):
-    mock_lcp.side_effect = [[], [], [], [], [], []]
-    with pytest.warns(UserWarning, match="No subjects found"):
-        result = get_subjects()
-    assert result == []
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_filters_non_subject_names(mock_lcp):
-    mock_lcp.side_effect = [["sub-01", "_tmp"], [], [], [], [], []]
-    assert get_subjects() == ["sub-01"]
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_queries_all_derivative_prefixes(mock_lcp):
-    mock_lcp.side_effect = [[], [], [], [], [], []]
-    with pytest.warns(UserWarning):
-        get_subjects()
-    prefixes = [call.args[1] for call in mock_lcp.call_args_list]
-    assert "derivatives/glmsingle-tedana/" in prefixes
-    assert "derivatives/rois/" in prefixes
-    assert "derivatives/freesurfer/" in prefixes
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_finds_freesurfer_only_subjects(mock_lcp):
-    """Subject with only a FreeSurfer recon (no glmsingle, no rois)
-    is still returned -- some subjects may have an anatomical
-    pipeline run before the functional one lands.
-    """
-    # glmsingle-tedana, rois, freesurfer, anatomical, localizers, raw root
-    mock_lcp.side_effect = [[], [], ["sub-07"], [], [], []]
-    assert get_subjects() == ["sub-07"]
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_includes_anatomical_prefix(mock_lcp):
-    """``derivatives/anatomical/`` is one of the subject-prefix probes."""
-    mock_lcp.side_effect = [[], [], [], [], [], []]
-    with pytest.warns(UserWarning):
-        get_subjects()
-    prefixes = [call.args[1] for call in mock_lcp.call_args_list]
-    assert "derivatives/anatomical/" in prefixes
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_includes_localizers_prefix(mock_lcp):
-    mock_lcp.side_effect = [[], [], [], [], [], []]
-    with pytest.warns(UserWarning):
-        get_subjects()
-    prefixes = [call.args[1] for call in mock_lcp.call_args_list]
-    assert "derivatives/localizers/" in prefixes
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_finds_anatomical_only_subjects(mock_lcp):
-    """Subject present only in anatomical derivatives still surfaces."""
-    # glmsingle-tedana, rois, freesurfer, anatomical, localizers, raw root
-    mock_lcp.side_effect = [[], [], [], ["sub-09"], [], []]
-    assert get_subjects() == ["sub-09"]
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_finds_raw_only_subjects(mock_lcp):
-    """Subject present only under ``sub-XX/`` (raw BIDS root) surfaces.
-
-    A subject who has raw multi-echo BOLD uploaded but no derivatives
-    yet must still be reachable via ``get_subjects()`` so that
-    ``download_raw(subject="all")`` can iterate over them.
-    """
-    # glmsingle-tedana, rois, freesurfer, anatomical, localizers, raw root
-    mock_lcp.side_effect = [[], [], [], [], [], ["sub-11"]]
-    assert get_subjects() == ["sub-11"]
-
-
-@patch("laion_fmri.discovery.list_common_prefixes")
-def test_get_subjects_probes_raw_bids_root_prefix(mock_lcp):
-    """``""`` (bucket root) is probed so ``sub-*`` under raw root surfaces."""
-    mock_lcp.side_effect = [[], [], [], [], [], []]
-    with pytest.warns(UserWarning):
-        get_subjects()
-    prefixes = [call.args[1] for call in mock_lcp.call_args_list]
-    assert "" in prefixes
+def test_get_subjects_rejects_unknown_dataset():
+    with pytest.raises(ValueError):
+        get_subjects("all+mapping")
 
 
 @patch("laion_fmri.discovery.list_common_prefixes")

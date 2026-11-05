@@ -208,10 +208,11 @@ def _sha256_of(path: "Path") -> str:
 
 
 def _format_bytes(n: int) -> str:
+    """Decimal (SI) units, as S3 and ``aws s3 ls`` report sizes."""
     for unit in ("B", "KB", "MB", "GB", "TB"):
-        if n < 1024:
+        if n < 1000:
             return f"{n:.1f} {unit}"
-        n /= 1024
+        n /= 1000
     return f"{n:.1f} PB"
 
 

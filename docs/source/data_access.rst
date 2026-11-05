@@ -62,8 +62,13 @@ Common operations:
    # one session, parallel transfer
    download(subject="sub-01", ses="ses-04", n_jobs=4)
 
-   # all subjects (whole-dataset mirror)
+   # every subject of the main experiment
    download(subject="all")
+
+   # the precision-mapping dataset: pRF and localizer maps, ROIs, apertures
+   from laion_fmri.download import download_mapping
+
+   download_mapping(subject="all")
 
    # stimuli - dataset-wide, subject-independent, requires accepting the DUA
    download_stimuli()
@@ -88,6 +93,7 @@ CLI equivalents:
    laion-fmri download --subject sub-01
    laion-fmri download-stimuli
    laion-fmri download-raw --subject sub-01 --ses ses-01
+   laion-fmri download-mapping --subject all
    laion-fmri request-access            # standalone DUA form, no download
 
 Direct AWS CLI (public files only)

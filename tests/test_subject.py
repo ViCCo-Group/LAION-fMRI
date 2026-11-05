@@ -13,11 +13,13 @@ from tests.conftest import (
     N_BRAIN_VOXELS,
     N_ECHOES,
     N_HLVIS_VOXELS,
+    N_VERTICES_L,
     N_RAW_TRIALS_PER_RUN,
     N_RUNS_PER_SESSION,
     N_SESSIONS,
     N_SHARED,
     N_STIMULI,
+    N_TISSUE_VOXELS,
     N_TRIALS_PER_SESSION,
     N_UNIQUE,
     N_VISUAL_VOXELS,
@@ -108,6 +110,50 @@ def test_load_subject_not_downloaded_raises(tmp_path, monkeypatch):
 
     with pytest.raises(DataNotDownloadedError):
         load_subject("sub-01")
+
+
+@pytest.fixture
+def mapping_data_dir(tmp_path, monkeypatch):
+    """An initialized, empty data dir; tests add the trees they need."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "cfg"))
+
+    from laion_fmri.config import dataset_initialize
+    dataset_initialize(str(data_dir))
+    return data_dir
+
+
+@pytest.mark.parametrize("tree", [
+    "derivatives/retinotopy/sub-04",
+    "derivatives/localizers/sub-04",
+    "derivatives/rois/sub-04",
+])
+def test_load_subject_mapping_only_subject_loads_without_betas(
+    mapping_data_dir, tree,
+):
+    (mapping_data_dir / tree).mkdir(parents=True)
+    assert load_subject("sub-04").subject_id == "sub-04"
+
+
+def test_load_subject_main_subject_loads_with_mapping_data_only(
+    mapping_data_dir,
+):
+    """download_mapping(subject="sub-03") alone is enough to load."""
+    (mapping_data_dir / "derivatives/localizers/sub-03").mkdir(parents=True)
+    assert load_subject("sub-03").subject_id == "sub-03"
+
+
+@pytest.mark.parametrize("subject, hint", [
+    ("sub-01", r"download\(subject='sub-01'\)"),
+    ("sub-04", r"download_mapping\(subject='sub-04'\)"),
+    ("sub-08", r"download_mapping\(subject='sub-08'\)"),
+])
+def test_load_subject_not_downloaded_hint_matches_the_dataset(
+    mapping_data_dir, subject, hint,
+):
+    with pytest.raises(DataNotDownloadedError, match=hint):
+        load_subject(subject)
 
 
 # ── Discovery ──────────────────────────────────────────────────
@@ -1010,6 +1056,91 @@ def test_get_anatomical_brain_mask_res_1pt8(configured_subject):
     )
 
 
+def test_get_t1w_res_1pt5(configured_subject):
+    """``get_t1w(res='1pt5')`` returns the pRF / localizer-grid T1w path."""
+    path = configured_subject.get_t1w(res="1pt5")
+    assert path.is_file()
+    assert path.name.endswith("_res-1pt5_T1w.nii.gz")
+
+
+@pytest.mark.parametrize("res", [None, "1pt8", "1pt5"])
+def test_get_anatomical_tissue_mask_paths(configured_subject, res):
+    """Each tissue label resolves to its ``label-`` file on each grid."""
+    res_token = f"_res-{res}" if res else ""
+    for label in N_TISSUE_VOXELS:
+        path = configured_subject.get_anatomical_tissue_mask(
+            label, res=res,
+        )
+        assert path.is_file()
+        assert path.name.endswith(
+            f"_space-T1w{res_token}_label-{label}_mask.nii.gz"
+        )
+
+
+def test_get_tissue_mask_on_voxel_axis(configured_subject):
+    """The mask spans the brain-mask voxels and counts the label's voxels."""
+    n_voxels = configured_subject.get_n_voxels()
+    for label, n in N_TISSUE_VOXELS.items():
+        mask = configured_subject.get_tissue_mask(label)
+        assert mask.dtype == bool
+        assert mask.shape == (n_voxels,)
+        assert mask.sum() == n
+
+
+def test_get_tissue_mask_on_the_fit_grid(configured_subject):
+    """``res="1pt5"`` is indexed by the res-1pt5 brain mask."""
+    n_voxels = configured_subject.get_n_voxels(res="1pt5")
+    mask = configured_subject.get_tissue_mask("CGM", res="1pt5")
+    assert mask.shape == (n_voxels,)
+    with pytest.raises(ValueError, match="rsquare"):
+        configured_subject.get_tissue_mask(
+            "CGM", mask_source="rsquare", res="1pt5",
+        )
+
+
+def test_get_tissue_mask_list_unions(configured_subject):
+    """A list of labels is the voxel-wise union, here all grey matter."""
+    grey_labels = ["CGM", "SGM", "BS", "CBM"]
+    grey = configured_subject.get_tissue_mask(grey_labels)
+    assert grey.sum() == sum(N_TISSUE_VOXELS[lab] for lab in grey_labels)
+    expected = np.zeros_like(grey)
+    for lab in grey_labels:
+        expected |= configured_subject.get_tissue_mask(lab)
+    assert np.array_equal(grey, expected)
+
+
+def test_get_tissue_mask_classes_do_not_overlap(configured_subject):
+    """No brain-mask voxel carries two tissue labels."""
+    stacked = np.stack([
+        configured_subject.get_tissue_mask(label)
+        for label in N_TISSUE_VOXELS
+    ])
+    assert stacked.sum(axis=0).max() == 1
+
+
+def test_get_tissue_mask_feeds_get_betas(configured_subject):
+    """The voxel-axis mask is accepted as ``mask=`` by ``get_betas``."""
+    cgm = configured_subject.get_tissue_mask("CGM")
+    betas = configured_subject.get_betas(session="ses-01", mask=cgm)
+    assert betas.shape[1] == N_TISSUE_VOXELS["CGM"]
+
+
+def test_get_tissue_mask_unknown_label_raises(configured_subject):
+    """An unknown label raises ``ValueError`` before touching disk."""
+    with pytest.raises(ValueError, match="label must be one of"):
+        configured_subject.get_tissue_mask("GM")
+
+
+def test_get_anatomical_tissue_mask_raises_when_missing(
+    configured_subject, synthetic_data_dir,
+):
+    """A tissue mask absent on disk raises ``DataNotDownloadedError``."""
+    path = configured_subject.get_anatomical_tissue_mask("WM", res="1pt5")
+    path.unlink()
+    with pytest.raises(DataNotDownloadedError, match="include_anatomical"):
+        configured_subject.get_anatomical_tissue_mask("WM", res="1pt5")
+
+
 def test_sub_metadata_stim_idx_range(configured_subject):
     df = configured_subject.metadata
     indices = df.query("session == 'ses-01'")["stim_idx"].to_numpy()
@@ -1178,3 +1309,383 @@ def test_raw_all_echoes_readable(configured_subject):
             session="ses-01", run="01", echo=str(echo),
         )
         assert arr.shape[0] == N_RAW_TRIALS_PER_RUN
+
+
+# ── pRF maps ────────────────────────────────────────────────────
+
+
+def _write_prf(data_dir, name, values):
+    import nibabel as nib
+
+    path = data_dir / "derivatives/retinotopy/sub-01/func" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    values = np.asarray(values, dtype=np.float32)
+    if name.endswith(".func.gii"):
+        arr = nib.gifti.GiftiDataArray(values)
+        nib.save(nib.GiftiImage(darrays=[arr]), str(path))
+    else:
+        nib.save(nib.Nifti1Image(values, np.eye(4)), str(path))
+
+
+def _prf_volume_name(param, res="1pt8"):
+    return (
+        f"sub-01_paradigm-best_space-T1w_res-{res}_param-{param}_"
+        "model-dnhrf_statmap.nii.gz"
+    )
+
+
+def test_get_prf_volume_is_indexed_like_the_betas(
+    configured_subject, synthetic_data_dir,
+):
+    """One value per brain-mask voxel, in the voxel axis' order; roi
+    selects within it."""
+    sub = configured_subject
+    grid = np.arange(125, dtype=np.float32).reshape(5, 5, 5)
+    _write_prf(synthetic_data_dir, _prf_volume_name("angle"), grid)
+    brain = sub.get_brain_mask()
+    angle = sub.get_prf("angle")
+    assert angle.shape == (N_ANATOMICAL_BRAIN_VOXELS,)
+    np.testing.assert_array_equal(angle, grid.ravel()[brain])
+    in_roi = sub.get_prf("angle", roi="hlvis")
+    np.testing.assert_array_equal(in_roi, angle[sub.get_roi_mask("hlvis")])
+    assert in_roi.shape == (N_HLVIS_VOXELS,)
+
+
+def test_get_prf_surface_roi(configured_subject, synthetic_data_dir):
+    from laion_fmri._paths import roi_surface_path
+    from laion_fmri.io import load_gifti_mask
+
+    sub = configured_subject
+    values = np.arange(N_VERTICES_L, dtype=np.float32)
+    _write_prf(
+        synthetic_data_dir,
+        "sub-01_paradigm-standard_hemi-L_space-fsnative_param-x_"
+        "model-dnhrf_desc-filtered_statmap.func.gii",
+        values,
+    )
+    kw = dict(paradigm="standard", desc="filtered", space="fsnative",
+              hemi="L")
+    np.testing.assert_array_equal(sub.get_prf("x", **kw), values)
+    keep = load_gifti_mask(
+        roi_surface_path(synthetic_data_dir, "sub-01", "hlvis", "L"))
+    np.testing.assert_array_equal(
+        sub.get_prf("x", roi="hlvis", **kw), values[keep])
+
+
+def test_get_prf_missing_map_says_how_to_download(configured_subject):
+    with pytest.raises(DataNotDownloadedError, match="include-retinotopy"):
+        configured_subject.get_prf("ecc", paradigm="foveal")
+
+
+def test_get_prf_best_without_a_noise_ceiling_says_why(configured_subject):
+    """Downloading cannot help here, so no download hint."""
+    with pytest.raises(ValueError, match="paradigm='standard'"):
+        configured_subject.get_prf("nc", desc="half")
+
+
+@pytest.mark.parametrize("call", [
+    lambda s: s.get_prf("ecc"),
+    lambda s: s.get_localizer("floc", "faceVsOthers"),
+    lambda s: s.get_localizer_fitted_mask("floc"),
+])
+def test_missing_maps_of_a_mapping_only_subject_point_to_download_mapping(
+    tmp_path, call,
+):
+    """``download`` refuses sub-04, so the hint names download-mapping."""
+    with pytest.raises(
+        DataNotDownloadedError, match="download-mapping --subject sub-04$",
+    ):
+        call(Subject("sub-04", str(tmp_path)))
+
+
+def test_missing_anatomy_of_a_mapping_only_subject_points_to_download_mapping(
+    tmp_path,
+):
+    with pytest.raises(
+        DataNotDownloadedError,
+        match=r"download_mapping\(subject='sub-04', include_anatomical",
+    ):
+        Subject("sub-04", str(tmp_path)).get_t1w()
+
+
+def test_get_prf_winner_names_volume_and_surface(
+    configured_subject, synthetic_data_dir,
+):
+    """Paradigm names from the seg-winner dseg, indexed like get_prf."""
+    import nibabel as nib
+
+    sub = configured_subject
+    levels = ["none", "standard", "foveal", "corners"]
+    d = synthetic_data_dir / "derivatives/retinotopy/sub-01/func"
+    d.mkdir(parents=True, exist_ok=True)
+    codes = (np.arange(125) % 4).astype(np.int16).reshape(5, 5, 5)
+    nib.save(
+        nib.Nifti1Image(codes, np.eye(4)),
+        str(d / "sub-01_paradigm-best_space-T1w_res-1pt8_model-dnhrf_"
+                "seg-winner_dseg.nii.gz"),
+    )
+    names = sub.get_prf("winner")
+    expect = np.array(levels)[codes.ravel()[sub.get_brain_mask()]]
+    np.testing.assert_array_equal(names, expect)
+    np.testing.assert_array_equal(
+        sub.get_prf("winner", roi="hlvis"),
+        expect[sub.get_roi_mask("hlvis")],
+    )
+
+    surf = (np.arange(N_VERTICES_L) % 4).astype(np.int32)
+    nib.save(
+        nib.GiftiImage(darrays=[nib.gifti.GiftiDataArray(
+            surf, intent="NIFTI_INTENT_LABEL", datatype="NIFTI_TYPE_INT32",
+        )]),
+        str(d / "sub-01_paradigm-best_hemi-L_space-fsnative_model-dnhrf_"
+                "seg-winner_desc-filtered_dseg.label.gii"),
+    )
+    got = sub.get_prf("winner", desc="filtered", space="fsnative", hemi="L")
+    assert got.tolist() == [levels[c] for c in surf]
+
+
+def test_get_prf_winner_missing_says_how_to_download(configured_subject):
+    with pytest.raises(DataNotDownloadedError, match="include-retinotopy"):
+        configured_subject.get_prf("winner", space="fsnative", hemi="R")
+
+
+@pytest.mark.parametrize(
+    "kw",
+    [dict(paradigm="standard"), dict(stage="gauss"), dict(desc="odd")],
+)
+def test_get_prf_winner_only_for_the_dnhrf_best_of(configured_subject, kw):
+    with pytest.raises(ValueError, match="winner"):
+        configured_subject.get_prf("winner", **kw)
+
+
+def test_get_prf_roi_and_mask_raises(configured_subject):
+    mask = np.zeros(N_ANATOMICAL_BRAIN_VOXELS, dtype=bool)
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        configured_subject.get_prf("angle", roi="hlvis", mask=mask)
+
+
+def test_get_noise_ceiling_roi_and_mask_raises(configured_subject):
+    mask = np.zeros(N_ANATOMICAL_BRAIN_VOXELS, dtype=bool)
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        configured_subject.get_noise_ceiling(
+            session="ses-01", roi="hlvis", mask=mask,
+        )
+
+
+# ── Localizer maps ──────────────────────────────────────────────
+
+
+def _write_face_roi_and_zmap(data_dir, z):
+    """FFA1 in the face category (the hlvis voxels), and the 1pt8
+    faceVsOthers z-map it is thresholded on."""
+    import shutil
+
+    import nibabel as nib
+
+    rois = data_dir / "derivatives/rois/sub-01"
+    (rois / "face").mkdir()
+    shutil.copy(
+        next((rois / "hlviscat").glob("*_res-1pt8_label-hlvis_mask.nii.gz")),
+        rois / "face/sub-01_space-T1w_res-1pt8_label-FFA1_mask.nii.gz",
+    )
+    d = data_dir / "derivatives/localizers/sub-01/ses-4BarScreenfLoc/func"
+    d.mkdir(parents=True)
+    nib.save(
+        nib.Nifti1Image(np.asarray(z, dtype=np.float32), np.eye(4)),
+        str(d / "sub-01_ses-4BarScreenfLoc_task-floc_space-T1w_res-1pt8_"
+                "contrast-faceVsOthers_stat-z_statmap.nii.gz"),
+    )
+
+
+def test_get_localizer_is_indexed_like_the_betas(
+    configured_subject, synthetic_data_dir,
+):
+    sub = configured_subject
+    z = np.linspace(-3, 9, 125).reshape(5, 5, 5)
+    _write_face_roi_and_zmap(synthetic_data_dir, z)
+    brain = sub.get_brain_mask()
+    got = sub.get_localizer("floc", "faceVsOthers")
+    np.testing.assert_allclose(got, z.ravel()[brain].astype(np.float32))
+    np.testing.assert_allclose(
+        sub.get_localizer("floc", "faceVsOthers", roi="FFA1"),
+        got[sub.get_roi_mask("FFA1")],
+    )
+
+
+def test_get_localizer_missing_says_how_to_download(configured_subject):
+    with pytest.raises(DataNotDownloadedError, match="include-localizers"):
+        configured_subject.get_localizer("oloc", "objectVsScrambled")
+
+
+def test_get_roi_mask_z_threshold_uses_the_defining_contrast(
+    configured_subject, synthetic_data_dir,
+):
+    sub = configured_subject
+    z = np.linspace(-3, 9, 125).reshape(5, 5, 5)
+    _write_face_roi_and_zmap(synthetic_data_dir, z)
+    roi = sub.get_roi_mask("FFA1")
+    zb = sub.get_localizer("floc", "faceVsOthers")
+    t = float(np.median(zb[roi]))
+    kept = sub.get_roi_mask("FFA1", z_threshold=t)
+    np.testing.assert_array_equal(kept, roi & (zb > t))
+    assert 0 < kept.sum() < roi.sum()
+    np.testing.assert_array_equal(
+        sub.get_roi_mask("face", z_threshold=t), kept)
+
+
+def test_get_roi_mask_z_threshold_refuses_rois_without_a_contrast(
+    configured_subject,
+):
+    with pytest.raises(ValueError, match="hlvis"):
+        configured_subject.get_roi_mask("hlvis", z_threshold=5)
+
+
+# ── res-1pt5: the grid the volumetric fits were computed on ──────
+
+
+def _save_volume(path, data, dtype=np.float32):
+    import nibabel as nib
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    nib.save(
+        nib.Nifti1Image(np.asarray(data, dtype=dtype), np.eye(4)), str(path),
+    )
+
+
+def _write_1pt5_brain_mask(data_dir):
+    """A res-1pt5 brain mask that differs from the res-1pt8 one, so a
+    test can tell which grid's mask indexed the result."""
+    mask = np.zeros((5, 5, 5), dtype=np.uint8)
+    mask[:, :, :2] = 1
+    _save_volume(
+        data_dir / "derivatives/anatomical/sub-01/ses-PrismaAnat/anat/"
+        "sub-01_ses-PrismaAnat_space-T1w_res-1pt5_desc-brain_mask.nii.gz",
+        mask, np.uint8,
+    )
+    return mask.ravel().astype(bool)
+
+
+def test_get_prf_res_1pt5_reads_the_fit_grid(
+    configured_subject, synthetic_data_dir,
+):
+    sub = configured_subject
+    brain15 = _write_1pt5_brain_mask(synthetic_data_dir)
+    grid8 = np.arange(125, dtype=np.float32).reshape(5, 5, 5)
+    grid15 = -grid8
+    _write_prf(synthetic_data_dir, _prf_volume_name("angle"), grid8)
+    _write_prf(synthetic_data_dir, _prf_volume_name("angle", "1pt5"), grid15)
+    np.testing.assert_array_equal(
+        sub.get_prf("angle", res="1pt5"), grid15.ravel()[brain15])
+    np.testing.assert_array_equal(
+        sub.get_prf("angle"), grid8.ravel()[sub.get_brain_mask()])
+
+
+def test_get_localizer_res_1pt5_reads_the_fit_grid(
+    configured_subject, synthetic_data_dir,
+):
+    brain15 = _write_1pt5_brain_mask(synthetic_data_dir)
+    z = np.linspace(-3, 9, 125).reshape(5, 5, 5)
+    _save_volume(
+        synthetic_data_dir
+        / "derivatives/localizers/sub-01/ses-4BarScreenfLoc/func/"
+        "sub-01_ses-4BarScreenfLoc_task-floc_space-T1w_res-1pt5_"
+        "contrast-faceVsOthers_stat-z_statmap.nii.gz",
+        z,
+    )
+    got = configured_subject.get_localizer(
+        "floc", "faceVsOthers", res="1pt5")
+    np.testing.assert_allclose(got, z.ravel()[brain15].astype(np.float32))
+
+
+def test_get_roi_mask_res_1pt5_and_rois_present_on_one_grid_only(
+    configured_subject, synthetic_data_dir,
+):
+    """A ROI shipped on res-1pt5 only (sub-04, sub-08) is still found,
+    and selects within the res-1pt5 brain mask."""
+    sub = configured_subject
+    brain15 = _write_1pt5_brain_mask(synthetic_data_dir)
+    roi = np.zeros((5, 5, 5), dtype=np.uint8)
+    roi[2, 2, :] = 1
+    _save_volume(
+        synthetic_data_dir / "derivatives/rois/sub-01/retinotopy/"
+        "sub-01_space-T1w_res-1pt5_label-V1d_mask.nii.gz",
+        roi, np.uint8,
+    )
+    got = sub.get_roi_mask("V1d", res="1pt5")
+    np.testing.assert_array_equal(got, roi.ravel().astype(bool)[brain15])
+    assert got.sum() == 2
+    grid15 = np.arange(125, dtype=np.float32).reshape(5, 5, 5)
+    _write_prf(synthetic_data_dir, _prf_volume_name("ecc", "1pt5"), grid15)
+    np.testing.assert_array_equal(
+        sub.get_prf("ecc", res="1pt5", roi="V1d"),
+        grid15.ravel()[brain15][got],
+    )
+
+
+@pytest.mark.parametrize("call", [
+    lambda s: s.get_prf("angle", res="1pt5", mask_source="rsquare"),
+    lambda s: s.get_localizer(
+        "floc", "faceVsOthers", res="1pt5", mask_source="rsquare"),
+    lambda s: s.get_roi_mask("hlvis", res="1pt5", mask_source="rsquare"),
+    lambda s: s.get_localizer_fitted_mask(
+        "floc", res="1pt5", mask_source="rsquare"),
+])
+def test_rsquare_brain_mask_exists_on_the_beta_grid_only(
+    configured_subject, call,
+):
+    with pytest.raises(ValueError, match="beta grid only"):
+        call(configured_subject)
+
+
+def test_get_localizer_fitted_mask_per_session_and_grid(
+    configured_subject, synthetic_data_dir,
+):
+    sub = configured_subject
+    brain15 = _write_1pt5_brain_mask(synthetic_data_dir)
+    fitted = np.zeros((5, 5, 5), dtype=np.uint8)
+    fitted[1:4, 1:4, 1:4] = 1
+    d = (synthetic_data_dir
+         / "derivatives/localizers/sub-01/ses-MotionLocBarsSML/func")
+    for res in ("1pt8", "1pt5"):
+        _save_volume(
+            d / f"sub-01_ses-MotionLocBarsSML_space-T1w_res-{res}_"
+            "desc-fitted_mask.nii.gz",
+            fitted, np.uint8,
+        )
+    flat = fitted.ravel().astype(bool)
+    left = sub.get_localizer_fitted_mask("MotionLeft")
+    np.testing.assert_array_equal(left, flat[sub.get_brain_mask()])
+    np.testing.assert_array_equal(
+        sub.get_localizer_fitted_mask("MotionRight"), left)
+    np.testing.assert_array_equal(
+        sub.get_localizer_fitted_mask("MotionLeft", res="1pt5"),
+        flat[brain15],
+    )
+
+
+def test_get_localizer_fitted_mask_missing_says_how_to_download(
+    configured_subject,
+):
+    with pytest.raises(DataNotDownloadedError, match="include-localizers"):
+        configured_subject.get_localizer_fitted_mask("floc")
+
+
+def test_laionstim_category_is_queryable(
+    configured_subject, synthetic_data_dir,
+):
+    """The laionstim group needs no special casing: a category directory
+    whose (de-hyphenated) labels resolve by name and by category."""
+    import shutil
+
+    sub = configured_subject
+    rois = synthetic_data_dir / "derivatives/rois/sub-01"
+    (rois / "laionstim").mkdir()
+    shutil.copy(
+        next((rois / "hlviscat").glob("*_res-1pt8_label-hlvis_mask.nii.gz")),
+        rois / "laionstim/"
+        "sub-01_space-T1w_res-1pt8_label-laionstimV1d_mask.nii.gz",
+    )
+    assert sub.get_available_rois(category="laionstim") == ["laionstimV1d"]
+    hlvis = sub.get_roi_mask("hlvis")
+    np.testing.assert_array_equal(sub.get_roi_mask("laionstimV1d"), hlvis)
+    np.testing.assert_array_equal(sub.get_roi_mask("laionstim"), hlvis)

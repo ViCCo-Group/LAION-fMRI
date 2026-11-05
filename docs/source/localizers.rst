@@ -18,11 +18,11 @@ GLM Analysis
 ============
   
 All three localizers were analysed with the same general linear model,
-implemented with ``nilearn.glm.first_level`` (Abraham et al., 2014). For the
-surface maps, the preprocessed timeseries were first projected to each
-participant's ``fsnative`` surface with FreeSurfer ``mri_vol2surf`` and the
-model was fitted per vertex. The volumetric maps come from the same model
-fitted to the voxel data.
+implemented with ``nilearn.glm.first_level`` (Abraham et al., 2014). The
+preprocessed timeseries are on a 1.5 mm grid; the object localizer, acquired
+at 1.778 mm, was first resampled to the same resolution. The model was then fitted twice:
+per vertex, on timeseries projected to each participant's ``fsnative``
+surface with FreeSurfer ``mri_vol2surf``, and per voxel in the volume.
 
 Each condition enters the design as a block regressor rather than as
 individual trials. In fLoc, consecutive trials of the same category form one
@@ -70,7 +70,8 @@ Released Contrasts
    of the other four. The object localizer is objects against their
    grid-scrambled counterparts, and the motion localizer is moving against
    static dots, pooled over both hemifields. Maps are the released
-   z-statistics, combined across runs by fixed effects, shown unthresholded.
+   z-statistics, combined across runs by fixed effects, shown for z > 0,
+   with opacity scaling alongside colour.
    The same maps with the manually delineated ROIs overlaid are shown in
    :doc:`rois`.
 
@@ -139,13 +140,6 @@ Spaces
        a refit.
 
 
-.. warning::
-
-   Interpolation is confined to the fitted volume: an output voxel is
-   written only where at least half its interpolation weight comes from
-   voxels the GLM estimated, and is NaN otherwise. So unestimated voxels
-   neither dilute their neighbours nor inflate the coverage.
-
 
 Downloading and loading
 =======================
@@ -176,6 +170,21 @@ For the object localizer pass ``task="oloc", session="31"``. For a
 volumetric map pass ``space="T1w"`` with ``res="1pt5"`` or ``res="1pt8"`` and
 omit ``hemi``.
 
+``Subject.get_localizer`` loads a z-map directly, indexed like ``get_betas``
+(one value per brain-mask voxel on the 1.8 mm grid) and with the session
+filled in from the task:
+
+.. code-block:: python
+
+   import laion_fmri
+
+   sub = laion_fmri.load_subject("sub-03")
+   z = sub.get_localizer("floc", "faceVsOthers")
+   z_ffa = sub.get_localizer("floc", "faceVsOthers", roi="FFA1")
+
+To threshold the localizer-defined ROIs with their own contrast, see
+:ref:`thresholding-rois`.
+
 The per-run condition estimates have their own helper. It takes the
 regressor name and the run, and returns the path to that run's effect-size
 map in percent signal change; ``space``, ``hemi`` and ``res`` work as above:
@@ -197,7 +206,8 @@ File organization
 
 Localizer maps are per-session, so they sit under ``sub-XX/ses-YY/func/``.
 ``contrast-`` names the contrast in camelCase, ``stat-`` the statistic
-(``z`` for contrasts, ``effect`` for per-run condition estimates).
+(``z`` for contrasts, ``effect`` for per-run condition estimates). Each
+session's ``desc-fitted_mask`` covers all of its volumetric maps.
 
 .. code-block:: text
 
@@ -209,7 +219,8 @@ Localizer maps are per-session, so they sit under ``sub-XX/ses-YY/func/``.
         │       ├── sub-XX_ses-4BarScreenfLoc_task-floc_run-01_hemi-L_space-fsnative_contrast-body_stat-effect_statmap.func.gii
         │       ├── sub-XX_ses-4BarScreenfLoc_task-floc_space-T1w_res-1pt5_contrast-faceVsOthers_stat-z_statmap.nii.gz
         │       ├── sub-XX_ses-4BarScreenfLoc_task-floc_run-01_space-T1w_res-1pt5_contrast-body_stat-effect_statmap.nii.gz
-        │       └── sub-XX_ses-4BarScreenfLoc_task-floc_space-T1w_res-1pt8_contrast-faceVsOthers_stat-z_statmap.nii.gz
+        │       ├── sub-XX_ses-4BarScreenfLoc_task-floc_space-T1w_res-1pt8_contrast-faceVsOthers_stat-z_statmap.nii.gz
+        │       └── sub-XX_ses-4BarScreenfLoc_space-T1w_res-1pt5_desc-fitted_mask.nii.gz
         ├── ses-MotionLocBarsSML/
         │   └── func/
         │       ├── sub-XX_ses-MotionLocBarsSML_task-MotionLoc_hemi-L_space-fsnative_contrast-movingVsStatic_stat-z_statmap.func.gii

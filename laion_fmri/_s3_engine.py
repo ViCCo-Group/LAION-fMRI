@@ -88,6 +88,28 @@ def list_prefix_objects(bucket, prefix):
     ]
 
 
+def list_top_level_objects(bucket, prefix):
+    """List the objects directly under ``prefix``, not in sub-prefixes.
+
+    Returns
+    -------
+    list of dict
+        Each item has ``"Key"`` (str) and ``"Size"`` (int, bytes).
+    """
+    result = _aws([
+        "s3api", "list-objects-v2",
+        "--bucket", bucket,
+        "--prefix", prefix,
+        "--delimiter", "/",
+        "--output", "json",
+    ])
+    data = json.loads(result.stdout) if result.stdout.strip() else {}
+    return [
+        {"Key": obj["Key"], "Size": int(obj["Size"])}
+        for obj in data.get("Contents", [])
+    ]
+
+
 def list_common_prefixes(bucket, prefix):
     """List the immediate sub-prefix names under ``prefix``.
 

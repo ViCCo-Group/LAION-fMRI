@@ -4,21 +4,24 @@ from laion_fmri.discovery import get_subjects
 from laion_fmri.subject import load_subject
 
 
-def load_subjects(subjects):
+def load_subjects(subjects, dataset="main"):
     """Load multiple subjects into a Group.
 
     Parameters
     ----------
     subjects : list[str | int] or "all"
         List of subject identifiers, or ``"all"`` to load every
-        subject in the dataset.
+        subject of ``dataset``.
+    dataset : ``"main"`` (default) | ``"mapping"``
+        Which subjects ``"all"`` means; see
+        :func:`laion_fmri.discovery.get_subjects`.
 
     Returns
     -------
     Group
     """
     if subjects == "all":
-        subject_ids = get_subjects()
+        subject_ids = get_subjects(dataset)
     else:
         subject_ids = subjects
 

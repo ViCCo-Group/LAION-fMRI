@@ -96,7 +96,7 @@ print(f"Querying subject: {SUBJECT}")
 # rather than the whole brain, so the next thing worth knowing
 # is which ROIs ship per subject and how they are grouped.
 #
-# The dataset organizes ROIs into eight categories on the
+# The dataset organizes ROIs into nine categories on the
 # bucket (body-, face-, place-areas, ...). ``get_rois`` is the
 # accessor for them. With no filter it returns the full
 # inventory; with ``category=`` it returns one functional family

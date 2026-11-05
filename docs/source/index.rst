@@ -170,6 +170,7 @@ Getting Started
    anatomical_data
    fmri_data
    rois
+   retinotopy
    localizers
    glmsingle_betas
 
