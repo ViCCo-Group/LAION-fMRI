@@ -17,9 +17,21 @@ object localizer, and none of the ROI sets defined by the image-viewing
 data (``laion``, ``laionstim``, ``object``). ``sub-04``'s anatomy is
 ``ses-ConnectomAnat`` instead of ``ses-PrismaAnat``.
 
-Package versions before 0.2.0 list subjects from the bucket and will show
-``sub-04`` and ``sub-08`` among the main-experiment subjects: upgrade the
-package if you encounter a DataNotDownloadedError.
+.. warning::
+
+   If your code uses ``get_subjects``, upgrade the LAION-fMRI package to
+   0.2.0:
+
+   .. code-block:: bash
+
+      python -m pip install --upgrade "laion-fmri @ git+https://github.com/ViCCo-Group/LAION-fMRI.git@main"
+
+   Versions before 0.2.0 list subjects from the bucket, so ``get_subjects``
+   now returns ``sub-04`` and ``sub-08`` among the main-experiment subjects.
+   Code that loops over that list then requests main-experiment files these
+   subjects do not have, and fails with a ``DataNotDownloadedError``. From
+   0.2.0, ``get_subjects()`` returns the main experiment's five subjects and
+   ``get_subjects("mapping")`` adds ``sub-04`` and ``sub-08``.
 
 Retinotopy timeseries and stimulus apertures
 --------------------------------------------

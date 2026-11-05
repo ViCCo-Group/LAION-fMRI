@@ -10,58 +10,76 @@ underlying localizer contrasts (:doc:`localizers`) and pRF parameter maps
 (:doc:`retinotopy`) are released alongside them, so alternative definitions can
 be derived from the same data.
 
-Available ROI Sets
-==================
+Available ROI Categories
+========================
+
+ROIs are grouped into categories. Below each category is its name in the
+package and its directory on the bucket, e.g.
+``get_available_rois(category="face")``.
 
 .. list-table::
    :widths: 22 35 20 23
    :header-rows: 1
 
-   * - Set
+   * - Category
      - ROIs
      - Source
      - Criterion
    * - **Retinotopic**
+
+       ``retinotopy``
      - V1v, V1d, V2v, V2d, V3v, V3d, V3A, V3B, hV4, LO1, LO2,
        TO1, TO2, VO1, VO2, IPS0, SPCS, IPCS, EVC
      - Retinotopy localizer
      - Polar angle reversals, eccentricity gradients (R²-thresholded)
-   * - **Retinotopic (LAION-stimulated)**
+   * - **Retinotopic, LAION-stimulated**
+
+       ``laionstim``
      - laionstim- versions of the retinotopic ROIs above
      - Filter of the retinotopic ROIs
      - pRF centre inside the LAION image
    * - **Face-selective**
+
+       ``face``
      - OFA, FFA-1, FFA-2, pSTS-faces, AFP-1, AFP-2
      - fLoc
      - faces > others
    * - **Body-selective**
+
+       ``body``
      - EBA, FBA
      - fLoc
      - bodies > others
    * - **Scene-selective**
+
+       ``place``
      - PPA, OPA, MPA, SPA
      - fLoc
      - scenes > others
    * - **Character-selective**
+
+       ``character``
      - VWFA-1, VWFA-2, mfs-words, pSTS-words
      - fLoc
      - characters > others
    * - **Object-selective**
+
+       ``object``
      - l-objects, v-objects
      - Object localizer
      - objects > scrambled
-   * - **Motion**
+   * - **Motion-selective**
+
+       ``motion``
      - MT, MST
      - Motion localizer
      - motion > static, ipsilateral > static
-   * - **General visual selectivity**
-     - laion-general
-     - LAION main experiment
-     - GLMsingle R²
-   * - **Sectors of visual selectivity**
-     - laion-EVC, laion-dorsal, laion-lateral, laion-ventral
-     - Retinotopic ROIs + anatomical borders
-     - Subdivision of laion-general
+   * - **Visual selectivity**
+
+       ``laion``
+     - laion-general, laion-EVC, laion-dorsal, laion-lateral, laion-ventral
+     - LAION main experiment, retinotopic ROIs and anatomical borders
+     - GLMsingle R². The four sectors subdivide laion-general.
 
 Functional ROIs
 ===============
@@ -71,7 +89,7 @@ Design Choices
 
 All functional ROIs were manually delineated on the cortical surface.
 Statistical maps informing the delineations, such as polar angle, or
-localizer contrast t-statistics, were rendered as flatmaps via pycortex
+localizer contrast z-statistics, were rendered as flatmaps via pycortex
 (Gao et al., 2015) and annotated in Inkscape.
 
 **Selection of ROIs.**
@@ -79,16 +97,16 @@ ROIs were included based on relevance to the field and consistent
 identifiability across subjects.
 
 **Mutual exclusivity.**
-ROIs can overlap across sets but not within a set. For example, face-selective
+ROIs can overlap across categories but not within a category. For example, face-selective
 FFA-1 may overlap with body-selective FBA, but not with face-selective FFA-2.
 
-EVC, laionstim-EVC and laion-general are unions of other ROIs in their set and
-therefore overlap them. They are released as individual masks but are not included in the set's ``dseg``
+EVC, laionstim-EVC and laion-general are unions of other ROIs in their category and
+therefore overlap them. They are released as individual masks but are not included in the category's ``dseg``
 file, which assigns a single label to each voxel.
 
 **Contrast thresholds.**
 Contrast thresholds used in the definitions of ROIs vary across the field and are dependent on the statistical power of the experiment.
-To accommodate different user preferences, we applied a liberal threshold at t>0 and relied on human judgment to identify steep drop-offs in functional preference.
+To accommodate different user preferences, we applied a liberal threshold at z>0 and relied on human judgment to identify steep drop-offs in functional preference.
 The resulting ROIs may be larger than those reported in studies applying more conservative thresholds.
 The underlying statistical maps are released alongside the ROIs (see
 :doc:`localizers`), so stricter thresholds can be applied within the provided
@@ -147,7 +165,7 @@ clusters on the precentral sulcus are labeled.
 Retinotopic ROIs stimulated by LAION field of view
 --------------------------------------------------
 
-The *laionstim* set is not drawn by hand. Each laionstim ROI keeps the part of
+The *laionstim* category is not drawn by hand. Each laionstim ROI keeps the part of
 its retinotopic ROI whose pRF centre lies inside the LAION image,
 :math:`|x| \le 4.55^\circ` and :math:`|y| \le 4.55^\circ` (see :doc:`experimental_design`). The pRF centres
 come from the filtered ``paradigm-best`` ``model-dnhrf`` maps
@@ -270,12 +288,12 @@ Per-subject ROIs are released in three spaces:
 
 Surface masks are the canonical reference; the T1w volumes are derived from
 them and provided for convenience in volume-based analyses. All three spaces
-cover the same ROI sets.
+cover the same ROI categories.
 
 File Organization
 =================
 
-ROIs are grouped by set, one directory per group.
+ROIs are grouped by category, one directory per category.
 
 .. code-block:: text
 
@@ -314,7 +332,7 @@ Loading ROIs
 
 Downloaded files drop the hyphens from ROI labels, as BIDS requires, and the
 :mod:`laion_fmri` package uses those names: ``FFA-1`` becomes ``FFA1`` and
-``laionstim-V1d`` becomes ``laionstimV1d`` (``"laionstim"`` is the whole set).
+``laionstim-V1d`` becomes ``laionstimV1d`` (``"laionstim"`` is the whole category).
 
 .. code-block:: python
 
@@ -378,9 +396,7 @@ For the retinotopic ROIs, a recommended threshold can be applied with
 ``r2cv`` threshold (see above). The ROIs were drawn on the surface
 z-maps, while the volumetric z-map comes from a separate volumetric GLM, so a
 volumetric threshold is close to, but not identical with, the same threshold
-on the surface. With nibabel alone, the ``res-1pt5`` or ``res-1pt8`` mask and
-the contrast's ``space-T1w`` z-map of the same resolution share one grid and
-can be combined voxel by voxel.
+on the surface.
 
 References
 ==========

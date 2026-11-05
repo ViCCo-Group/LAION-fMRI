@@ -22,33 +22,35 @@ path, and the second call skips it, so nothing is downloaded twice.
    * - Files
      - :func:`download`
      - :func:`download_mapping`
-   * - Betas
+   * - :doc:`../glmsingle_betas`
      - always
      - —
-   * - Raw main-experiment sessions
+   * - Raw main-experiment sessions (:doc:`../fmri_data`)
      - ``include_raw``, or :func:`download_raw`
      - —
-   * - LAION images, embeddings, segmentations, captions
+   * - LAION images (:doc:`../stimulus_data`); embeddings, segmentations,
+       captions (:doc:`../stimulus_derivatives`)
      - with the ``include_*`` flags or their own functions
      - —
-   * - ROIs
+   * - :doc:`../rois`
      - always
      - always
-   * - pRF maps, localizer maps
+   * - Retinotopic maps (:doc:`../retinotopy`) and localizer contrasts (:doc:`../localizers`)
      - ``include_retinotopy``, ``include_localizers``
      - always
-   * - Anatomy, FreeSurfer
+   * - :doc:`../anatomical_data` and segmentations
      - ``include_anatomical``, ``include_freesurfer``
      - ``include_anatomical``, ``include_freesurfer``
-   * - Aperture libraries
+   * - Aperture libraries (:ref:`retinotopy-apertures`)
      - —
      - always
-   * - Precision-mapping data, raw and preprocessed
+   * - Precision-mapping data, raw and preprocessed (:doc:`../fmri_data`)
      - —
      - ``include_raw``, ``include_preproc``
-   * - ``sub-04``, ``sub-08``
-     - —
-     - yes
+
+The two functions also cover different subjects (:ref:`subject-sets`):
+:func:`download` covers the five subjects of the main experiment, and
+:func:`download_mapping` covers those five plus ``sub-04`` and ``sub-08``.
 
 .. code-block:: python
 
@@ -269,7 +271,9 @@ libraries under ``stimuli/retinotopy/``.
   matrices and the frame tables the pRF maps were fitted on.
 * ``include_raw=True`` adds the raw precision-mapping sessions and
   ``ses-PrismaAnat``. The main experiment's numbered sessions are not included;
-  :func:`download_raw` fetches those.
+  :func:`download_raw` fetches those. ``sub-04`` has no raw anatomy on the
+  bucket. Its anatomy (``ses-ConnectomAnat``) is released as derivatives only
+  (``include_anatomical``).
 
 .. code-block:: python
 

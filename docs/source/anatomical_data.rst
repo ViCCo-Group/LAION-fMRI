@@ -10,7 +10,8 @@ mask, tissue masks, and a FreeSurfer surface reconstruction.
 ``sub-04`` was not scanned in that session. Its anatomy comes from a 3T
 Connectom scanner and is released under ``ses-ConnectomAnat``, which
 replaces ``ses-PrismaAnat`` in every path and file name on this page.
-Its derivatives have the same 0.8 mm resolution and file types.
+The derivatives have the same 0.8 mm resolution and file types.
+The raw data for ``ses-ConnectomAnat`` are not part of the current release.
 
 Averaged T1w, T2w, and Brain Mask
 =================================

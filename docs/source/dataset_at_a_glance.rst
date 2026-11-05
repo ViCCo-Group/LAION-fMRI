@@ -47,14 +47,14 @@ released as well, so the pRF models can be refitted or replaced
 
    .. todo::
 
-      Brief summary of available ROI sets. For full details, point to
+      Brief summary of available ROI categories. For full details, point to
       :doc:`rois`.
 
    .. list-table::
       :widths: 25 40 35
       :header-rows: 1
 
-      * - ROI set
+      * - ROI category
         - Description
         - How defined
       * - (placeholder)

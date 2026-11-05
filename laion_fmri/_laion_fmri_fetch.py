@@ -604,7 +604,10 @@ def fetch_mapping(
         Also pull the raw precision-mapping sessions
         (:data:`MAPPING_SESSIONS`) and ``ses-PrismaAnat``. LAION's
         numbered sessions are not included; use
-        :func:`laion_fmri.download.download_raw` for those.
+        :func:`laion_fmri.download.download_raw` for those. ``sub-04``
+        has no raw anatomy on the bucket. Its anatomy
+        (``ses-ConnectomAnat``) is released as derivatives only
+        (``include_anatomical``).
     """
     bucket = LAION_FMRI_BUCKET
     flags = {

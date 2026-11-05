@@ -760,7 +760,9 @@ def download_mapping(
     include_raw : bool
         Also pull the raw precision-mapping sessions and
         ``ses-PrismaAnat``. LAION's numbered sessions are not included;
-        use :func:`download_raw` for those.
+        use :func:`download_raw` for those. ``sub-04`` has no raw
+        anatomy on the bucket. Its anatomy (``ses-ConnectomAnat``) is
+        released as derivatives only (``include_anatomical``).
     n_jobs : int
         Number of parallel AWS CLI copy workers.
 

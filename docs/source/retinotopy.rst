@@ -6,7 +6,7 @@ Retinotopy
 
 Population receptive field (pRF) estimates (Dumoulin & Wandell, 2008) are
 released as parameter maps on the ``fsnative`` surface and in the
-participant's ``T1w`` volume, for the LAION subjects. They are the basis for the
+participant's ``T1w`` volume. They are the basis for the
 retinotopic :doc:`rois`.
 
 .. admonition:: TL;DR — best maps
